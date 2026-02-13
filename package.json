@@ -12,11 +12,15 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
     "@tailwindcss/postcss": "^4.1.18",
+    "@vitejs/plugin-basic-ssl": "^2.1.4",
     "clsx": "^2.1.1",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",
+    "react-speech-recognition": "^4.0.1",
+    "regenerator-runtime": "^0.14.1",
+    "speech-recognition-polyfill": "^0.0.5",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

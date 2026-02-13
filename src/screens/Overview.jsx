@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getVocabulary, deleteVocabularyItem, addVocabularyItem, updateVocabularyItem } from '../store/vocabularyStore';
-import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2 } from 'lucide-react';
+import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
@@ -21,6 +21,7 @@ export default function Overview() {
   const [german, setGerman] = useState('');
   const [spanish, setSpanish] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const loadVokabeln = useCallback(async () => {
     const all = await getVocabulary();
@@ -35,6 +36,7 @@ export default function Overview() {
     setEditingItem(null);
     setGerman('');
     setSpanish('');
+    setError('');
     setIsModalOpen(true);
   };
 
@@ -42,13 +44,16 @@ export default function Overview() {
     setEditingItem(item);
     setGerman(item.german);
     setSpanish(item.spanish);
+    setError('');
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
     if (!german || !spanish) {
-      alert('Bitte beide Felder ausfüllen');
+      setError('Bitte beide Felder ausfüllen');
       return;
     }
 
@@ -65,13 +70,14 @@ export default function Overview() {
       setEditingItem(null);
       await loadVokabeln();
     } catch (e) {
-      alert('Konnte Vokabel nicht speichern');
+      setError('Konnte Vokabel nicht speichern');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = (id) => {
+    setError('');
     setItemToDelete(id);
     setIsDeleteModalOpen(true);
   };
@@ -84,7 +90,7 @@ export default function Overview() {
         setIsDeleteModalOpen(false);
         setItemToDelete(null);
       } catch (e) {
-        alert('Konnte Vokabel nicht löschen');
+        setError('Konnte Vokabel nicht löschen');
       }
     }
   };
@@ -120,25 +126,27 @@ export default function Overview() {
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto">
-        {activeVokabeln.map((item) => (
+        {activeVokabeln.map((item, index) => (
           <VocabularyItem 
             key={item.id} 
             item={item} 
+            index={index}
             onEdit={handleOpenEdit} 
             onDelete={handleDelete} 
           />
         ))}
 
         {archivedVokabeln.length > 0 && (
-          <div className="pt-4 pb-2 mt-4 mb-2">
+          <div className="pt-4 pb-2 mt-4 mb-2 animate-fade-in-up">
             <h2 className="text-xl font-bold text-text-secondary">Archiv</h2>
           </div>
         )}
 
-        {archivedVokabeln.map((item) => (
+        {archivedVokabeln.map((item, index) => (
           <VocabularyItem 
             key={item.id} 
             item={item} 
+            index={activeVokabeln.length + index}
             onEdit={handleOpenEdit} 
             onDelete={handleDelete} 
           />
@@ -174,6 +182,12 @@ export default function Overview() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="p-4 bg-error/10 text-error rounded-2xl flex items-center gap-2">
+                  <AlertCircle size={20} />
+                  <p className="text-sm font-medium">{error}</p>
+                </div>
+              )}
               <div>
                 <label className="block mb-2 ml-1 text-sm font-medium text-text-main">Deutsch</label>
                 <textarea
@@ -216,10 +230,11 @@ export default function Overview() {
   );
 }
 
-function VocabularyItem({ item, onEdit, onDelete }) {
+function VocabularyItem({ item, onEdit, onDelete, index }) {
   return (
     <div 
-      className="flex items-center justify-between p-4 bg-surface border border-border-light rounded-2xl shadow-sm hover:border-primary/30 transition-all cursor-pointer group"
+      className="flex items-center justify-between p-4 bg-surface border border-border-light rounded-2xl shadow-sm hover:border-primary/30 transition-all cursor-pointer group animate-fade-in-up"
+      style={{ animationDelay: `${index * 0.05}s` }}
       onClick={() => onEdit(item)}
     >
       <div className="flex-1">
@@ -231,7 +246,7 @@ function VocabularyItem({ item, onEdit, onDelete }) {
             <div
               key={i}
               className={cn(
-                "w-3 h-3 rounded-full border",
+                "w-3 h-3 rounded-full border transition-all duration-300",
                 item.status > i ? "bg-primary border-primary" : "bg-transparent border-primary-light"
               )}
             />
