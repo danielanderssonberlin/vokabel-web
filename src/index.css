@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #41A8BF;
+  --color-primary-light: #B0D1D9;
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text-main: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-success: #26A653;
+  --color-success-light: #dcfce7;
+  --color-error: #ef4444;
+  --color-error-light: #fee2e2;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-text-main;
+  }
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
