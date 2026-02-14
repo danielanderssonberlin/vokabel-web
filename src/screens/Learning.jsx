@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getVocabulary, updateVocabularyStatus } from '../store/vocabularyStore';
-import { CheckCircle2, GraduationCap, ArrowRight, Mic, MicOff, AlertCircle } from 'lucide-react';
+import { CheckCircle2, GraduationCap, ArrowRight, Mic, MicOff, AlertCircle, Volume2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -216,7 +216,7 @@ export default function Learning() {
                 isDragging && "cursor-grabbing active:snap-none"
               )}
             >
-              <div className="flex gap-4 px-6 pb-8 w-max min-w-full justify-center">
+              <div className="flex justify-center min-w-full gap-4 px-6 pb-8 w-max">
                 {wrongAnswers.map((item, idx) => (
                   <div 
                     key={`wrong-${idx}`}
@@ -243,7 +243,7 @@ export default function Learning() {
   const current = vokabeln[currentIndex];
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto md:p-8 mb-[80px]">
+    <div className="flex flex-col w-full max-w-2xl p-4 pb-24 mx-auto md:p-8 ">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
           <GraduationCap size={24} className="text-primary" />
@@ -340,18 +340,20 @@ export default function Learning() {
           </div>
         )}
         
-        <div className="h-8 mt-3 text-center">
+        
           {isCorrect === true && (
-            <p className="font-medium text-success">
-              {wasTooSoon ? 'Richtig! (Status unverändert - 12h Regel)' : 'Sehr gut! +1 Status'}
-            </p>
+            <div className="h-8 mt-3 text-center">
+              <p className="font-medium text-success">
+                {wasTooSoon ? 'Richtig! (Status unverändert - 12h Regel)' : 'Sehr gut! +1 Status'}
+              </p>
+            </div>
           )}
-        </div>
+        
 
         <button
           type="submit"
           disabled={isCorrect !== null}
-          className="flex items-center justify-center gap-2 p-4 mt-auto mb-6 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50 disabled:bg-text-muted"
+          className="flex items-center justify-center gap-2 p-4 mt-8 mb-6 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50 disabled:bg-text-muted"
         >
           <span>{!answer && isCorrect === null ? 'Ich weiß es nicht' : 'Prüfen'}</span>
           <ArrowRight size={20} />
