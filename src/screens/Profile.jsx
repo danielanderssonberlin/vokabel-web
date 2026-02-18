@@ -80,30 +80,30 @@ export default function Profile() {
   }
 
   return (
-    <div className="flex flex-col flex-1 h-full p-4 pb-24 md:p-8 max-w-2xl mx-auto w-full overflow-y-auto">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto overflow-y-auto md:p-8">
       <div className="flex items-center gap-3 mb-8">
-        <User className="text-primary w-8 h-8" />
-        <h1 className="text-2xl font-bold text-primary">Profil & Einstellungen</h1>
+        <User className="w-8 h-8 text-primary" />
+        <h1 className="text-xl font-bold text-primary">Profil & Einstellungen</h1>
       </div>
 
       {/* Statistik Card */}
       <div className="bg-surface border border-border rounded-[32px] p-6 mb-8 shadow-sm">
         <div className="flex items-center gap-2 mb-6">
-          <BarChart3 className="text-primary w-5 h-5" />
+          <BarChart3 className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-bold text-text-main">Statistik</h2>
         </div>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="p-4 bg-primary/5 rounded-2xl">
             <p className="text-2xl font-bold text-primary">{stats.total}</p>
-            <p className="text-xs text-text-secondary uppercase tracking-wider mt-1">Gesamt</p>
+            <p className="mt-1 text-xs tracking-wider uppercase text-text-secondary">Gesamt</p>
           </div>
           <div className="p-4 bg-success/5 rounded-2xl">
             <p className="text-2xl font-bold text-success">{stats.learned}</p>
-            <p className="text-xs text-text-secondary uppercase tracking-wider mt-1">Gelernt</p>
+            <p className="mt-1 text-xs tracking-wider uppercase text-text-secondary">Gelernt</p>
           </div>
           <div className="p-4 bg-secondary/5 rounded-2xl">
             <p className="text-2xl font-bold text-secondary">{stats.inProgress}</p>
-            <p className="text-xs text-text-secondary uppercase tracking-wider mt-1">Offen</p>
+            <p className="mt-1 text-xs tracking-wider uppercase text-text-secondary">Offen</p>
           </div>
         </div>
       </div>
@@ -112,12 +112,12 @@ export default function Profile() {
       <form onSubmit={handleUpdateProfile} className="space-y-6">
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-text-main ml-1 mb-2 block">Name</label>
+            <label className="block mb-2 ml-1 text-sm font-medium text-text-main">Name</label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted w-5 h-5" />
+              <User className="absolute w-5 h-5 -translate-y-1/2 left-4 top-1/2 text-text-muted" />
               <input
                 type="text"
-                className="w-full bg-surface border border-border rounded-2xl py-4 pl-12 pr-4 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full py-4 pl-12 pr-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Dein Name"
@@ -126,12 +126,12 @@ export default function Profile() {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-text-main ml-1 mb-2 block">E-Mail</label>
+            <label className="block mb-2 ml-1 text-sm font-medium text-text-main">E-Mail</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted w-5 h-5" />
+              <Mail className="absolute w-5 h-5 -translate-y-1/2 left-4 top-1/2 text-text-muted" />
               <input
                 type="email"
-                className="w-full bg-surface border border-border rounded-2xl py-4 pl-12 pr-4 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full py-4 pl-12 pr-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="deine@email.de"
@@ -143,10 +143,10 @@ export default function Profile() {
             <button
               type="button"
               onClick={() => setIsPasswordModalOpen(true)}
-              className="w-full flex items-center justify-between p-4 bg-surface border border-border rounded-2xl hover:bg-slate-50 transition-all group"
+              className="flex items-center justify-between w-full p-4 transition-all border bg-surface border-border rounded-2xl hover:bg-slate-50 group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
+                <div className="p-2 transition-colors bg-primary/10 rounded-xl group-hover:bg-primary/20">
                   <Lock size={18} className="text-primary" />
                 </div>
                 <span className="font-medium text-text-main">Passwort ändern</span>
@@ -166,17 +166,17 @@ export default function Profile() {
         <button
           type="submit"
           disabled={saving}
-          className="w-full flex items-center justify-center gap-2 p-4 bg-primary text-white rounded-2xl font-bold shadow-md hover:bg-primary/90 transition-all disabled:opacity-50"
+          className="flex items-center justify-center w-full gap-2 p-4 font-bold text-white transition-all shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save size={20} />}
           Änderungen speichern
         </button>
       </form>
 
-      <div className="mt-12 pt-8 border-t border-border">
+      <div className="pt-8 mt-12 border-t border-border">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 p-4 bg-error/10 text-error rounded-2xl font-bold hover:bg-error/20 transition-all"
+          className="flex items-center justify-center w-full gap-2 p-4 font-bold transition-all bg-error/10 text-error rounded-2xl hover:bg-error/20"
         >
           <LogOut size={20} />
           Abmelden

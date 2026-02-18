@@ -104,21 +104,21 @@ export default function Overview() {
   const archivedVokabeln = filteredData.filter(item => item.status === 5);
 
   return (
-    <div className="flex flex-col flex-1 h-full p-4 pb-24 md:p-8 max-w-4xl mx-auto w-full">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <BookOpen className="text-primary w-8 h-8" />
-          <h1 className="text-2xl font-bold text-primary">Übersicht</h1>
+          <BookOpen className="w-8 h-8 text-primary" />
+          <h1 className="text-xl font-bold text-primary">Übersicht</h1>
         </div>
       </div>
 
       <div className="relative mb-6">
-        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-          <Search className="text-text-muted w-5 h-5" />
+        <div className="absolute inset-y-0 flex items-center pointer-events-none left-4">
+          <Search className="w-5 h-5 text-text-muted" />
         </div>
         <input
           type="text"
-          className="w-full bg-surface border border-border rounded-2xl py-4 pl-12 pr-4 text-text-main shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full py-4 pl-12 pr-4 border shadow-sm bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
           placeholder="Suchen..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -161,13 +161,13 @@ export default function Overview() {
 
       <button 
         onClick={handleOpenAdd}
-        className="fixed bottom-24 right-6 md:right-12 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors z-10"
+        className="fixed z-10 flex items-center justify-center text-white transition-colors rounded-full shadow-lg bottom-24 right-6 md:right-12 w-14 h-14 bg-primary hover:bg-primary/90"
       >
         <Plus size={30} />
       </button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
           <div className="bg-background rounded-t-[40px] p-6 shadow-2xl w-full max-w-2xl h-[80%] animate-slide-up">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-text-main">
@@ -175,7 +175,7 @@ export default function Overview() {
               </h2>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 rounded-full bg-slate-200 hover:bg-slate-300 transition-colors"
+                className="p-2 transition-colors rounded-full bg-slate-200 hover:bg-slate-300"
               >
                 <X size={20} className="text-text-secondary" />
               </button>
@@ -183,7 +183,7 @@ export default function Overview() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div className="p-4 bg-error/10 text-error rounded-2xl flex items-center gap-2">
+                <div className="flex items-center gap-2 p-4 bg-error/10 text-error rounded-2xl">
                   <AlertCircle size={20} />
                   <p className="text-sm font-medium">{error}</p>
                 </div>
@@ -211,7 +211,7 @@ export default function Overview() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 p-4 bg-primary text-white rounded-2xl font-bold shadow-md hover:bg-primary/90 transition-colors disabled:opacity-50 mt-4"
+                className="flex items-center justify-center w-full gap-2 p-4 mt-4 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
               >
                 <PlusCircle size={24} />
                 {editingItem ? 'Speichern' : 'Hinzufügen'}
@@ -233,7 +233,7 @@ export default function Overview() {
 function VocabularyItem({ item, onEdit, onDelete, index }) {
   return (
     <div 
-      className="flex items-center justify-between p-4 bg-surface border border-border-light rounded-2xl shadow-sm hover:border-primary/30 transition-all cursor-pointer group animate-fade-in-up"
+      className="flex items-center justify-between p-4 transition-all border shadow-sm cursor-pointer bg-surface border-border-light rounded-2xl hover:border-primary/30 group animate-fade-in-up"
       style={{ animationDelay: `${index * 0.05}s` }}
       onClick={() => onEdit(item)}
     >
@@ -241,7 +241,7 @@ function VocabularyItem({ item, onEdit, onDelete, index }) {
         <h3 className="text-lg font-bold text-text-main">{item.german}</h3>
         <p className="italic text-text-secondary">{item.spanish}</p>
         
-        <div className="flex items-center mt-2 gap-1">
+        <div className="flex items-center gap-1 mt-2">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
@@ -262,13 +262,13 @@ function VocabularyItem({ item, onEdit, onDelete, index }) {
       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
         <button 
           onClick={() => onEdit(item)}
-          className="p-2 rounded-full bg-primary-light/20 hover:bg-primary-light/40 text-primary transition-colors"
+          className="p-2 transition-colors rounded-full bg-primary-light/20 hover:bg-primary-light/40 text-primary"
         >
           <Edit2 size={16} />
         </button>
         <button 
           onClick={() => onDelete(item.id)}
-          className="p-2 rounded-full bg-error-light hover:bg-error/20 text-error transition-colors"
+          className="p-2 transition-colors rounded-full bg-error-light hover:bg-error/20 text-error"
         >
           <Trash2 size={20} />
         </button>

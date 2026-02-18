@@ -48,6 +48,7 @@ export default function Learning() {
   };
   
   // Speech Recognition State
+  const [isSupported, setIsSupported] = useState(false);
   const [isMicEnabled, setIsMicEnabled] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recognition = useRef(null);
@@ -73,6 +74,7 @@ export default function Learning() {
     // Initialize Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
+      setIsSupported(true);
       recognition.current = new SpeechRecognition();
       recognition.current.lang = 'es-ES';
       recognition.current.interimResults = true;
@@ -243,11 +245,11 @@ export default function Learning() {
   const current = vokabeln[currentIndex];
 
   return (
-    <div className="flex flex-col w-full max-w-2xl p-4 pb-24 mx-auto md:p-8 ">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto md:p-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
-          <GraduationCap size={24} className="text-primary" />
-          <h1 className="text-lg font-bold text-primary">Lernen</h1>
+          <GraduationCap className="w-8 h-8 text-primary" />
+          <h1 className="text-xl font-bold text-primary">Lernen</h1>
         </div>
         <div className="px-4 py-1 border rounded-full border-border bg-surface">
           <p className="text-sm font-medium text-text-secondary">{currentIndex + 1} / {vokabeln.length}</p>
@@ -321,16 +323,18 @@ export default function Learning() {
             autoComplete="off"
           />
           
-          <button 
-            type="button"
-            onClick={handleMicPress}
-            className={cn(
-              "p-4 rounded-2xl shadow-sm transition-all",
-              isMicEnabled ? "bg-error text-white scale-110" : "bg-primary-light text-primary hover:bg-primary-light/80"
-            )}
-          >
-            {isMicEnabled ? <MicOff size={24} /> : <Mic size={24} />}
-          </button>
+          {isSupported && isCorrect === null && (
+            <button 
+              type="button"
+              onClick={handleMicPress}
+              className={cn(
+                "p-4 rounded-2xl shadow-sm transition-all",
+                isMicEnabled ? "bg-error text-white scale-110" : "bg-primary-light text-primary hover:bg-primary-light/80"
+              )}
+            >
+              {isMicEnabled ? <MicOff size={24} /> : <Mic size={24} />}
+            </button>
+          )}
         </div>
         
         {error && (
