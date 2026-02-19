@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getVocabulary, deleteVocabularyItem, addVocabularyItem, updateVocabularyItem } from '../store/vocabularyStore';
-import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle } from 'lucide-react';
+import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle, Calendar, SortAsc, Clock } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
@@ -12,10 +12,12 @@ function cn(...inputs) {
 export default function Overview() {
   const [vokabeln, setVokabeln] = useState([]);
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('date'); // 'date' or 'alpha'
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
   
   // Form State
   const [german, setGerman] = useState('');
@@ -24,8 +26,12 @@ export default function Overview() {
   const [error, setError] = useState('');
 
   const loadVokabeln = useCallback(async () => {
-    const all = await getVocabulary();
-    setVokabeln(all);
+    try {
+      const all = await getVocabulary();
+      setVokabeln(all);
+    } finally {
+      setInitialLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -95,16 +101,24 @@ export default function Overview() {
     }
   };
 
-  const filteredData = vokabeln.filter(item => 
-    item.german.toLowerCase().includes(search.toLowerCase()) || 
-    item.spanish.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredData = vokabeln
+    .filter(item => 
+      item.german.toLowerCase().includes(search.toLowerCase()) || 
+      item.spanish.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortBy === 'alpha') {
+        return a.german.localeCompare(b.german);
+      }
+      // Default: date (newest first)
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
 
   const activeVokabeln = filteredData.filter(item => item.status < 5);
   const archivedVokabeln = filteredData.filter(item => item.status === 5);
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto md:p-8">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto mb-25 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <BookOpen className="w-8 h-8 text-primary" />
@@ -112,50 +126,70 @@ export default function Overview() {
         </div>
       </div>
 
-      <div className="relative mb-6">
-        <div className="absolute inset-y-0 flex items-center pointer-events-none left-4">
-          <Search className="w-5 h-5 text-text-muted" />
+      <div className="relative flex items-center gap-2 mb-6">
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 flex items-center pointer-events-none left-4">
+            <Search className="w-5 h-5 text-text-muted" />
+          </div>
+          <input
+            type="text"
+            className="w-full py-4 pl-12 pr-4 border shadow-sm bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
+            placeholder="Suchen..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-        <input
-          type="text"
-          className="w-full py-4 pl-12 pr-4 border shadow-sm bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
-          placeholder="Suchen..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        
+        <button
+          onClick={() => setSortBy(sortBy === 'date' ? 'alpha' : 'date')}
+          className="flex items-center justify-center w-14 h-14 transition-all border shadow-sm bg-surface border-border rounded-2xl text-primary active:scale-95 hover:bg-slate-50"
+          title={sortBy === 'date' ? 'Nach Alphabet sortieren' : 'Nach Datum sortieren'}
+        >
+          {sortBy === 'date' ? <Clock size={24} /> : <SortAsc size={24} />}
+        </button>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto">
-        {activeVokabeln.map((item, index) => (
-          <VocabularyItem 
-            key={item.id} 
-            item={item} 
-            index={index}
-            onEdit={handleOpenEdit} 
-            onDelete={handleDelete} 
-          />
-        ))}
-
-        {archivedVokabeln.length > 0 && (
-          <div className="pt-4 pb-2 mt-4 mb-2 animate-fade-in-up">
-            <h2 className="text-xl font-bold text-text-secondary">Archiv</h2>
+      <div className="flex-1 space-y-3 overflow-y-auto no-scrollbar">
+        {initialLoading ? (
+          <div className="flex flex-col items-center justify-center h-40 gap-3 animate-pulse">
+            <div className="w-full h-24 rounded-2xl bg-surface/50" />
+            <div className="w-full h-24 rounded-2xl bg-surface/50" />
+            <div className="w-full h-24 rounded-2xl bg-surface/50" />
           </div>
-        )}
+        ) : (
+          <>
+            {activeVokabeln.map((item, index) => (
+              <VocabularyItem 
+                key={item.id} 
+                item={item} 
+                index={index}
+                onEdit={handleOpenEdit} 
+                onDelete={handleDelete} 
+              />
+            ))}
 
-        {archivedVokabeln.map((item, index) => (
-          <VocabularyItem 
-            key={item.id} 
-            item={item} 
-            index={activeVokabeln.length + index}
-            onEdit={handleOpenEdit} 
-            onDelete={handleDelete} 
-          />
-        ))}
+            {archivedVokabeln.length > 0 && (
+              <div className="pt-4 pb-2 mt-4 mb-2 animate-fade-in-up">
+                <h2 className="text-xl font-bold text-text-secondary">Archiv</h2>
+              </div>
+            )}
 
-        {filteredData.length === 0 && (
-          <div className="flex items-center justify-center h-40">
-            <p className="text-text-muted">Keine Vokabeln gefunden</p>
-          </div>
+            {archivedVokabeln.map((item, index) => (
+              <VocabularyItem 
+                key={item.id} 
+                item={item} 
+                index={activeVokabeln.length + index}
+                onEdit={handleOpenEdit} 
+                onDelete={handleDelete} 
+              />
+            ))}
+
+            {filteredData.length === 0 && (
+              <div className="flex items-center justify-center h-40">
+                <p className="text-text-muted">Keine Vokabeln gefunden</p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
