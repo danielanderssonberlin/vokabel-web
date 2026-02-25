@@ -3,7 +3,7 @@ name: Deploy to SFTP
 on:
   push:
     branches:
-      - main   # Branch, der deployt werden soll
+      - main
 
 jobs:
   deploy:
@@ -13,6 +13,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
       - name: Upload files to SFTP
         uses: appleboy/scp-action@master
         with:
@@ -20,5 +31,5 @@ jobs:
           username: ${{ secrets.SFTP_USER }}
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 22
-          source: "dist/"
-          target: "/clickandbuilds/PosterHomeGallery/vokabel-app"  # Zielverzeichnis auf Server
+          source: "dist/*"
+          target: "/clickandbuilds/PosterHomeGallery/vokabel-app"
