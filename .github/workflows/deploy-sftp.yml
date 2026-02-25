@@ -1,0 +1,24 @@
+name: Deploy to SFTP
+
+on:
+  push:
+    branches:
+      - main   # Branch, der deployt werden soll
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Upload files to SFTP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USER }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          port: 22
+          source: "build/"
+          target: "/clickandbuilds/PosterHomeGallery/vokabel-app"  # Zielverzeichnis auf Server
