@@ -81,7 +81,7 @@ export default function Profile() {
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
-  }
+  } 
 
   return (
     <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto overflow-y-auto md:p-8">
