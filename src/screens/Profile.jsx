@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { getVocabulary } from '../store/vocabularyStore';
-import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, ChevronRight } from 'lucide-react';
+import { getUserStats } from '../store/userStore';
+import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, ChevronRight, Calendar, XCircle, CheckCircle2 } from 'lucide-react';
 import PasswordModal from '../components/PasswordModal';
 
 export default function Profile() {
@@ -9,7 +10,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [stats, setStats] = useState({ total: 0, learned: 0, inProgress: 0 });
+  const [stats, setStats] = useState({ total: 0, learned: 0, inProgress: 0, studyHistory: [], streak: 0 });
 
   // Form states
   const [fullName, setFullName] = useState('');
@@ -32,10 +33,13 @@ export default function Profile() {
 
   const fetchStats = async () => {
     const all = await getVocabulary();
+    const userStats = getUserStats();
     setStats({
       total: all.length,
       learned: all.filter(v => v.status === 5).length,
       inProgress: all.filter(v => v.status < 5 && v.status > 0).length,
+      studyHistory: userStats.studyHistory || [],
+      streak: userStats.streak || 0
     });
     setLoading(false);
   };
@@ -105,6 +109,51 @@ export default function Profile() {
             <p className="text-2xl font-bold text-secondary">{stats.inProgress}</p>
             <p className="mt-1 text-xs tracking-wider uppercase text-text-secondary">Offen</p>
           </div>
+        </div>
+      </div>
+
+      {/* Study Activity / Calendar */}
+      <div className="bg-surface border border-border rounded-[32px] p-6 mb-8 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-bold text-text-main">Lernaktivität</h2>
+          </div>
+          <div className="flex items-center gap-1 px-3 py-1 text-orange-600 border border-orange-100 rounded-full bg-orange-50">
+            <span className="text-xs font-bold">{stats.streak} Tage Serie</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-7 gap-2">
+          {Array.from({ length: 14 }).map((_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (13 - i));
+            const dateStr = date.toDateString();
+            const isToday = dateStr === new Date().toDateString();
+            const hasStudied = stats.studyHistory.includes(dateStr);
+            
+            return (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <span className="text-[10px] font-bold text-text-muted uppercase">
+                  {date.toLocaleDateString('de-DE', { weekday: 'short' }).charAt(0)}
+                </span>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                  hasStudied 
+                    ? 'bg-success/10 text-success border border-success/20' 
+                    : 'bg-slate-50 text-slate-300 border border-slate-100'
+                } ${isToday ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
+                  {hasStudied ? (
+                    <CheckCircle2 size={20} />
+                  ) : (
+                    <XCircle size={20} />
+                  )}
+                </div>
+                <span className={`text-[10px] font-medium ${isToday ? 'text-primary font-bold' : 'text-text-muted'}`}>
+                  {date.getDate()}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

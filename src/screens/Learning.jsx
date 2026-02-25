@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getVocabulary, updateVocabularyStatus } from '../store/vocabularyStore';
-import { updateDailyProgress, getUserStats } from '../store/userStore';
-import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, Target, GraduationCap } from 'lucide-react';
+import { updateStudyStats, getUserStats } from '../store/userStore';
+import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, GraduationCap } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -119,7 +119,7 @@ export default function Learning() {
     if (isMicEnabled && isCorrect === null && !loading && !sessionCompleted && recognition.current && !isListening) {
       try {
         recognition.current.start();
-      } catch (e) {
+      } catch {
         // Bereits gestartet
       }
     }
@@ -184,7 +184,7 @@ export default function Learning() {
       setWasTooSoon(tooSoon); // Sync mit Server-Ergebnis
       
       if (correct) {
-        setStats(updateDailyProgress(1));
+        setStats(updateStudyStats());
       }
       
       // Lokal aktualisieren für Animation
@@ -300,22 +300,13 @@ export default function Learning() {
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setInfo({ title: 'Streak', text: 'Deine Serie an aufeinanderfolgenden Lerntagen!' })}
-              className="flex items-center gap-1 px-2 py-1 text-orange-600 transition-transform border border-orange-100 rounded-full bg-orange-50 active:scale-95"
-            >
-              <Flame size={14} fill="currentColor" />
-              <span className="text-sm font-bold">{stats.streak}</span>
-            </button>
-            <button 
-              onClick={() => setInfo({ title: 'Tagesziel', text: `Dein Ziel für heute: ${stats.dailyGoal} richtige Vokabeln.` })}
-              className="flex items-center gap-1 px-2 py-1 transition-transform border rounded-full bg-primary-light/20 text-primary border-primary-light/30 active:scale-95"
-            >
-              <Target size={14} />
-              <span className="text-sm font-bold">{stats.dailyProgress}/{stats.dailyGoal}</span>
-            </button>
-          </div>
+          <button 
+            onClick={() => setInfo({ title: 'Streak', text: 'Deine Serie an aufeinanderfolgenden Lerntagen!' })}
+            className="flex items-center gap-1 px-3 py-1.5 text-orange-600 transition-transform border border-orange-100 rounded-full bg-orange-50 active:scale-95 shadow-sm"
+          >
+            <Flame size={16} fill="currentColor" />
+            <span className="text-sm font-bold">{stats.streak}</span>
+          </button>
         </div>
       </div>
 
@@ -323,7 +314,7 @@ export default function Learning() {
         <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-sm animate-bounce-in">
           <div className="p-4 text-white border shadow-xl bg-text-main rounded-2xl border-white/10">
             <div className="flex items-center gap-2 mb-1">
-              {info.title === 'Streak' ? <Flame size={16} className="text-orange-400" fill="currentColor" /> : <Target size={16} className="text-primary-light" />}
+              <Flame size={16} className="text-orange-400" fill="currentColor" />
               <span className="text-xs font-bold tracking-widest uppercase opacity-70">{info.title}</span>
             </div>
             <p className="text-sm font-medium">{info.text}</p>

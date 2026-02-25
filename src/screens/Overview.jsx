@@ -75,7 +75,7 @@ export default function Overview() {
       setIsModalOpen(false);
       setEditingItem(null);
       await loadVokabeln();
-    } catch (e) {
+    } catch {
       setError('Konnte Vokabel nicht speichern');
     } finally {
       setLoading(false);
@@ -95,7 +95,7 @@ export default function Overview() {
         await loadVokabeln();
         setIsDeleteModalOpen(false);
         setItemToDelete(null);
-      } catch (e) {
+      } catch {
         setError('Konnte Vokabel nicht löschen');
       }
     }

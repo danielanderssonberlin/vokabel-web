@@ -4,20 +4,12 @@ export const getUserStats = () => {
     return {
       streak: 0,
       lastStudyDate: null,
-      dailyGoal: 10,
-      dailyProgress: 0,
-      lastProgressDate: null
+      studyHistory: []
     };
   }
   const parsed = JSON.parse(stats);
+  if (!parsed.studyHistory) parsed.studyHistory = [];
   
-  // Reset daily progress if it's a new day
-  const today = new Date().toDateString();
-  if (parsed.lastProgressDate !== today) {
-    parsed.dailyProgress = 0;
-    parsed.lastProgressDate = today;
-  }
-
   // Reset streak if more than 1 day has passed
   if (parsed.lastStudyDate) {
     const lastDate = new Date(parsed.lastStudyDate);
@@ -32,13 +24,10 @@ export const getUserStats = () => {
   return parsed;
 };
 
-export const updateDailyProgress = (count = 1) => {
+export const updateStudyStats = () => {
   const stats = getUserStats();
   const today = new Date().toDateString();
   
-  stats.dailyProgress += count;
-  stats.lastProgressDate = today;
-
   // Update streak if not already updated today
   if (stats.lastStudyDate !== today) {
     const lastDate = stats.lastStudyDate ? new Date(stats.lastStudyDate) : null;
@@ -47,19 +36,17 @@ export const updateDailyProgress = (count = 1) => {
 
     if (!lastDate || lastDate.toDateString() === yesterday.toDateString()) {
       stats.streak += 1;
-    } else if (lastDate.toDateString() !== today) {
+    } else {
       stats.streak = 1;
     }
     stats.lastStudyDate = today;
   }
 
-  localStorage.setItem('user_stats', JSON.stringify(stats));
-  return stats;
-};
+  if (!stats.studyHistory) stats.studyHistory = [];
+  if (!stats.studyHistory.includes(today)) {
+    stats.studyHistory.push(today);
+  }
 
-export const setDailyGoal = (goal) => {
-  const stats = getUserStats();
-  stats.dailyGoal = goal;
   localStorage.setItem('user_stats', JSON.stringify(stats));
   return stats;
 };
