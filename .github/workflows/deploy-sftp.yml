@@ -32,4 +32,4 @@ jobs:
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 22
           source: "dist/*"
-          target: "/clickandbuilds/PosterHomeGallery/vokabel-app"
+          target: "clickandbuilds/PosterHomeGallery/vokabel-app"
