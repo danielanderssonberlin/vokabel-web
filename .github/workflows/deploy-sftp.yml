@@ -33,3 +33,4 @@ jobs:
           port: 22
           source: "dist/*"
           target: "clickandbuilds/PosterHomeGallery/vokabel-app"
+          strip_components: 1
