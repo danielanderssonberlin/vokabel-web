@@ -20,5 +20,5 @@ jobs:
           username: ${{ secrets.SFTP_USER }}
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 22
-          source: "build/"
+          source: "dist/"
           target: "/clickandbuilds/PosterHomeGallery/vokabel-app"  # Zielverzeichnis auf Server
