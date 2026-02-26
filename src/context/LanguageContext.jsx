@@ -3,6 +3,18 @@ import { supabase } from '../lib/supabase';
 
 const LanguageContext = createContext();
 
+export const PREDEFINED_LANGUAGES = [
+  { code: 'en', name: 'Englisch', flag: '🇬🇧' },
+  { code: 'es', name: 'Spanisch', flag: '🇪🇸' },
+  { code: 'fr', name: 'Französisch', flag: '🇫🇷' },
+  { code: 'it', name: 'Italienisch', flag: '🇮🇹' },
+  { code: 'pt', name: 'Portugiesisch', flag: '🇵🇹' },
+  { code: 'ru', name: 'Russisch', flag: '🇷🇺' },
+  { code: 'tr', name: 'Türkisch', flag: '🇹🇷' },
+  { code: 'pl', name: 'Polnisch', flag: '🇵🇱' },
+  { code: 'nl', name: 'Niederländisch', flag: '🇳🇱' },
+];
+
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {
@@ -32,17 +44,13 @@ export const LanguageProvider = ({ children }) => {
     if (error) {
       console.error('Error fetching languages:', error);
     } else if (profile) {
-      // Standard-Sprachen falls keine existieren
-      const langs = profile.languages || [
-        { code: 'es', name: 'Spanisch', flag: '🇪🇸' }
-      ];
+      const langs = profile.languages || [];
       setAvailableLanguages(langs);
-      setSelectedLanguage(profile.current_language || langs[0].code);
+      setSelectedLanguage(profile.current_language || (langs.length > 0 ? langs[0].code : null));
     } else {
-      // Fallback
-      const defaultLangs = [{ code: 'es', name: 'Spanisch', flag: '🇪🇸' }];
-      setAvailableLanguages(defaultLangs);
-      setSelectedLanguage('es');
+      // Fallback: Keine Sprachen
+      setAvailableLanguages([]);
+      setSelectedLanguage(null);
     }
     setLoading(false);
   };
@@ -77,16 +85,20 @@ export const LanguageProvider = ({ children }) => {
   const removeLanguage = async (code) => {
     const newLangs = availableLanguages.filter(l => l.code !== code);
     setAvailableLanguages(newLangs);
-    if (selectedLanguage === code && newLangs.length > 0) {
-      setSelectedLanguage(newLangs[0].code);
+    
+    let newSelected = selectedLanguage;
+    if (selectedLanguage === code) {
+      newSelected = newLangs.length > 0 ? newLangs[0].code : null;
+      setSelectedLanguage(newSelected);
     }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase
         .from('profiles')
         .update({ 
           languages: newLangs,
-          current_language: selectedLanguage === code && newLangs.length > 0 ? newLangs[0].code : selectedLanguage
+          current_language: newSelected
         })
         .eq('id', user.id);
     }

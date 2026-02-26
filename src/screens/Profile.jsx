@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { getVocabulary } from '../store/vocabularyStore';
 import { getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, PREDEFINED_LANGUAGES } from '../context/LanguageContext';
 import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, ChevronRight, Calendar, XCircle, CheckCircle2, Plus, Trash2, Globe } from 'lucide-react';
 import PasswordModal from '../components/PasswordModal';
 
 export default function Profile() {
-  const { availableLanguages, addLanguage, removeLanguage, selectedLanguage } = useLanguage();
+  const { availableLanguages, addLanguage, removeLanguage, selectedLanguage, loading: langLoading } = useLanguage();
   const [user, setUser] = useState(null);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [disableTooSoon, setDisableTooSoon] = useState(false);
@@ -26,18 +26,6 @@ export default function Profile() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
-
-  const PREDEFINED_LANGUAGES = [
-    { code: 'en', name: 'Englisch', flag: '🇬🇧' },
-    { code: 'es', name: 'Spanisch', flag: '🇪🇸' },
-    { code: 'fr', name: 'Französisch', flag: '🇫🇷' },
-    { code: 'it', name: 'Italienisch', flag: '🇮🇹' },
-    { code: 'pt', name: 'Portugiesisch', flag: '🇵🇹' },
-    { code: 'ru', name: 'Russisch', flag: '🇷🇺' },
-    { code: 'tr', name: 'Türkisch', flag: '🇹🇷' },
-    { code: 'pl', name: 'Polnisch', flag: '🇵🇱' },
-    { code: 'nl', name: 'Niederländisch', flag: '🇳🇱' },
-  ];
 
   const handleSelectPredefined = (e) => {
     const selected = PREDEFINED_LANGUAGES.find(l => l.code === e.target.value);
@@ -69,10 +57,14 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    if (selectedLanguage) {
-      fetchStats();
+    if (!langLoading) {
+      if (selectedLanguage) {
+        fetchStats();
+      } else {
+        setLoading(false);
+      }
     }
-  }, [selectedLanguage]);
+  }, [selectedLanguage, langLoading]);
 
   const fetchUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -207,14 +199,12 @@ export default function Profile() {
                   <span className="text-xs text-text-muted uppercase tracking-wider">{lang.code}</span>
                 </div>
               </div>
-              {availableLanguages.length > 1 && (
-                <button 
-                  onClick={() => removeLanguage(lang.code)}
-                  className="p-2 transition-colors rounded-full text-text-muted hover:text-error hover:bg-error/10"
-                >
-                  <Trash2 size={18} />
-                </button>
-              )}
+              <button 
+                onClick={() => removeLanguage(lang.code)}
+                className="p-2 transition-colors rounded-full text-text-muted hover:text-error hover:bg-error/10"
+              >
+                <Trash2 size={18} />
+              </button>
             </div>
           ))}
         </div>

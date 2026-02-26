@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getVocabulary, updateVocabularyStatus } from '../store/vocabularyStore';
 import { updateStudyStats, getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, PREDEFINED_LANGUAGES } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, GraduationCap } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -14,7 +15,8 @@ function cn(...inputs) {
 }
 
 export default function Learning() {
-  const { selectedLanguage } = useLanguage();
+  const navigate = useNavigate();
+  const { selectedLanguage, availableLanguages, addLanguage, changeLanguage, loading: isLangLoading } = useLanguage();
   const [vokabeln, setVokabeln] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -66,7 +68,10 @@ export default function Learning() {
   const recognition = useRef(null);
 
   const loadVokabeln = useCallback(async (archive = false) => {
-    if (!selectedLanguage) return;
+    if (!selectedLanguage) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setIsArchiveMode(archive);
     const all = await getVocabulary(selectedLanguage);
@@ -272,7 +277,7 @@ export default function Learning() {
     }, isLearned ? 1500 : 2000); 
   };
 
-  if (loading) {
+  if (loading || isLangLoading) {
     return (
       <div className="flex items-center justify-center flex-1 h-full bg-background">
         <p className="text-text-secondary">Lade Vokabeln...</p>
@@ -280,7 +285,46 @@ export default function Learning() {
     );
   }
 
-  if (sessionCompleted || vokabeln.length === 0) {
+  if (sessionCompleted || vokabeln.length === 0 || !selectedLanguage) {
+    if ((vokabeln.length === 0 || !selectedLanguage) && !sessionCompleted) {
+      return (
+        <div className="flex flex-col items-center justify-center flex-1 h-full p-6 text-center">
+          <div className="p-6 mb-8 rounded-full bg-primary/10 animate-bounce-in">
+            <BookOpen size={60} className="text-primary" />
+          </div>
+          <h2 className="mb-4 text-3xl font-black text-text-main">Willkommen!</h2>
+          <p className="max-w-sm mb-10 text-text-secondary">
+            Wähle eine Sprache aus, um mit dem Lernen zu beginnen.
+          </p>
+
+          <div className="grid w-full max-w-md grid-cols-2 gap-4">
+            {PREDEFINED_LANGUAGES.map((lang) => {
+              const isAdded = availableLanguages.some(al => al.code === lang.code);
+              return (
+                <button
+                  key={lang.code}
+                  onClick={async () => {
+                    if (!isAdded) {
+                      await addLanguage(lang);
+                    }
+                    await changeLanguage(lang.code);
+                    navigate('/overview');
+                  }}
+                  className="flex flex-col items-center gap-3 p-6 transition-all border shadow-sm bg-surface border-border-light rounded-[32px] hover:border-primary/50 hover:shadow-md active:scale-95"
+                >
+                  <span className="text-4xl">{lang.flag}</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-text-main">{lang.name}</span>
+                    <span className="text-[10px] uppercase tracking-widest text-text-muted">{lang.code}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center flex-1 h-full py-6 overflow-hidden text-center">
         <div className="flex flex-col items-center px-6 mb-8">
