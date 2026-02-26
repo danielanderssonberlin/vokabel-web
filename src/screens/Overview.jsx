@@ -4,12 +4,15 @@ import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle, Cale
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
 export default function Overview() {
+  const { selectedLanguage } = useLanguage();
   const [vokabeln, setVokabeln] = useState([]);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('date'); // 'date' or 'alpha'
@@ -21,18 +24,19 @@ export default function Overview() {
   
   // Form State
   const [german, setGerman] = useState('');
-  const [spanish, setSpanish] = useState('');
+  const [foreign, setForeign] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const loadVokabeln = useCallback(async () => {
+    if (!selectedLanguage) return;
     try {
-      const all = await getVocabulary();
+      const all = await getVocabulary(selectedLanguage);
       setVokabeln(all);
     } finally {
       setInitialLoading(false);
     }
-  }, []);
+  }, [selectedLanguage]);
 
   useEffect(() => {
     loadVokabeln();
@@ -41,7 +45,7 @@ export default function Overview() {
   const handleOpenAdd = () => {
     setEditingItem(null);
     setGerman('');
-    setSpanish('');
+    setForeign('');
     setError('');
     setIsModalOpen(true);
   };
@@ -49,7 +53,7 @@ export default function Overview() {
   const handleOpenEdit = (item) => {
     setEditingItem(item);
     setGerman(item.german);
-    setSpanish(item.spanish);
+    setForeign(item.spanish);
     setError('');
     setIsModalOpen(true);
   };
@@ -58,7 +62,7 @@ export default function Overview() {
     e.preventDefault();
     setError('');
     
-    if (!german || !spanish) {
+    if (!german || !foreign) {
       setError('Bitte beide Felder ausfüllen');
       return;
     }
@@ -66,12 +70,12 @@ export default function Overview() {
     setLoading(true);
     try {
       if (editingItem) {
-        await updateVocabularyItem(editingItem.id, german.trim(), spanish.trim());
+        await updateVocabularyItem(editingItem.id, german.trim(), foreign.trim());
       } else {
-        await addVocabularyItem(german.trim(), spanish.trim());
+        await addVocabularyItem(german.trim(), foreign.trim(), selectedLanguage);
       }
       setGerman('');
-      setSpanish('');
+      setForeign('');
       setIsModalOpen(false);
       setEditingItem(null);
       await loadVokabeln();
@@ -124,6 +128,7 @@ export default function Overview() {
           <BookOpen className="w-8 h-8 text-primary" />
           <h1 className="text-xl font-bold text-primary">Übersicht</h1>
         </div>
+        <LanguageSwitcher />
       </div>
 
       <div className="relative flex items-center gap-2 mb-6">
@@ -142,7 +147,7 @@ export default function Overview() {
         
         <button
           onClick={() => setSortBy(sortBy === 'date' ? 'alpha' : 'date')}
-          className="flex items-center justify-center w-14 h-14 transition-all border shadow-sm bg-surface border-border rounded-2xl text-primary active:scale-95 hover:bg-slate-50"
+          className="flex items-center justify-center transition-all border shadow-sm w-14 h-14 bg-surface border-border rounded-2xl text-primary active:scale-95 hover:bg-slate-50"
           title={sortBy === 'date' ? 'Nach Alphabet sortieren' : 'Nach Datum sortieren'}
         >
           {sortBy === 'date' ? <Clock size={24} /> : <SortAsc size={24} />}
@@ -233,12 +238,12 @@ export default function Overview() {
               </div>
 
               <div>
-                <label className="block mb-2 ml-1 text-sm font-medium text-text-main">Spanisch</label>
+                <label className="block mb-2 ml-1 text-sm font-medium text-text-main">Fremdsprache</label>
                 <textarea
                   className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="z.B. manzana"
-                  value={spanish}
-                  onChange={(e) => setSpanish(e.target.value)}
+                  placeholder="z.B. apple"
+                  value={foreign}
+                  onChange={(e) => setForeign(e.target.value)}
                 />
               </div>
 

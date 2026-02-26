@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { getVocabulary } from '../store/vocabularyStore';
 import { getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
-import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, ChevronRight, Calendar, XCircle, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, ChevronRight, Calendar, XCircle, CheckCircle2, Plus, Trash2, Globe } from 'lucide-react';
 import PasswordModal from '../components/PasswordModal';
 
 export default function Profile() {
+  const { availableLanguages, addLanguage, removeLanguage, selectedLanguage } = useLanguage();
   const [user, setUser] = useState(null);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [disableTooSoon, setDisableTooSoon] = useState(false);
@@ -14,15 +16,63 @@ export default function Profile() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [stats, setStats] = useState({ total: 0, learned: 0, inProgress: 0, studyHistory: [], streak: 0 });
 
+  // Language Form State
+  const [newLangName, setNewLangName] = useState('');
+  const [newLangCode, setNewLangCode] = useState('');
+  const [newLangFlag, setNewLangFlag] = useState('');
+  const [showAddLang, setShowAddLang] = useState(false);
+
   // Form states
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
 
+  const PREDEFINED_LANGUAGES = [
+    { code: 'en', name: 'Englisch', flag: '🇬🇧' },
+    { code: 'es', name: 'Spanisch', flag: '🇪🇸' },
+    { code: 'fr', name: 'Französisch', flag: '🇫🇷' },
+    { code: 'it', name: 'Italienisch', flag: '🇮🇹' },
+    { code: 'pt', name: 'Portugiesisch', flag: '🇵🇹' },
+    { code: 'ru', name: 'Russisch', flag: '🇷🇺' },
+    { code: 'tr', name: 'Türkisch', flag: '🇹🇷' },
+    { code: 'pl', name: 'Polnisch', flag: '🇵🇱' },
+    { code: 'nl', name: 'Niederländisch', flag: '🇳🇱' },
+  ];
+
+  const handleSelectPredefined = (e) => {
+    const selected = PREDEFINED_LANGUAGES.find(l => l.code === e.target.value);
+    if (selected) {
+      setNewLangCode(selected.code);
+      setNewLangName(selected.name);
+      setNewLangFlag(selected.flag);
+    }
+  };
+
+  const handleAddLang = async (e) => {
+    e.preventDefault();
+    if (!newLangName || !newLangCode || !newLangFlag) return;
+    
+    await addLanguage({
+      name: newLangName,
+      code: newLangCode,
+      flag: newLangFlag
+    });
+    
+    setNewLangName('');
+    setNewLangCode('');
+    setNewLangFlag('');
+    setShowAddLang(false);
+  };
+
   useEffect(() => {
     fetchUserData();
-    fetchStats();
   }, []);
+
+  useEffect(() => {
+    if (selectedLanguage) {
+      fetchStats();
+    }
+  }, [selectedLanguage]);
 
   const fetchUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -55,13 +105,13 @@ export default function Profile() {
   };
 
   const fetchStats = async () => {
-    const all = await getVocabulary();
+    const all = await getVocabulary(selectedLanguage);
     const calculated = calculateStatsFromVocabulary(all);
     
     setStats({
       total: all.length,
       learned: all.filter(v => v.status === 5).length,
-      inProgress: all.filter(v => v.status < 5 && v.status > 0).length,
+      inProgress: all.filter(v => v.status < 5).length,
       studyHistory: calculated.studyHistory,
       streak: calculated.streak
     });
@@ -129,6 +179,74 @@ export default function Profile() {
           <div className="items-center gap-1 px-3 py-1 text-center border rounded-full bg-primary/10 border-primary/20 ">
             <span className="text-[10px] font-black tracking-widest text-primary uppercase">Superadmin</span>
           </div>
+        )}
+      </div>
+
+      {/* Sprachen Management */}
+      <div className="bg-surface border border-border rounded-[32px] p-6 mb-8 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-bold text-text-main">Meine Sprachen</h2>
+          </div>
+          <button 
+            onClick={() => setShowAddLang(!showAddLang)}
+            className="p-2 transition-colors rounded-full bg-primary/10 text-primary hover:bg-primary/20"
+          >
+            <Plus size={20} />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {availableLanguages.map((lang) => (
+            <div key={lang.code} className="flex items-center justify-between p-4 border bg-background border-border-light rounded-2xl">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{lang.flag}</span>
+                <div className="flex flex-col">
+                  <span className="font-bold text-text-main">{lang.name}</span>
+                  <span className="text-xs text-text-muted uppercase tracking-wider">{lang.code}</span>
+                </div>
+              </div>
+              {availableLanguages.length > 1 && (
+                <button 
+                  onClick={() => removeLanguage(lang.code)}
+                  className="p-2 transition-colors rounded-full text-text-muted hover:text-error hover:bg-error/10"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {showAddLang && (
+          <form onSubmit={handleAddLang} className="pt-6 mt-6 border-t border-border-light animate-fade-in-up">
+            <div className="mb-6">
+              <label className="block mb-2 ml-1 text-xs font-bold uppercase text-text-muted">Sprache auswählen</label>
+              <select 
+                className="w-full p-4 border bg-background border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                onChange={handleSelectPredefined}
+                defaultValue=""
+                required
+              >
+                <option value="" disabled>Wähle eine neue Sprache...</option>
+                {PREDEFINED_LANGUAGES
+                  .filter(l => !availableLanguages.find(al => al.code === l.code))
+                  .map(lang => (
+                    <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
+                  ))
+                }
+              </select>
+            </div>
+            
+            <button 
+              type="submit"
+              disabled={!newLangCode}
+              className="flex items-center justify-center w-full gap-2 p-4 font-bold text-white transition-colors bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
+            >
+              Sprache hinzufügen
+            </button>
+          </form>
         )}
       </div>
 

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { getVocabulary, updateVocabularyStatus } from '../store/vocabularyStore';
 import { updateStudyStats, getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, GraduationCap } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { clsx } from 'clsx';
@@ -12,6 +14,7 @@ function cn(...inputs) {
 }
 
 export default function Learning() {
+  const { selectedLanguage } = useLanguage();
   const [vokabeln, setVokabeln] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -63,9 +66,10 @@ export default function Learning() {
   const recognition = useRef(null);
 
   const loadVokabeln = useCallback(async (archive = false) => {
+    if (!selectedLanguage) return;
     setLoading(true);
     setIsArchiveMode(archive);
-    const all = await getVocabulary();
+    const all = await getVocabulary(selectedLanguage);
     
     let toLearn = [];
     if (archive) {
@@ -105,7 +109,7 @@ export default function Learning() {
     setSessionCompleted(false);
     setWrongAnswers([]);
     setLoading(false);
-  }, []);
+  }, [selectedLanguage]);
 
   useEffect(() => {
     loadVokabeln();
@@ -115,7 +119,7 @@ export default function Learning() {
     if (SpeechRecognition) {
       setIsSupported(true);
       recognition.current = new SpeechRecognition();
-      recognition.current.lang = 'es-ES';
+      recognition.current.lang = selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'en' ? 'en-US' : 'de-DE'; // Basic mapping
       recognition.current.interimResults = false;
       recognition.current.continuous = false;
 
@@ -133,7 +137,7 @@ export default function Learning() {
         // Fallback: Wenn Fehler (z.B. no-speech), Modus nicht hart beenden
       };
     }
-  }, [loadVokabeln]);
+  }, [loadVokabeln, selectedLanguage]);
 
   useEffect(() => {
     if (isCorrect === null && !loading && !sessionCompleted && inputRef.current) {
@@ -369,6 +373,7 @@ export default function Learning() {
         </div>
         
         <div className="flex items-center gap-3">
+          <LanguageSwitcher />
           <button 
             onClick={() => setInfo({ title: 'Streak', text: 'Deine Serie an aufeinanderfolgenden Lerntagen!' })}
             className="flex items-center gap-1 px-3 py-1.5 text-orange-600 transition-transform border border-orange-100 rounded-full bg-orange-50 active:scale-95 shadow-sm"
@@ -449,7 +454,7 @@ export default function Learning() {
       </div>
 
       <form onSubmit={handleCheck} className="flex flex-col flex-1">
-        <label className="mb-2 ml-1 text-sm font-medium text-text-main">Spanische Übersetzung</label>
+        <label className="mb-2 ml-1 text-sm font-medium text-text-main">Übersetzung</label>
         <div className="flex items-center gap-3">
           <input
             ref={inputRef}

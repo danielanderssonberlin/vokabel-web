@@ -1,13 +1,19 @@
 import { supabase } from '../lib/supabase';
 
-export const getVocabulary = async () => {
+export const getVocabulary = async (language) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('vocabulary')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', user.id);
+  
+  if (language) {
+    query = query.eq('language', language);
+  }
+
+  const { data, error } = await query
     .order('status', { ascending: true })          // schwache Vokabeln zuerst
     .order('lastReviewed', { ascending: true }); 
 
@@ -18,7 +24,7 @@ export const getVocabulary = async () => {
   return data || [];
 };
 
-export const addVocabularyItem = async (german, spanish) => {
+export const addVocabularyItem = async (german, foreignWord, language) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
@@ -27,9 +33,10 @@ export const addVocabularyItem = async (german, spanish) => {
     .insert([
       { 
         german, 
-        spanish, 
+        spanish: foreignWord, // Wir behalten das Spaltennamens-Schema 'spanish' bei oder nutzen ein neues Feld, falls möglich. Da 'spanish' bereits existiert, nutzen wir es als 'foreignWord'.
+        language,
         user_id: user.id,
-        status: 1 
+        status: 0 
       }
     ])
     .select();
@@ -76,7 +83,7 @@ export const updateVocabularyStatus = async (id, correct) => {
       }
     }
   } else {
-    newStatus = Math.max(1, item.status - 1);
+    newStatus = Math.max(0, item.status - 1);
   }
 
   const { data, error: updateError } = await supabase
