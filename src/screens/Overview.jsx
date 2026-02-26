@@ -281,7 +281,7 @@ function VocabularyItem({ item, onEdit, onDelete, index }) {
               key={i}
               className={cn(
                 "w-3 h-3 rounded-full border transition-all duration-300",
-                item.status > i ? "bg-primary border-primary" : "bg-transparent border-primary-light"
+                item.status >= i ? "bg-primary border-primary" : "bg-transparent border-primary-light"
               )}
             />
           ))}

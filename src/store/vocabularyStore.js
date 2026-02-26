@@ -8,7 +8,8 @@ export const getVocabulary = async () => {
     .from('vocabulary')
     .select('*')
     .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+    .order('status', { ascending: true })          // schwache Vokabeln zuerst
+    .order('lastReviewed', { ascending: true }); 
 
   if (error) {
     console.error('Error fetching vocabulary:', error);
@@ -38,6 +39,9 @@ export const addVocabularyItem = async (german, spanish) => {
 };
 
 export const updateVocabularyStatus = async (id, correct) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data: item, error: fetchError } = await supabase
     .from('vocabulary')
     .select('*')
@@ -45,6 +49,15 @@ export const updateVocabularyStatus = async (id, correct) => {
     .single();
 
   if (fetchError) throw fetchError;
+
+  // Profil-Einstellungen prüfen (für Superadmin disable_too_soon)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('disable_too_soon')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  const isTooSoonDisabled = profile?.disable_too_soon || false;
 
   let statusIncreased = false;
   let tooSoon = false;
@@ -54,7 +67,7 @@ export const updateVocabularyStatus = async (id, correct) => {
   const hoursSinceLast = (now - last) / (1000 * 60 * 60);
 
   if (correct) {
-    if (hoursSinceLast < 12 && item.lastReviewed !== null) {
+    if (!isTooSoonDisabled && hoursSinceLast < 12 && item.lastReviewed !== null) {
       tooSoon = true;
     } else {
       newStatus = Math.min(5, item.status + 1);

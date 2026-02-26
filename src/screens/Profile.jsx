@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { getVocabulary } from '../store/vocabularyStore';
-import { getUserStats } from '../store/userStore';
+import { getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
 import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, ChevronRight, Calendar, XCircle, CheckCircle2 } from 'lucide-react';
 import PasswordModal from '../components/PasswordModal';
 
 export default function Profile() {
   const [user, setUser] = useState(null);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [disableTooSoon, setDisableTooSoon] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -24,22 +26,44 @@ export default function Profile() {
 
   const fetchUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setUser(user);
-      setFullName(user.user_metadata?.full_name || '');
-      setEmail(user.email || '');
+    if (!user) return;
+    console.log('Fetched user:', user);
+    setUser(user);
+    setFullName(user.user_metadata?.full_name || '');
+    setEmail(user.email || '');
+
+    // Superadmin abfragen
+    console.log('Auth user id:', user.id);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('superadmin, disable_too_soon')
+      .eq('id', user.id)
+      .maybeSingle(); 
+    console.log('Profile data:', data);
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+    } else if (data) {
+      console.log('Fetched profile data:', data);
+      setIsSuperadmin(Boolean(data.superadmin));
+      setDisableTooSoon(Boolean(data.disable_too_soon));
+    } else {
+      console.log('No profile found for this user.');
+      setIsSuperadmin(false);
     }
+
   };
 
   const fetchStats = async () => {
     const all = await getVocabulary();
-    const userStats = getUserStats();
+    const calculated = calculateStatsFromVocabulary(all);
+    
     setStats({
       total: all.length,
       learned: all.filter(v => v.status === 5).length,
       inProgress: all.filter(v => v.status < 5 && v.status > 0).length,
-      studyHistory: userStats.studyHistory || [],
-      streak: userStats.streak || 0
+      studyHistory: calculated.studyHistory,
+      streak: calculated.streak
     });
     setLoading(false);
   };
@@ -60,6 +84,17 @@ export default function Profile() {
 
       const { error } = await supabase.auth.updateUser(updates);
       if (error) throw error;
+
+      // Profile settings (superadmin options)
+      if (isSuperadmin) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .update({ disable_too_soon: disableTooSoon })
+          .eq('id', user.id)
+          .select(); // <-- hier bekommst du die aktualisierte Zeile zurück
+
+        console.log('Update result:', data, error);
+      }
 
       setMessage({ type: 'success', text: 'Profil erfolgreich aktualisiert!' });
     } catch (error) {
@@ -84,10 +119,22 @@ export default function Profile() {
   } 
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto overflow-y-auto md:p-8">
-      <div className="flex items-center gap-3 mb-8">
-        <User className="w-8 h-8 text-primary" />
-        <h1 className="text-xl font-bold text-primary">Profil & Einstellungen</h1>
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto mb-64 overflow-y-auto md:p-8">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <User className="w-8 h-8 text-primary" />
+          <h1 className="text-xl font-bold text-primary">Profil & Einstellungen</h1>
+        </div>
+        {isSuperadmin && (
+          <div className="px-3 py-1 text-center border rounded-full bg-primary/10 border-primary/20">
+            <span className="text-[10px] font-black tracking-widest text-primary uppercase">Superadmin <br/>{user?.id}</span>
+          </div>
+        )}
+        {!isSuperadmin && (
+          <div className="px-3 py-1 text-center border rounded-full bg-primary/10 border-primary/20">
+            <span className="text-[10px] font-black tracking-widest text-primary uppercase">Not Superadmin <br/>{user?.id}</span>
+          </div>
+        )}
       </div>
 
       {/* Statistik Card */}
@@ -203,6 +250,25 @@ export default function Profile() {
               <ChevronRight size={18} className="text-text-muted" />
             </button>
           </div>
+
+          {isSuperadmin && (
+            <div className="pt-4 mt-6 border-t border-border">
+              <h3 className="mb-4 text-xs font-bold tracking-widest uppercase text-text-muted">Superadmin Einstellungen</h3>
+              <div className="flex items-center justify-between p-4 border bg-primary/5 border-primary/10 rounded-2xl">
+                <div className="flex flex-col">
+                  <span className="font-bold text-primary">12h Sperre deaktivieren</span>
+                  <span className="text-xs text-text-secondary">Erlaubt das sofortige Hochstufen von Vokabeln</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDisableTooSoon(!disableTooSoon)}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${disableTooSoon ? 'bg-primary' : 'bg-slate-300'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${disableTooSoon ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {message.text && (

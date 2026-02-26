@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getVocabulary, updateVocabularyStatus } from '../store/vocabularyStore';
-import { updateStudyStats, getUserStats } from '../store/userStore';
+import { updateStudyStats, getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
 import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, GraduationCap } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { clsx } from 'clsx';
@@ -22,6 +22,7 @@ export default function Learning() {
   const [wrongAnswers, setWrongAnswers] = useState([]);
   const [stats, setStats] = useState(getUserStats());
   const [info, setInfo] = useState(null);
+  const [pendingUpdate, setPendingUpdate] = useState(false);
   const inputRef = useRef(null);
   
   // Carousel Drag State
@@ -65,6 +66,10 @@ export default function Learning() {
       .filter(v => v.status < 5)
       .sort((a, b) => a.status - b.status);
     setVokabeln(toLearn);
+    
+    // Stats aus den Vokabeln berechnen
+    setStats(calculateStatsFromVocabulary(all));
+    
     setCurrentIndex(0);
     setIsCorrect(null);
     setAnswer('');
@@ -152,25 +157,31 @@ export default function Learning() {
       // Play success sound
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); 
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 0.1);
+        
+        const playTone = (freq, time, duration) => {
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(freq, time); 
+          gainNode.gain.setValueAtTime(0.1, time);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, time + duration);
+          oscillator.start(time);
+          oscillator.stop(time + duration);
+        };
+
+        if (current.status === 4 && !wasTooSoon) {
+          // Triple tone for learned
+          playTone(440, audioCtx.currentTime, 0.1);
+          playTone(554.37, audioCtx.currentTime + 0.15, 0.1);
+          playTone(659.25, audioCtx.currentTime + 0.3, 0.15);
+        } else {
+          // Single tone for correct
+          playTone(440, audioCtx.currentTime, 0.1);
+        }
       } catch (e) {
         console.error('Audio play failed:', e);
-      }
-
-      const now = new Date();
-      const last = new Date(current.lastReviewed || 0);
-      const hoursSinceLast = (now - last) / (1000 * 60 * 60);
-      if (hoursSinceLast < 12 && current.lastReviewed !== null) {
-        setWasTooSoon(true);
       }
     } else {
       setWrongAnswers(prev => [...prev, current]);
@@ -178,23 +189,38 @@ export default function Learning() {
 
     setIsCorrect(correct);
     
+    let isLearned = false;
+
     // Datenbank im Hintergrund aktualisieren
+    if (correct) {
+      setPendingUpdate(true);
+    }
+    
     try {
       const { updated, tooSoon } = await updateVocabularyStatus(current.id, correct);
-      setWasTooSoon(tooSoon); // Sync mit Server-Ergebnis
       
-      if (correct) {
-        setStats(updateStudyStats());
-      }
+      // Sync mit Backend-Ergebnis (berücksichtigt disableTooSoon automatisch)
+      setWasTooSoon(tooSoon); 
       
-      // Lokal aktualisieren für Animation
+      // Lokal aktualisieren für Animation und Stats
       if (updated) {
         setVokabeln(prev => prev.map(v => v.id === current.id ? updated : v));
+
+        if (correct) {
+          setStats(updateStudyStats());
+        }
+
+        // Eine Vokabel gilt NUR als gelernt, wenn sie Status 5 erreicht hat
+        if (updated.status === 5) {
+          isLearned = true;
+        }
       }
     } catch (err) {
       console.error('Update failed:', err);
+    } finally {
+      setPendingUpdate(false);
     }
-
+    
     setTimeout(() => {
       if (currentIndex < vokabeln.length - 1) {
         setCurrentIndex(currentIndex + 1);
@@ -210,7 +236,7 @@ export default function Learning() {
           colors: ['#41A8BF', '#26A653', '#ffffff']
         });
       }
-    }, 2000); // 2 Sekunden Zeit zum Lesen geben
+    }, isLearned ? 1500 : 2000); 
   };
 
   if (loading) {
@@ -344,7 +370,10 @@ export default function Learning() {
         
         <div 
           key={currentIndex}
-          className="relative flex flex-col items-center p-10 text-center border shadow-sm border-border-light bg-surface rounded-3xl animate-slide-in-top"
+          className={cn(
+            "relative flex flex-col items-center p-10 text-center border shadow-sm border-border-light bg-surface rounded-3xl animate-slide-in-top",
+            current.status === 5 && isCorrect === true && "animate-fly-away animate-learned-success"
+          )}
         >
           <div className="absolute px-3 py-1 border rounded-full top-4 right-4 border-border-light bg-background/50">
             <p className="text-[10px] font-bold text-text-muted">{currentIndex + 1} / {vokabeln.length}</p>
@@ -365,8 +394,8 @@ export default function Learning() {
                 key={i}
                 className={cn(
                   "w-4 h-4 rounded-full border transition-all duration-500",
-                  current.status > i ? "bg-primary border-primary" : "bg-transparent border-primary-light",
-                  current.status === i + 1 && isCorrect === true && !wasTooSoon && "animate-status-pop"
+                  current.status >= i ? "bg-primary border-primary" : "bg-transparent border-primary-light",
+                  current.status === i && isCorrect === true && !wasTooSoon && !pendingUpdate && "animate-status-pop"
                 )}
               />
             ))}

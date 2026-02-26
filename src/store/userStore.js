@@ -50,3 +50,51 @@ export const updateStudyStats = () => {
   localStorage.setItem('user_stats', JSON.stringify(stats));
   return stats;
 };
+
+export const calculateStatsFromVocabulary = (vocabulary) => {
+  if (!vocabulary || vocabulary.length === 0) {
+    return { streak: 0, studyHistory: [] };
+  }
+
+  // Alle Review-Daten extrahieren (nur das Datum ohne Uhrzeit)
+  const dates = vocabulary
+    .filter(v => v.lastReviewed)
+    .map(v => new Date(v.lastReviewed).toDateString());
+  
+  // Eindeutige Daten sortieren (neueste zuerst)
+  const uniqueDates = [...new Set(dates)].sort((a, b) => new Date(b) - new Date(a));
+  
+  if (uniqueDates.length === 0) {
+    return { streak: 0, studyHistory: [] };
+  }
+
+  let streak = 0;
+  const today = new Date().toDateString();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toDateString();
+
+  // Prüfen ob heute oder gestern gelernt wurde, sonst ist die Serie 0
+  if (uniqueDates[0] === today || uniqueDates[0] === yesterdayStr) {
+    streak = 1;
+    for (let i = 0; i < uniqueDates.length - 1; i++) {
+      const current = new Date(uniqueDates[i]);
+      const next = new Date(uniqueDates[i + 1]);
+      
+      // Differenz in Tagen berechnen
+      const diffTime = Math.abs(current - next);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+  }
+
+  return {
+    streak,
+    studyHistory: uniqueDates
+  };
+};
