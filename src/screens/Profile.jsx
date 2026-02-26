@@ -130,11 +130,6 @@ export default function Profile() {
             <span className="text-[10px] font-black tracking-widest text-primary uppercase">Superadmin <br/>{user?.id}</span>
           </div>
         )}
-        {!isSuperadmin && (
-          <div className="px-3 py-1 text-center border rounded-full bg-primary/10 border-primary/20">
-            <span className="text-[10px] font-black tracking-widest text-primary uppercase">Not Superadmin <br/>{user?.id}</span>
-          </div>
-        )}
       </div>
 
       {/* Statistik Card */}
