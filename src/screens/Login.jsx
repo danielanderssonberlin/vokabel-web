@@ -67,16 +67,17 @@ export default function Login() {
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-main ml-1">E-Mail</label>
+            <label className="ml-1 text-sm font-medium text-text-main">E-Mail</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted w-5 h-5" />
+              <Mail className="absolute w-5 h-5 -translate-y-1/2 left-4 top-1/2 text-text-muted" />
               <input
                 type="email"
                 required
-                className="w-full bg-surface border border-border rounded-2xl py-4 pl-12 pr-4 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full py-4 pl-12 pr-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                 placeholder="deine@email.de"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                tabIndex={1}
               />
             </div>
           </div>
@@ -90,20 +91,22 @@ export default function Login() {
                     type="button"
                     onClick={() => setView('forgot')}
                     className="text-xs text-primary hover:underline"
+                    tabIndex={4} 
                   >
                     Vergessen?
                   </button>
                 )}
               </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted w-5 h-5" />
+                <Lock className="absolute w-5 h-5 -translate-y-1/2 left-4 top-1/2 text-text-muted" />
                 <input
                   type="password"
                   required
-                  className="w-full bg-surface border border-border rounded-2xl py-4 pl-12 pr-4 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="w-full py-4 pl-12 pr-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  tabIndex={2}
                 />
               </div>
             </div>
@@ -121,7 +124,8 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 p-4 bg-primary text-white rounded-2xl font-bold shadow-md hover:bg-primary/90 transition-all disabled:opacity-50 mt-6"
+            className="flex items-center justify-center w-full gap-2 p-4 mt-6 font-bold text-white transition-all shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
+            tabIndex={3} 
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
             {view === 'signup' ? 'Registrieren' : 
@@ -132,7 +136,7 @@ export default function Login() {
         <div className="text-center">
           <button
             onClick={() => setView(view === 'signup' ? 'login' : 'signup')}
-            className="text-primary font-medium hover:underline transition-all"
+            className="font-medium transition-all text-primary hover:underline"
           >
             {view === 'signup' ? 'Bereits ein Konto? Anmelden' : 
              view === 'forgot' ? 'Zurück zum Login' : 'Noch kein Konto? Registrieren'}
