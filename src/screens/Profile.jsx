@@ -126,8 +126,8 @@ export default function Profile() {
           <h1 className="text-xl font-bold text-primary">Profil & Einstellungen</h1>
         </div>
         {isSuperadmin && (
-          <div className="px-3 py-1 text-center border rounded-full bg-primary/10 border-primary/20">
-            <span className="text-[10px] font-black tracking-widest text-primary uppercase">Superadmin <br/>{user?.id}</span>
+          <div className="items-center gap-1 px-3 py-1 text-center border rounded-full bg-primary/10 border-primary/20 ">
+            <span className="text-[10px] font-black tracking-widest text-primary uppercase">Superadmin</span>
           </div>
         )}
       </div>
@@ -262,7 +262,11 @@ export default function Profile() {
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${disableTooSoon ? 'left-7' : 'left-1'}`} />
                 </button>
               </div>
+              <div className="mt-4 text-sm text-text-secondary">
+                User ID: {user.id}
+              </div>
             </div>
+            
           )}
         </div>
 

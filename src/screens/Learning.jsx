@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '../lib/supabase';
 import { getVocabulary, updateVocabularyStatus } from '../store/vocabularyStore';
 import { updateStudyStats, getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
 import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, GraduationCap } from 'lucide-react';
@@ -23,6 +24,8 @@ export default function Learning() {
   const [stats, setStats] = useState(getUserStats());
   const [info, setInfo] = useState(null);
   const [pendingUpdate, setPendingUpdate] = useState(false);
+  const [isArchiveMode, setIsArchiveMode] = useState(false);
+  const [disableTooSoon, setDisableTooSoon] = useState(false);
   const inputRef = useRef(null);
   
   // Carousel Drag State
@@ -59,16 +62,42 @@ export default function Learning() {
   const [isListening, setIsListening] = useState(false);
   const recognition = useRef(null);
 
-  const loadVokabeln = useCallback(async () => {
+  const loadVokabeln = useCallback(async (archive = false) => {
     setLoading(true);
+    setIsArchiveMode(archive);
     const all = await getVocabulary();
-    const toLearn = all
-      .filter(v => v.status < 5)
-      .sort((a, b) => a.status - b.status);
+    
+    let toLearn = [];
+    if (archive) {
+      // Archiv-Modus: Zufällige 20 gelerne Vokabeln (Status 5)
+      toLearn = all
+        .filter(v => v.status === 5)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 20);
+    } else {
+      // Normaler Modus: Alles unter Status 5
+      toLearn = all
+        .filter(v => v.status < 5)
+        .sort((a, b) => a.status - b.status);
+    }
+    
     setVokabeln(toLearn);
     
     // Stats aus den Vokabeln berechnen
     setStats(calculateStatsFromVocabulary(all));
+
+    // Superadmin Einstellungen laden
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('disable_too_soon')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (profile) {
+        setDisableTooSoon(profile.disable_too_soon);
+      }
+    }
     
     setCurrentIndex(0);
     setIsCorrect(null);
@@ -265,10 +294,17 @@ export default function Learning() {
           
           <div className="flex flex-col w-full max-w-xs gap-3">
             <button 
-              onClick={loadVokabeln}
+              onClick={() => loadVokabeln(false)}
               className="px-8 py-4 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90"
             >
               {vokabeln.length === 0 ? 'Aktualisieren' : 'Neue Session'}
+            </button>
+            
+            <button
+              onClick={() => loadVokabeln(true)}
+              className="mt-8 text-sm font-medium transition-colors text-text-secondary hover:text-primary"
+            >
+              Archivierte Vokabeln wiederholen (Random)
             </button>
           </div>
         </div>
@@ -322,7 +358,14 @@ export default function Learning() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
           <GraduationCap className="w-8 h-8 text-primary" />
-          <h1 className="hidden text-xl font-bold text-primary sm:block">Lernen</h1>
+          <h1 className="hidden text-xl font-bold text-primary sm:block">
+            {isArchiveMode ? 'Archiv Wiederholen' : 'Lernen'}
+          </h1>
+          {isArchiveMode && (
+            <div className="px-2 py-0.5 rounded-full bg-success/10 border border-success/20">
+              <span className="text-[10px] font-bold text-success uppercase">Archiv</span>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center gap-3">
@@ -388,18 +431,20 @@ export default function Learning() {
             </div>
           )}
 
-          <div className="flex gap-2 mt-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className={cn(
-                  "w-4 h-4 rounded-full border transition-all duration-500",
-                  current.status >= i ? "bg-primary border-primary" : "bg-transparent border-primary-light",
-                  current.status === i && isCorrect === true && !wasTooSoon && !pendingUpdate && "animate-status-pop"
-                )}
-              />
-            ))}
-          </div>
+          {current.status < 5 && (
+            <div className="flex gap-2 mt-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "w-4 h-4 rounded-full border transition-all duration-500",
+                    current.status >= i ? "bg-primary border-primary" : "bg-transparent border-primary-light",
+                    current.status === i && isCorrect === true && !wasTooSoon && !pendingUpdate && "animate-status-pop"
+                  )}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
