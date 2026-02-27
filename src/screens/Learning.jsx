@@ -522,18 +522,18 @@ export default function Learning() {
             spellCheck="false"
           />
           
-         
-          <button 
-            type="button"
-            onClick={handleMicPress}
-            className={cn(
-              "p-4 rounded-2xl shadow-sm transition-all",
-              isMicEnabled ? "bg-error text-white scale-110" : "bg-primary-light text-primary hover:bg-primary-light/80"
-            )}
-          >
-            {isMicEnabled ? <MicOff size={24} /> : <Mic size={24} />}
-          </button>
-        
+          { isCorrect === null && (
+            <button 
+              type="button"
+              onClick={handleMicPress}
+              className={cn(
+                "p-4 rounded-2xl shadow-sm transition-all",
+                isMicEnabled ? "bg-error text-white scale-110" : "bg-primary-light text-primary hover:bg-primary-light/80"
+              )}
+            >
+              {isMicEnabled ? <MicOff size={24} /> : <Mic size={24} />}
+            </button>
+          )}
         </div>
         
         {error && (
