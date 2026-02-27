@@ -293,7 +293,7 @@ export default function Learning() {
   }
 
   if (sessionCompleted || vokabeln.length === 0 || !selectedLanguage) {
-    if ((vokabeln.length === 0 || !selectedLanguage) && !sessionCompleted) {
+    if ((vokabeln.length === 0 || !selectedLanguage) && !sessionCompleted && !loading && !isLangLoading) {
       return (
         <div className="flex flex-col items-center justify-center flex-1 h-full p-6 text-center">
           <div className="p-6 mb-8 rounded-full bg-primary/10 animate-bounce-in">
