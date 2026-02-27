@@ -133,10 +133,14 @@ export default function Learning() {
 
       recognition.current.onstart = () => setIsListening(true);
       recognition.current.onend = () => setIsListening(false);
+      const normalizeTranscript = (text) => {
+        return text.charAt(0).toLowerCase() + text.slice(1);
+      };
+
       recognition.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         if (transcript) {
-          setAnswer(transcript);
+          if (transcript) setAnswer(normalizeTranscript(transcript));
         }
       };
       recognition.current.onerror = (event) => {
