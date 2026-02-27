@@ -29,7 +29,7 @@ function Navigation() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light px-6 py-2 flex flex-col items-center h-auto shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40">
-      <div className="flex justify-around items-center w-full max-w-2xl h-14">
+      <div className="flex items-center justify-around w-full max-w-2xl gap-4 h-14">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -39,12 +39,12 @@ function Navigation() {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center gap-1 transition-colors",
+                "flex flex-col items-center gap-1 transition-colors w-[33%]",
                 isActive ? "text-primary" : "text-text-secondary"
               )}
             >
               <Icon size={24} />
-              <span className="text-[10px] font-semibold">{item.label}</span>
+              <span className="text-[10px] font-semibold text-center">{item.label}</span>
             </Link>
           );
         })}
@@ -94,7 +94,7 @@ function AppContent({ session }) {
 
   return (
     <Router basename="/">
-      <main className="z-0 flex flex-col flex-1 overflow-hidden bg-background mb-24">
+      <main className="z-0 flex flex-col flex-1 mb-24 overflow-hidden bg-background">
         <Routes>
           <Route path="/" element={<Learning />} />
           <Route path="/overview" element={<Overview />} />
