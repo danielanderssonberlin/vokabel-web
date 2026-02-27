@@ -7,12 +7,10 @@ import Login from './screens/Login';
 import Profile from './screens/Profile';
 import Welcome from './screens/Welcome';
 import { GraduationCap, BookOpen, LogOut, User } from 'lucide-react';
-import Toast from './components/Toast'; // Optional if I want custom toast
+import Toast from './components/Toast'; 
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { UI_STRINGS } from './constants/uiContent';
-
-const { LEARNING, OVERVIEW, PROFILE } = UI_STRINGS;
+import { UiLanguageProvider, useUiLanguage } from './context/UiLanguageContext';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -20,6 +18,8 @@ function cn(...inputs) {
 
 function Navigation() {
   const location = useLocation();
+  const { uiLanguage, toggleUiLanguage, strings } = useUiLanguage();
+  const { LEARNING, OVERVIEW, PROFILE } = strings;
 
   const navItems = [
     { path: '/', label: LEARNING.TITLE, icon: GraduationCap },
@@ -28,25 +28,27 @@ function Navigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light px-6 py-2 flex justify-around items-center h-20 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = location.pathname === item.path;
-        
-        return (
-          <Link 
-            key={item.path}
-            to={item.path}
-            className={cn(
-              "flex flex-col items-center gap-1 transition-colors",
-              isActive ? "text-primary" : "text-text-secondary"
-            )}
-          >
-            <Icon size={24} />
-            <span className="text-xs font-semibold">{item.label}</span>
-          </Link>
-        );
-      })}
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light px-6 py-2 flex flex-col items-center h-auto shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40">
+      <div className="flex justify-around items-center w-full max-w-2xl h-14">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          
+          return (
+            <Link 
+              key={item.path}
+              to={item.path}
+              className={cn(
+                "flex flex-col items-center gap-1 transition-colors",
+                isActive ? "text-primary" : "text-text-secondary"
+              )}
+            >
+              <Icon size={24} />
+              <span className="text-[10px] font-semibold">{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }
@@ -78,13 +80,21 @@ export default function App() {
     );
   }
 
+  return (
+    <UiLanguageProvider>
+      <AppContent session={session} />
+    </UiLanguageProvider>
+  );
+}
+
+function AppContent({ session }) {
   if (!session) {
     return <Welcome />;
   }
 
   return (
     <Router basename="/">
-      <main className="z-0 flex flex-col flex-1 overflow-hidden bg-background">
+      <main className="z-0 flex flex-col flex-1 overflow-hidden bg-background mb-24">
         <Routes>
           <Route path="/" element={<Learning />} />
           <Route path="/overview" element={<Overview />} />
@@ -96,3 +106,5 @@ export default function App() {
     </Router>
   );
 }
+
+

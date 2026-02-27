@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { X, Lock, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { UI_STRINGS } from '../constants/uiContent';
-
-const { PASSWORD_MODAL } = UI_STRINGS.COMPONENTS;
+import { useUiLanguage } from '../context/UiLanguageContext';
 
 export default function PasswordModal({ isOpen, onClose }) {
+  const { strings } = useUiLanguage();
+  const { COMPONENTS } = strings;
+  const { PASSWORD_MODAL } = COMPONENTS;
+
   const [loading, setLoading] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -70,18 +72,18 @@ export default function PasswordModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4 animate-in fade-in duration-200">
       <div 
-        className="bg-background rounded-[32px] p-6 shadow-2xl w-full max-w-sm relative animate-in zoom-in duration-200"
+        className="bg-background rounded-[32px] p-6 shadow-2xl w-full max-sm relative animate-in zoom-in duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <button 
           onClick={onClose}
-          className="absolute right-6 top-6 p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+          className="absolute p-2 transition-colors rounded-full right-6 top-6 bg-slate-100 hover:bg-slate-200"
         >
           <X size={20} className="text-text-secondary" />
         </button>
 
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
+          <div className="flex items-center justify-center w-12 h-12 mb-4 bg-primary/10 rounded-2xl">
             <Lock size={24} className="text-primary" />
           </div>
           <h2 className="text-xl font-bold text-text-main">{PASSWORD_MODAL.TITLE}</h2>
@@ -89,31 +91,31 @@ export default function PasswordModal({ isOpen, onClose }) {
 
         {success ? (
           <div className="flex flex-col items-center py-8 text-center animate-in zoom-in">
-            <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mb-4">
+            <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-success/10">
               <CheckCircle size={40} className="text-success" />
             </div>
-            <p className="text-success font-bold text-lg">{PASSWORD_MODAL.SUCCESS}</p>
+            <p className="text-lg font-bold text-success">{PASSWORD_MODAL.SUCCESS}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-main ml-1">{PASSWORD_MODAL.CURRENT_LABEL}</label>
+              <label className="ml-1 text-sm font-medium text-text-main">{PASSWORD_MODAL.CURRENT_LABEL}</label>
               <input
                 type="password"
                 required
-                className="w-full bg-surface border border-border rounded-2xl py-4 px-4 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full px-4 py-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                 placeholder="••••••••"
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
               />
             </div>
 
-            <div className="space-y-2 pt-2 border-t border-border/50">
-              <label className="text-sm font-medium text-text-main ml-1">{PASSWORD_MODAL.NEW_LABEL}</label>
+            <div className="pt-2 space-y-2 border-t border-border/50">
+              <label className="ml-1 text-sm font-medium text-text-main">{PASSWORD_MODAL.NEW_LABEL}</label>
               <input
                 type="password"
                 required
-                className="w-full bg-surface border border-border rounded-2xl py-4 px-4 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full px-4 py-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                 placeholder="••••••••"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -121,11 +123,11 @@ export default function PasswordModal({ isOpen, onClose }) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-main ml-1">{PASSWORD_MODAL.CONFIRM_LABEL}</label>
+              <label className="ml-1 text-sm font-medium text-text-main">{PASSWORD_MODAL.CONFIRM_LABEL}</label>
               <input
                 type="password"
                 required
-                className="w-full bg-surface border border-border rounded-2xl py-4 px-4 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full px-4 py-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -133,7 +135,7 @@ export default function PasswordModal({ isOpen, onClose }) {
             </div>
 
             {error && (
-              <div className="p-3 bg-error/10 rounded-xl flex items-center gap-2 text-error">
+              <div className="flex items-center gap-2 p-3 bg-error/10 rounded-xl text-error">
                 <AlertCircle size={16} />
                 <p className="text-xs font-medium">{error}</p>
               </div>
@@ -142,7 +144,7 @@ export default function PasswordModal({ isOpen, onClose }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 p-4 bg-primary text-white rounded-2xl font-bold shadow-md hover:bg-primary/90 transition-all disabled:opacity-50 mt-4"
+              className="flex items-center justify-center w-full gap-2 p-4 mt-4 font-bold text-white transition-all shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : PASSWORD_MODAL.UPDATE_BUTTON}
             </button>

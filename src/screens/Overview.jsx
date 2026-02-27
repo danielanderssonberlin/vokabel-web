@@ -6,13 +6,15 @@ import { twMerge } from 'tailwind-merge';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import { UI_STRINGS } from '../constants/uiContent';
+import { useUiLanguage } from '../context/UiLanguageContext';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
 export default function Overview() {
+  const { strings } = useUiLanguage();
+  const { OVERVIEW, COMMON } = strings;
   const { selectedLanguage } = useLanguage();
   const [vokabeln, setVokabeln] = useState([]);
   const [search, setSearch] = useState('');
@@ -64,7 +66,7 @@ export default function Overview() {
     setError('');
     
     if (!german || !foreign) {
-      setError(UI_STRINGS.OVERVIEW.ERR_FILL_ALL);
+      setError(OVERVIEW.ERR_FILL_ALL);
       return;
     }
 
@@ -81,7 +83,7 @@ export default function Overview() {
       setEditingItem(null);
       await loadVokabeln();
     } catch {
-      setError(UI_STRINGS.OVERVIEW.ERR_SAVE);
+      setError(OVERVIEW.ERR_SAVE);
     } finally {
       setLoading(false);
     }
@@ -101,7 +103,7 @@ export default function Overview() {
         setIsDeleteModalOpen(false);
         setItemToDelete(null);
       } catch {
-        setError(UI_STRINGS.OVERVIEW.ERR_DELETE);
+        setError(OVERVIEW.ERR_DELETE);
       }
     }
   };
@@ -127,7 +129,7 @@ export default function Overview() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <BookOpen className="w-8 h-8 text-primary" />
-          <h1 className="text-xl font-bold text-primary">{UI_STRINGS.OVERVIEW.TITLE}</h1>
+          <h1 className="text-xl font-bold text-primary">{OVERVIEW.TITLE}</h1>
         </div>
         <LanguageSwitcher />
       </div>
@@ -140,7 +142,7 @@ export default function Overview() {
           <input
             type="text"
             className="w-full py-4 pl-12 pr-4 border shadow-sm bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder={UI_STRINGS.OVERVIEW.SEARCH_PLACEHOLDER}
+            placeholder={OVERVIEW.SEARCH_PLACEHOLDER}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -149,7 +151,7 @@ export default function Overview() {
         <button
           onClick={() => setSortBy(sortBy === 'date' ? 'alpha' : 'date')}
           className="flex items-center justify-center transition-all border shadow-sm w-14 h-14 bg-surface border-border rounded-2xl text-primary active:scale-95 hover:bg-slate-50"
-          title={sortBy === 'date' ? UI_STRINGS.OVERVIEW.SORT_ALPHA : UI_STRINGS.OVERVIEW.SORT_DATE}
+          title={sortBy === 'date' ? OVERVIEW.SORT_ALPHA : OVERVIEW.SORT_DATE}
         >
           {sortBy === 'date' ? <Clock size={24} /> : <SortAsc size={24} />}
         </button>
@@ -169,14 +171,15 @@ export default function Overview() {
                 key={item.id} 
                 item={item} 
                 index={index}
-                onEdit={handleOpenEdit} 
-                onDelete={handleDelete} 
+                onEdit={handleOpenAdd} 
+                onDelete={handleDelete}
+                OVERVIEW={OVERVIEW}
               />
             ))}
 
             {archivedVokabeln.length > 0 && (
               <div className="pt-4 pb-2 mt-4 mb-2 animate-fade-in-up">
-                <h2 className="text-xl font-bold text-text-secondary">{UI_STRINGS.OVERVIEW.ARCHIVE_HEADER}</h2>
+                <h2 className="text-xl font-bold text-text-secondary">{OVERVIEW.ARCHIVE_HEADER}</h2>
               </div>
             )}
 
@@ -185,14 +188,15 @@ export default function Overview() {
                 key={item.id} 
                 item={item} 
                 index={activeVokabeln.length + index}
-                onEdit={handleOpenEdit} 
-                onDelete={handleDelete} 
+                onEdit={handleOpenAdd} 
+                onDelete={handleDelete}
+                OVERVIEW={OVERVIEW}
               />
             ))}
 
             {filteredData.length === 0 && (
               <div className="flex items-center justify-center h-40">
-                <p className="text-text-muted">{UI_STRINGS.OVERVIEW.EMPTY_STATE}</p>
+                <p className="text-text-muted">{OVERVIEW.EMPTY_STATE}</p>
               </div>
             )}
           </>
@@ -211,7 +215,7 @@ export default function Overview() {
           <div className="bg-background rounded-t-[40px] p-6 shadow-2xl w-full max-w-2xl h-[80%] animate-slide-up">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-text-main">
-                {editingItem ? UI_STRINGS.OVERVIEW.MODAL_EDIT_TITLE : UI_STRINGS.OVERVIEW.MODAL_ADD_TITLE}
+                {editingItem ? OVERVIEW.MODAL_EDIT_TITLE : OVERVIEW.MODAL_ADD_TITLE}
               </h2>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -229,20 +233,20 @@ export default function Overview() {
                 </div>
               )}
               <div>
-                <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{UI_STRINGS.OVERVIEW.GERMAN_LABEL}</label>
+                <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.GERMAN_LABEL}</label>
                 <textarea
                   className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder={UI_STRINGS.OVERVIEW.GERMAN_PLACEHOLDER}
+                  placeholder={OVERVIEW.GERMAN_PLACEHOLDER}
                   value={german}
                   onChange={(e) => setGerman(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{UI_STRINGS.OVERVIEW.FOREIGN_LABEL}</label>
+                <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL}</label>
                 <textarea
                   className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder={UI_STRINGS.OVERVIEW.FOREIGN_PLACEHOLDER}
+                  placeholder={OVERVIEW.FOREIGN_PLACEHOLDER}
                   value={foreign}
                   onChange={(e) => setForeign(e.target.value)}
                 />
@@ -254,7 +258,7 @@ export default function Overview() {
                 className="flex items-center justify-center w-full gap-2 p-4 mt-4 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
               >
                 <PlusCircle size={24} />
-                {editingItem ? UI_STRINGS.COMON.SAVE : UI_STRINGS.COMON.ADD}
+                {editingItem ? COMMON.SAVE : COMMON.ADD}
               </button>
             </form>
           </div>
@@ -270,7 +274,7 @@ export default function Overview() {
   );
 }
 
-function VocabularyItem({ item, onEdit, onDelete, index }) {
+function VocabularyItem({ item, onEdit, onDelete, index, OVERVIEW }) {
   return (
     <div 
       className="flex items-center justify-between p-4 transition-all border shadow-sm cursor-pointer bg-surface border-border-light rounded-2xl hover:border-primary/30 group animate-fade-in-up"
@@ -293,7 +297,7 @@ function VocabularyItem({ item, onEdit, onDelete, index }) {
           ))}
           {item.status === 5 && (
             <div className="px-2 ml-2 rounded-full bg-success-light">
-              <span className="text-success text-[10px] font-bold">{UI_STRINGS.OVERVIEW.ARCHIVE_TAG}</span>
+              <span className="text-success text-[10px] font-bold">{OVERVIEW.ARCHIVE_TAG}</span>
             </div>
           )}
         </div>

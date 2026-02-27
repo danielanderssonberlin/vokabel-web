@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { getVocabulary } from '../store/vocabularyStore';
-import { getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
-import { useLanguage, PREDEFINED_LANGUAGES } from '../context/LanguageContext';
+import { calculateStatsFromVocabulary } from '../store/userStore';
+import { useLanguage } from '../context/LanguageContext';
 import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, ChevronRight, Calendar, XCircle, CheckCircle2, Plus, Trash2, Globe } from 'lucide-react';
 import PasswordModal from '../components/PasswordModal';
-import { UI_STRINGS } from '../constants/uiContent';
+import UiLanguageSwitcher from '../components/UiLanguageSwitcher';
+import { useUiLanguage } from '../context/UiLanguageContext';
 
 export default function Profile() {
+  const { strings } = useUiLanguage();
+  const { PROFILE, COMMON } = strings;
   const { availableLanguages, addLanguage, removeLanguage, selectedLanguage, loading: langLoading } = useLanguage();
   const [user, setUser] = useState(null);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
@@ -29,7 +32,7 @@ export default function Profile() {
   const [message, setMessage] = useState({ type: '', text: '' });
 
   const handleSelectPredefined = (e) => {
-    const selected = PREDEFINED_LANGUAGES.find(l => l.code === e.target.value);
+    const selected = COMMON.PREDEFINED_LANGUAGES.find(l => l.code === e.target.value);
     if (selected) {
       setNewLangCode(selected.code);
       setNewLangName(selected.name);
@@ -70,31 +73,26 @@ export default function Profile() {
   const fetchUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    console.log('Fetched user:', user);
     setUser(user);
     setFullName(user.user_metadata?.full_name || '');
     setEmail(user.email || '');
 
     // Superadmin abfragen
-    console.log('Auth user id:', user.id);
     const { data, error } = await supabase
       .from('profiles')
       .select('superadmin, disable_too_soon')
       .eq('id', user.id)
       .maybeSingle(); 
-    console.log('Profile data:', data);
-
+    
     if (error) {
       console.error('Error fetching profile:', error);
     } else if (data) {
-      console.log('Fetched profile data:', data);
       setIsSuperadmin(Boolean(data.superadmin));
       setDisableTooSoon(Boolean(data.disable_too_soon));
     } else {
-      console.log('No profile found for this user.');
+      console.error('No profile found for this user.');
       setIsSuperadmin(false);
     }
-
   };
 
   const fetchStats = async () => {
@@ -139,10 +137,10 @@ export default function Profile() {
         console.log('Update result:', data, error);
       }
 
-      setMessage({ type: 'success', text: UI_STRINGS.PROFILE.SUCCESS_UPDATE });
+      setMessage({ type: 'success', text: PROFILE.SUCCESS_UPDATE });
     } catch (error) {
       let errorMessage = error.message;
-      if (errorMessage === 'New email address is the same as the old one') errorMessage = UI_STRINGS.PROFILE.ERR_EMAIL_EXISTS;
+      if (errorMessage === 'New email address is the same as the old one') errorMessage = PROFILE.ERR_EMAIL_EXISTS;
       setMessage({ type: 'error', text: errorMessage });
     } finally {
       setSaving(false);
@@ -166,11 +164,11 @@ export default function Profile() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <User className="w-8 h-8 text-primary" />
-          <h1 className="text-xl font-bold text-primary">{UI_STRINGS.PROFILE.TITLE}</h1>
+          <h1 className="text-xl font-bold text-primary">{PROFILE.TITLE}</h1>
         </div>
         {isSuperadmin && (
           <div className="items-center gap-1 px-3 py-1 text-center border rounded-full bg-primary/10 border-primary/20 ">
-            <span className="text-[10px] font-black tracking-widest text-primary uppercase">{UI_STRINGS.PROFILE.SUPERADMIN_TAG}</span>
+            <span className="text-[10px] font-black tracking-widest text-primary uppercase">{PROFILE.SUPERADMIN_TAG}</span>
           </div>
         )}
       </div>
@@ -180,7 +178,7 @@ export default function Profile() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Globe className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-bold text-text-main">{UI_STRINGS.PROFILE.LANGUAGES_SECTION}</h2>
+            <h2 className="text-lg font-bold text-text-main">{PROFILE.LANGUAGES_SECTION}</h2>
           </div>
           <button 
             onClick={() => setShowAddLang(!showAddLang)}
@@ -196,7 +194,9 @@ export default function Profile() {
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{lang.flag}</span>
                 <div className="flex flex-col">
-                  <span className="font-bold text-text-main">{lang.name}</span>
+                  <span className="font-bold text-text-main">
+                    {COMMON.PREDEFINED_LANGUAGES.find(l => l.code === lang.code)?.name || lang.name}
+                  </span>
                   <span className="text-xs tracking-wider uppercase text-text-muted">{lang.code}</span>
                 </div>
               </div>
@@ -213,15 +213,15 @@ export default function Profile() {
         {showAddLang && (
           <form onSubmit={handleAddLang} className="pt-6 mt-6 border-t border-border-light animate-fade-in-up">
             <div className="mb-6">
-              <label className="block mb-2 ml-1 text-xs font-bold uppercase text-text-muted">{UI_STRINGS.PROFILE.ADD_LANGUAGE_LABEL}</label>
+              <label className="block mb-2 ml-1 text-xs font-bold uppercase text-text-muted">{PROFILE.ADD_LANGUAGE_LABEL}</label>
               <select 
                 className="w-full p-4 border bg-background border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
                 onChange={handleSelectPredefined}
                 defaultValue=""
                 required
               >
-                <option value="" disabled>{UI_STRINGS.PROFILE.ADD_LANGUAGE_PLACEHOLDER}</option>
-                {PREDEFINED_LANGUAGES
+                <option value="" disabled>{PROFILE.ADD_LANGUAGE_PLACEHOLDER}</option>
+                {COMMON.PREDEFINED_LANGUAGES
                   .filter(l => !availableLanguages.find(al => al.code === l.code))
                   .map(lang => (
                     <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -235,30 +235,39 @@ export default function Profile() {
               disabled={!newLangCode}
               className="flex items-center justify-center w-full gap-2 p-4 font-bold text-white transition-colors bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
             >
-              {UI_STRINGS.PROFILE.ADD_LANGUAGE_BUTTON}
+              {PROFILE.ADD_LANGUAGE_BUTTON}
             </button>
           </form>
         )}
+      </div>
+
+      {/* App Sprache Card */}
+      <div className="bg-surface border border-border rounded-[32px] p-6 mb-8 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <Globe className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-bold text-text-main">{PROFILE.UI_LANGUAGE_SECTION}</h2>
+        </div>
+        <UiLanguageSwitcher className="justify-start px-0" />
       </div>
 
       {/* Statistik Card */}
       <div className="bg-surface border border-border rounded-[32px] p-6 mb-8 shadow-sm">
         <div className="flex items-center gap-2 mb-6">
           <BarChart3 className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold text-text-main">{UI_STRINGS.PROFILE.STATS_SECTION}</h2>
+          <h2 className="text-lg font-bold text-text-main">{PROFILE.STATS_SECTION}</h2>
         </div>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="p-4 bg-primary/5 rounded-2xl">
             <p className="text-2xl font-bold text-primary">{stats.total}</p>
-            <p className="mt-1 text-xs tracking-wider uppercase text-text-secondary">{UI_STRINGS.PROFILE.STATS_TOTAL}</p>
+            <p className="mt-1 text-xs tracking-wider uppercase text-text-secondary">{PROFILE.STATS_TOTAL}</p>
           </div>
           <div className="p-4 bg-success/5 rounded-2xl">
             <p className="text-2xl font-bold text-success">{stats.learned}</p>
-            <p className="mt-1 text-xs tracking-wider uppercase text-text-secondary">{UI_STRINGS.PROFILE.STATS_LEARNED}</p>
+            <p className="mt-1 text-xs tracking-wider uppercase text-text-secondary">{PROFILE.STATS_LEARNED}</p>
           </div>
           <div className="p-4 bg-secondary/5 rounded-2xl">
             <p className="text-2xl font-bold text-secondary">{stats.inProgress}</p>
-            <p className="mt-1 text-xs tracking-wider uppercase text-text-secondary">{UI_STRINGS.PROFILE.STATS_OPEN}</p>
+            <p className="mt-1 text-xs tracking-wider uppercase text-text-secondary">{PROFILE.STATS_OPEN}</p>
           </div>
         </div>
       </div>
@@ -268,10 +277,10 @@ export default function Profile() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-bold text-text-main">{UI_STRINGS.PROFILE.ACTIVITY_SECTION}</h2>
+            <h2 className="text-lg font-bold text-text-main">{PROFILE.ACTIVITY_SECTION}</h2>
           </div>
           <div className="flex items-center gap-1 px-3 py-1 text-orange-600 border border-orange-100 rounded-full bg-orange-50">
-            <span className="text-xs font-bold">{UI_STRINGS.PROFILE.STREAK_DAYS(stats.streak)}</span>
+            <span className="text-xs font-bold">{PROFILE.STREAK_DAYS(stats.streak)}</span>
           </div>
         </div>
         
@@ -286,7 +295,7 @@ export default function Profile() {
             return (
               <div key={i} className="flex flex-col items-center gap-1">
                 <span className="text-[10px] font-bold text-text-muted uppercase">
-                  {UI_STRINGS.PROFILE.WEEKDAYS[date.getDay()]}
+                  {PROFILE.WEEKDAYS[date.getDay()]}
                 </span>
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                   hasStudied 
@@ -312,7 +321,7 @@ export default function Profile() {
       <form onSubmit={handleUpdateProfile} className="space-y-6">
         <div className="space-y-4">
           <div>
-            <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{UI_STRINGS.PROFILE.NAME_LABEL}</label>
+            <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{PROFILE.NAME_LABEL}</label>
             <div className="relative">
               <User className="absolute w-5 h-5 -translate-y-1/2 left-4 top-1/2 text-text-muted" />
               <input
@@ -320,13 +329,13 @@ export default function Profile() {
                 className="w-full py-4 pl-12 pr-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder={UI_STRINGS.PROFILE.NAME_PLACEHOLDER}
+                placeholder={PROFILE.NAME_PLACEHOLDER}
               />
             </div>
           </div>
 
           <div>
-            <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{UI_STRINGS.PROFILE.EMAIL_LABEL}</label>
+            <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{PROFILE.EMAIL_LABEL}</label>
             <div className="relative">
               <Mail className="absolute w-5 h-5 -translate-y-1/2 left-4 top-1/2 text-text-muted" />
               <input
@@ -334,7 +343,7 @@ export default function Profile() {
                 className="w-full py-4 pl-12 pr-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={UI_STRINGS.PROFILE.EMAIL_PLACEHOLDER}
+                placeholder={PROFILE.EMAIL_PLACEHOLDER}
               />
             </div>
           </div>
@@ -349,7 +358,7 @@ export default function Profile() {
                 <div className="p-2 transition-colors bg-primary/10 rounded-xl group-hover:bg-primary/20">
                   <Lock size={18} className="text-primary" />
                 </div>
-                <span className="font-medium text-text-main">{UI_STRINGS.PROFILE.CHANGE_PASSWORD}</span>
+                <span className="font-medium text-text-main">{PROFILE.CHANGE_PASSWORD}</span>
               </div>
               <ChevronRight size={18} className="text-text-muted" />
             </button>
@@ -357,11 +366,11 @@ export default function Profile() {
 
           {isSuperadmin && (
             <div className="pt-4 mt-6 border-t border-border">
-              <h3 className="mb-4 text-xs font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.PROFILE.SUPERADMIN_SETTINGS}</h3>
+              <h3 className="mb-4 text-xs font-bold tracking-widest uppercase text-text-muted">{PROFILE.SUPERADMIN_SETTINGS}</h3>
               <div className="flex items-center justify-between p-4 border bg-primary/5 border-primary/10 rounded-2xl">
                 <div className="flex flex-col">
-                  <span className="font-bold text-primary">{UI_STRINGS.PROFILE.DISABLE_TOO_SOON_LABEL}</span>
-                  <span className="text-xs text-text-secondary">{UI_STRINGS.PROFILE.DISABLE_TOO_SOON_DESC}</span>
+                  <span className="font-bold text-primary">{PROFILE.DISABLE_TOO_SOON_LABEL}</span>
+                  <span className="text-xs text-text-secondary">{PROFILE.DISABLE_TOO_SOON_DESC}</span>
                 </div>
                 <button
                   type="button"
@@ -372,7 +381,7 @@ export default function Profile() {
                 </button>
               </div>
               <div className="mt-4 text-sm text-text-secondary">
-                {UI_STRINGS.PROFILE.USER_ID_LABEL} {user.id}
+                {PROFILE.USER_ID_LABEL} {user.id}
               </div>
             </div>
             
@@ -392,7 +401,7 @@ export default function Profile() {
           className="flex items-center justify-center w-full gap-2 p-4 font-bold text-white transition-all shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save size={20} />}
-          {UI_STRINGS.COMMON.SAVE}
+          {COMMON.SAVE}
         </button>
       </form>
 
@@ -402,7 +411,7 @@ export default function Profile() {
           className="flex items-center justify-center w-full gap-2 p-4 font-bold transition-all bg-error/10 text-error rounded-2xl hover:bg-error/20"
         >
           <LogOut size={20} />
-          {UI_STRINGS.COMMON.LOGOUT}
+          {COMMON.LOGOUT}
         </button>
       </div>
 

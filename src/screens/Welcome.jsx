@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { BookOpen, ArrowRight } from 'lucide-react';
 import Login from './Login';
-import {  UI_STRINGS } from '../constants/uiContent';
+import UiLanguageSwitcher from '../components/UiLanguageSwitcher';
+import { useUiLanguage } from '../context/UiLanguageContext';
 
 export default function Welcome() {
   const [showLogin, setShowLogin] = useState(false);
+  const { strings } = useUiLanguage();
+  const { LANDING, COMMON } = strings;
 
   if (showLogin) {
     return <Login onBack={() => setShowLogin(false)} />;
@@ -18,24 +21,24 @@ export default function Welcome() {
           <BookOpen size={48} />
         </div>
         <h1 className="mb-4 text-4xl font-black tracking-tight md:text-5xl text-text-main">
-          {UI_STRINGS.COMMON.APP_NAME.split(' ')[0]} <span className="text-primary">{UI_STRINGS.COMMON.APP_NAME.split(' ')[1]}</span>
+          {COMMON.APP_NAME.split(' ')[0]} <span className="text-primary">{COMMON.APP_NAME.split(' ')[1]}</span>
         </h1>
         <p className="max-w-md mx-auto mb-10 text-lg leading-relaxed text-text-secondary">
-          {UI_STRINGS.LANDING.TAGLINE}
+          {LANDING.TAGLINE}
         </p>
         
         <button
           onClick={() => setShowLogin(true)}
           className="flex items-center justify-center w-full max-w-sm gap-2 p-5 mx-auto font-bold text-white transition-all shadow-lg group bg-primary rounded-3xl hover:bg-primary/90 active:scale-95"
         >
-          <span>{UI_STRINGS.LANDING.START_BUTTON}</span>
+          <span>{LANDING.START_BUTTON}</span>
           <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
         </button>
       </div>
 
       {/* Feature Grid */}
       <div className="grid w-full max-w-2xl grid-cols-1 gap-4 md:grid-cols-2">
-        { UI_STRINGS.LANDING.FEATURES.map((feature, idx) => (
+        { LANDING.FEATURES.map((feature, idx) => (
           <div 
             key={idx} 
             className="p-6 bg-surface border border-border rounded-[32px] shadow-sm animate-fade-in-up"
@@ -52,15 +55,12 @@ export default function Welcome() {
 
       {/* Social Proof / Footer Info */}
       <div className="mt-12 text-center animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="flex -space-x-2">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="w-8 h-8 border-2 rounded-full border-background bg-slate-200" />
-            ))}
-          </div>
-          <span className="text-sm font-bold text-text-main">{UI_STRINGS.LANDING.SOCIAL_PROOF}</span>
-        </div>
-        <p className="text-xs text-text-muted">{UI_STRINGS.LANDING.FOOTER_INFO}</p>
+        <p className="text-xs text-text-muted">{LANDING.FOOTER_INFO}</p>
+      </div>
+
+      {/* Footer Switcher for non-logged in users */}
+      <div className="w-full max-w-xs pt-8 mt-auto">
+        <UiLanguageSwitcher />
       </div>
     </div>
   );

@@ -1,10 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { PREDEFINED_LANGUAGES } from '../constants/uiContent';
 
 const LanguageContext = createContext();
-
-export { PREDEFINED_LANGUAGES };
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);

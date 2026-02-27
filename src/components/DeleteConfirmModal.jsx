@@ -1,11 +1,15 @@
 import React from 'react';
 import { X, Trash2, AlertTriangle } from 'lucide-react';
-import { UI_STRINGS } from '../constants/uiContent';
+import { useUiLanguage } from '../context/UiLanguageContext';
 
-const { DELETE_MODAL } = UI_STRINGS.COMPONENTS;
-const { COMMON } = UI_STRINGS;
+export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title, message }) {
+  const { strings } = useUiLanguage();
+  const { COMPONENTS, COMMON } = strings;
+  const { DELETE_MODAL } = COMPONENTS;
 
-export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title = DELETE_MODAL.TITLE, message = DELETE_MODAL.DESC }) {
+  const displayTitle = title || DELETE_MODAL.TITLE;
+  const displayMessage = message || DELETE_MODAL.DESC;
+
   if (!isOpen) return null;
 
   return (
@@ -15,28 +19,28 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title =
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col items-center text-center">
-          <div className="w-16 h-16 bg-error-light/20 rounded-full flex items-center justify-center mb-4">
+          <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-error-light/20">
             <AlertTriangle size={32} className="text-error" />
           </div>
           
-          <h2 className="text-xl font-bold text-text-main mb-2">
-            {title}
+          <h2 className="mb-2 text-xl font-bold text-text-main">
+            {displayTitle}
           </h2>
           
-          <p className="text-text-secondary mb-8">
-            {message}
+          <p className="mb-8 text-text-secondary">
+            {displayMessage}
           </p>
 
-          <div className="grid grid-cols-2 gap-3 w-full">
+          <div className="grid w-full grid-cols-2 gap-3">
             <button 
               onClick={onClose}
-              className="p-4 rounded-2xl bg-surface border border-border text-text-secondary font-bold hover:bg-slate-100 transition-colors"
+              className="p-4 font-bold transition-colors border rounded-2xl bg-surface border-border text-text-secondary hover:bg-slate-100"
             >
               {COMMON.CANCEL}
             </button>
             <button 
               onClick={onConfirm}
-              className="p-4 rounded-2xl bg-error text-white font-bold flex items-center justify-center gap-2 hover:bg-error/90 transition-colors shadow-md shadow-error/20"
+              className="flex items-center justify-center gap-2 p-4 font-bold text-white transition-colors shadow-md rounded-2xl bg-error hover:bg-error/90 shadow-error/20"
             >
               <Trash2 size={18} />
               {DELETE_MODAL.CONFIRM}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useUiLanguage } from '../context/UiLanguageContext';
 import { ChevronDown } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -9,6 +10,8 @@ function cn(...inputs) {
 }
 
 export default function LanguageSwitcher() {
+  const { strings } = useUiLanguage();
+  const { COMMON } = strings;
   const { selectedLanguage, availableLanguages, changeLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -53,7 +56,9 @@ export default function LanguageSwitcher() {
               >
                 <span className="text-2xl">{lang.flag}</span>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold">{lang.name}</span>
+                  <span className="text-sm font-bold">
+                    {COMMON.PREDEFINED_LANGUAGES.find(l => l.code === lang.code)?.name || lang.name}
+                  </span>
                   <span className="text-[10px] uppercase tracking-widest opacity-60">{lang.code}</span>
                 </div>
               </button>

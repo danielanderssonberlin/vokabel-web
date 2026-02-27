@@ -3,19 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getVocabulary, updateVocabularyStatus } from '../store/vocabularyStore';
 import { updateStudyStats, getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
-import { useLanguage, PREDEFINED_LANGUAGES } from '../context/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, GraduationCap } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { UI_STRINGS } from '../constants/uiContent';
+import { useUiLanguage } from '../context/UiLanguageContext';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
 export default function Learning() {
+  const { strings: UI_STRINGS } = useUiLanguage();
+  const { LEARNING, COMMON } = UI_STRINGS;
   const navigate = useNavigate();
   const { selectedLanguage, availableLanguages, addLanguage, changeLanguage, loading: isLangLoading } = useLanguage();
   const [vokabeln, setVokabeln] = useState([]);
@@ -138,12 +140,12 @@ export default function Learning() {
         }
       };
       recognition.current.onerror = (event) => {
-        console.error(UI_STRINGS.LEARNING.MIC_ERROR, event.error);
+        console.error(LEARNING.MIC_ERROR, event.error);
         setIsListening(false);
         // Fallback: Wenn Fehler (z.B. no-speech), Modus nicht hart beenden
       };
     }
-  }, [loadVokabeln, selectedLanguage, UI_STRINGS.LEARNING.MIC_ERROR]);
+  }, [loadVokabeln, selectedLanguage, LEARNING.MIC_ERROR]);
 
   useEffect(() => {
     if (isCorrect === null && !loading && !sessionCompleted && inputRef.current) {
@@ -177,7 +179,7 @@ export default function Learning() {
   const handleMicPress = () => {
     setError('');
     if (!recognition.current) {
-      setError(UI_STRINGS.LEARNING.MIC_ERROR);
+      setError(LEARNING.MIC_ERROR);
       return;
     }
 
@@ -255,7 +257,7 @@ export default function Learning() {
         }
       }
     } catch (err) {
-      console.error(UI_STRINGS.LEARNING.UPDATE_FAILED, err);
+      console.error(LEARNING.UPDATE_FAILED, err);
     } finally {
       setPendingUpdate(false);
     }
@@ -281,7 +283,7 @@ export default function Learning() {
   if (loading || isLangLoading) {
     return (
       <div className="flex items-center justify-center flex-1 h-full bg-background">
-        <p className="text-text-secondary">{UI_STRINGS.LEARNING.LOADING_VOKABELN}</p>
+        <p className="text-text-secondary">{LEARNING.LOADING_VOKABELN}</p>
       </div>
     );
   }
@@ -293,13 +295,13 @@ export default function Learning() {
           <div className="p-6 mb-8 rounded-full bg-primary/10 animate-bounce-in">
             <BookOpen size={60} className="text-primary" />
           </div>
-          <h2 className="mb-4 text-3xl font-black text-text-main">{UI_STRINGS.LEARNING.ONBOARDING_TITLE}</h2>
+          <h2 className="mb-4 text-3xl font-black text-text-main">{LEARNING.ONBOARDING_TITLE}</h2>
           <p className="max-w-sm mb-10 text-text-secondary">
-            {UI_STRINGS.LEARNING.ONBOARDING_SUBTITLE}
+            {LEARNING.ONBOARDING_SUBTITLE}
           </p>
 
           <div className="grid w-full max-w-md grid-cols-2 gap-4">
-            {PREDEFINED_LANGUAGES.map((lang) => {
+            {COMMON.PREDEFINED_LANGUAGES.map((lang) => {
               const isAdded = availableLanguages.some(al => al.code === lang.code);
               return (
                 <button
@@ -333,12 +335,12 @@ export default function Learning() {
             <CheckCircle2 size={60} className="text-success" />
           </div>
           <h2 className="mb-2 text-2xl font-bold text-text-main">
-            {sessionCompleted ? UI_STRINGS.LEARNING.SESSION_COMPLETED : UI_STRINGS.LEARNING.ALL_LEARNED}
+            {sessionCompleted ? LEARNING.SESSION_COMPLETED : LEARNING.ALL_LEARNED}
           </h2>
           <p className="max-w-sm mb-8 text-text-secondary">
             {sessionCompleted 
-              ? UI_STRINGS.LEARNING.SESSION_STATS(vokabeln.length, wrongAnswers.length)
-              : UI_STRINGS.LEARNING.EMPTY_STATE}
+              ? LEARNING.SESSION_STATS(vokabeln.length, wrongAnswers.length)
+              : LEARNING.EMPTY_STATE}
           </p>
           
           <div className="flex flex-col w-full max-w-xs gap-3">
@@ -346,14 +348,14 @@ export default function Learning() {
               onClick={() => loadVokabeln(false)}
               className="px-8 py-4 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90"
             >
-              {vokabeln.length === 0 ? UI_STRINGS.LEARNING.REFRESH : UI_STRINGS.LEARNING.NEW_SESSION}
+              {vokabeln.length === 0 ? LEARNING.REFRESH : LEARNING.NEW_SESSION}
             </button>
             
             <button
               onClick={() => loadVokabeln(true)}
               className="mt-8 text-sm font-medium transition-colors text-text-secondary hover:text-primary"
             >
-              {UI_STRINGS.LEARNING.ARCHIVE_REPEAT}
+              {LEARNING.ARCHIVE_REPEAT}
             </button>
           </div>
         </div>
@@ -362,7 +364,7 @@ export default function Learning() {
           <div className="flex flex-col items-center w-full mt-4">
             <div className="flex items-center self-start gap-2 px-6 mb-4 md:self-center">
               <AlertCircle size={20} className="text-error" />
-              <h3 className="text-sm font-bold tracking-wider uppercase text-text-main">{UI_STRINGS.LEARNING.ERRORS_OVERVIEW}</h3>
+              <h3 className="text-sm font-bold tracking-wider uppercase text-text-main">{LEARNING.ERRORS_OVERVIEW}</h3>
             </div>
             
             <div 
@@ -383,11 +385,11 @@ export default function Learning() {
                     className="flex-shrink-0 w-[280px] p-6 bg-surface border border-error-light rounded-[32px] shadow-sm snap-center text-left animate-fade-in-up"
                     style={{ animationDelay: `${idx * 0.1}s` }}
                   >
-                    <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted mb-1 block">{UI_STRINGS.COMMON.DEUTSCH}</span>
+                    <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted mb-1 block">{COMMON.DEUTSCH}</span>
                     <p className="mb-4 text-xl font-bold text-text-main">{item.german}</p>
                     
                     <div className="pt-4 border-t border-border-light">
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-success mb-1 block">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-success mb-1 block">{LEARNING.RIGHT_ANSWER}</span>
                       <p className="text-2xl font-bold text-success">{item.spanish}</p>
                     </div>
                   </div>
