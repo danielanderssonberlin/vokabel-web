@@ -67,7 +67,8 @@ export default function Login({ onBack }) {
           <div className="p-4 bg-primary/10 rounded-3xl">
             <BookOpen className="w-12 h-12 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-text-main">{UI_STRINGS.COMMON.APP_NAME}</h1>
+          <h1 className="text-3xl font-bold text-text-main">{UI_STRINGS.COMMON.APP_NAME.split(' ')[0]} <span className="text-primary">{UI_STRINGS.COMMON.APP_NAME.split(' ')[1]}</span></h1>
+          
           <p className="text-text-secondary">
             {view === 'signup' ? UI_STRINGS.LOGIN.SUBTITLE_SIGNUP : 
              view === 'forgot' ? UI_STRINGS.LOGIN.SUBTITLE_FORGOT : UI_STRINGS.LOGIN.SUBTITLE_LOGIN}

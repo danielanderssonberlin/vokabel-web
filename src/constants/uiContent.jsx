@@ -15,7 +15,7 @@ export const PREDEFINED_LANGUAGES = [
 
 export const UI_STRINGS = {
   COMMON: {
-    APP_NAME: "Vokabel Master",
+    APP_NAME: "Voka bro",
     SAVE: "Speichern",
     CANCEL: "Abbrechen",
     DELETE: "Löschen",

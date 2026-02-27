@@ -83,7 +83,7 @@ export default function App() {
   }
 
   return (
-    <Router basename="/vokabel-app">
+    <Router basename="/">
       <main className="z-0 flex flex-col flex-1 overflow-hidden bg-background">
         <Routes>
           <Route path="/" element={<Learning />} />
