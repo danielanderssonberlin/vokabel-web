@@ -189,7 +189,7 @@ export default function Overview() {
                 key={item.id} 
                 item={item} 
                 index={index}
-                onEdit={handleOpenAdd} 
+                onEdit={handleOpenEdit} 
                 onDelete={handleDelete}
                 OVERVIEW={OVERVIEW}
               />
