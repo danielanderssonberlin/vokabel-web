@@ -468,7 +468,7 @@ export default function Learning() {
         })}
         
         <div 
-          key={currentIndex}
+          key={current.id}
           className={cn(
             "relative flex flex-col items-center p-10 text-center border shadow-sm border-border-light bg-surface rounded-3xl animate-slide-in-top",
             current.status === 5 && isCorrect === true && "animate-fly-away animate-learned-success",
