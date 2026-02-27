@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { BookOpen, Mail, Lock, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { BookOpen, Mail, Lock, Loader2, CheckCircle, AlertCircle, ChevronLeft } from 'lucide-react';
+import { UI_STRINGS } from '../constants/uiContent';
 
-export default function Login() {
+export default function Login({ onBack }) {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +22,7 @@ export default function Login() {
           password,
         });
         if (error) throw error;
-        setMessage({ type: 'success', text: 'Registrierung erfolgreich! Bitte prüfe deine E-Mails.' });
+        setMessage({ type: 'success', text: UI_STRINGS.LOGIN.SUCCESS_SIGNUP });
       } else if (view === 'login') {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -29,7 +30,7 @@ export default function Login() {
         });
         if (error) {
           if (error.message === 'Invalid login credentials') {
-            throw new Error('Ungültige Anmeldedaten. Bitte prüfe E-Mail und Passwort.');
+            throw new Error(UI_STRINGS.LOGIN.ERR_INVALID_CREDENTIALS);
           }
           throw error;
         }
@@ -38,13 +39,13 @@ export default function Login() {
           redirectTo: window.location.origin,
         });
         if (error) throw error;
-        setMessage({ type: 'success', text: 'E-Mail zum Zurücksetzen wurde gesendet!' });
+        setMessage({ type: 'success', text: UI_STRINGS.LOGIN.SUCCESS_FORGOT });
         setView('login');
       }
     } catch (error) {
       let errorMessage = error.message;
-      if (errorMessage === 'User already registered') errorMessage = 'Diese E-Mail-Adresse ist bereits registriert.';
-      if (errorMessage === 'Password should be at least 6 characters') errorMessage = 'Das Passwort muss mindestens 6 Zeichen lang sein.';
+      if (errorMessage === 'User already registered') errorMessage = UI_STRINGS.LOGIN.ERR_ALREADY_REGISTERED;
+      if (errorMessage === 'Password should be at least 6 characters') errorMessage = UI_STRINGS.LOGIN.ERR_PASSWORD_SHORT;
       setMessage({ type: 'error', text: errorMessage });
     } finally {
       setLoading(false);
@@ -52,29 +53,37 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-background">
+    <div className="relative flex flex-col items-center justify-center min-h-screen p-6 bg-background">
+      {onBack && (
+        <button 
+          onClick={onBack}
+          className="absolute p-2 transition-colors top-6 left-6 text-text-muted hover:text-text-main"
+        >
+          <ChevronLeft size={24} />
+        </button>
+      )}
       <div className="w-full max-w-sm space-y-8">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="p-4 bg-primary/10 rounded-3xl">
             <BookOpen className="w-12 h-12 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-text-main">Vokabel Trainer</h1>
+          <h1 className="text-3xl font-bold text-text-main">{UI_STRINGS.COMMON.APP_NAME}</h1>
           <p className="text-text-secondary">
-            {view === 'signup' ? 'Erstelle ein Konto' : 
-             view === 'forgot' ? 'Passwort zurücksetzen' : 'Melde dich an'}
+            {view === 'signup' ? UI_STRINGS.LOGIN.SUBTITLE_SIGNUP : 
+             view === 'forgot' ? UI_STRINGS.LOGIN.SUBTITLE_FORGOT : UI_STRINGS.LOGIN.SUBTITLE_LOGIN}
           </p>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div className="space-y-2">
-            <label className="ml-1 text-sm font-medium text-text-main">E-Mail</label>
+            <label className="ml-1 text-sm font-medium text-text-main">{UI_STRINGS.LOGIN.EMAIL_LABEL}</label>
             <div className="relative">
               <Mail className="absolute w-5 h-5 -translate-y-1/2 left-4 top-1/2 text-text-muted" />
               <input
                 type="email"
                 required
                 className="w-full py-4 pl-12 pr-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="deine@email.de"
+                placeholder={UI_STRINGS.LOGIN.EMAIL_PLACEHOLDER}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 tabIndex={1}
@@ -85,7 +94,7 @@ export default function Login() {
           {view !== 'forgot' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between ml-1">
-                <label className="text-sm font-medium text-text-main">Passwort</label>
+                <label className="text-sm font-medium text-text-main">{UI_STRINGS.LOGIN.PASSWORD_LABEL}</label>
                 {view === 'login' && (
                   <button 
                     type="button"
@@ -93,7 +102,7 @@ export default function Login() {
                     className="text-xs text-primary hover:underline"
                     tabIndex={4} 
                   >
-                    Vergessen?
+                    {UI_STRINGS.LOGIN.FORGOT_PASSWORD}
                   </button>
                 )}
               </div>
@@ -103,7 +112,7 @@ export default function Login() {
                   type="password"
                   required
                   className="w-full py-4 pl-12 pr-4 transition-all border bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="••••••••"
+                  placeholder={UI_STRINGS.LOGIN.PASSWORD_PLACEHOLDER}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   tabIndex={2}
@@ -128,8 +137,8 @@ export default function Login() {
             tabIndex={3} 
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-            {view === 'signup' ? 'Registrieren' : 
-             view === 'forgot' ? 'Link senden' : 'Anmelden'}
+            {view === 'signup' ? UI_STRINGS.LOGIN.SIGNUP_BUTTON : 
+             view === 'forgot' ? UI_STRINGS.LOGIN.SEND_LINK : UI_STRINGS.LOGIN.LOGIN_BUTTON}
           </button>
         </form>
 
@@ -138,8 +147,8 @@ export default function Login() {
             onClick={() => setView(view === 'signup' ? 'login' : 'signup')}
             className="font-medium transition-all text-primary hover:underline"
           >
-            {view === 'signup' ? 'Bereits ein Konto? Anmelden' : 
-             view === 'forgot' ? 'Zurück zum Login' : 'Noch kein Konto? Registrieren'}
+            {view === 'signup' ? UI_STRINGS.LOGIN.LOGIN_PROMPT : 
+             view === 'forgot' ? UI_STRINGS.LOGIN.BACK_TO_LOGIN : UI_STRINGS.LOGIN.SIGNUP_PROMPT}
           </button>
         </div>
       </div>

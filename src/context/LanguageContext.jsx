@@ -1,19 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { PREDEFINED_LANGUAGES } from '../constants/uiContent';
 
 const LanguageContext = createContext();
 
-export const PREDEFINED_LANGUAGES = [
-  { code: 'en', name: 'Englisch', flag: '🇬🇧' },
-  { code: 'es', name: 'Spanisch', flag: '🇪🇸' },
-  { code: 'fr', name: 'Französisch', flag: '🇫🇷' },
-  { code: 'it', name: 'Italienisch', flag: '🇮🇹' },
-  { code: 'pt', name: 'Portugiesisch', flag: '🇵🇹' },
-  { code: 'ru', name: 'Russisch', flag: '🇷🇺' },
-  { code: 'tr', name: 'Türkisch', flag: '🇹🇷' },
-  { code: 'pl', name: 'Polnisch', flag: '🇵🇱' },
-  { code: 'nl', name: 'Niederländisch', flag: '🇳🇱' },
-];
+export { PREDEFINED_LANGUAGES };
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);

@@ -9,6 +9,7 @@ import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, 
 import confetti from 'canvas-confetti';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { UI_STRINGS } from '../constants/uiContent';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -137,12 +138,12 @@ export default function Learning() {
         }
       };
       recognition.current.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
+        console.error(UI_STRINGS.LEARNING.MIC_ERROR, event.error);
         setIsListening(false);
         // Fallback: Wenn Fehler (z.B. no-speech), Modus nicht hart beenden
       };
     }
-  }, [loadVokabeln, selectedLanguage]);
+  }, [loadVokabeln, selectedLanguage, UI_STRINGS.LEARNING.MIC_ERROR]);
 
   useEffect(() => {
     if (isCorrect === null && !loading && !sessionCompleted && inputRef.current) {
@@ -176,7 +177,7 @@ export default function Learning() {
   const handleMicPress = () => {
     setError('');
     if (!recognition.current) {
-      setError('Spracherkennung wird in diesem Browser nicht unterstützt.');
+      setError(UI_STRINGS.LEARNING.MIC_ERROR);
       return;
     }
 
@@ -254,7 +255,7 @@ export default function Learning() {
         }
       }
     } catch (err) {
-      console.error('Update failed:', err);
+      console.error(UI_STRINGS.LEARNING.UPDATE_FAILED, err);
     } finally {
       setPendingUpdate(false);
     }
@@ -280,7 +281,7 @@ export default function Learning() {
   if (loading || isLangLoading) {
     return (
       <div className="flex items-center justify-center flex-1 h-full bg-background">
-        <p className="text-text-secondary">Lade Vokabeln...</p>
+        <p className="text-text-secondary">{UI_STRINGS.LEARNING.LOADING_VOKABELN}</p>
       </div>
     );
   }
@@ -292,9 +293,9 @@ export default function Learning() {
           <div className="p-6 mb-8 rounded-full bg-primary/10 animate-bounce-in">
             <BookOpen size={60} className="text-primary" />
           </div>
-          <h2 className="mb-4 text-3xl font-black text-text-main">Willkommen!</h2>
+          <h2 className="mb-4 text-3xl font-black text-text-main">{UI_STRINGS.LEARNING.ONBOARDING_TITLE}</h2>
           <p className="max-w-sm mb-10 text-text-secondary">
-            Wähle eine Sprache aus, um mit dem Lernen zu beginnen.
+            {UI_STRINGS.LEARNING.ONBOARDING_SUBTITLE}
           </p>
 
           <div className="grid w-full max-w-md grid-cols-2 gap-4">
@@ -332,12 +333,12 @@ export default function Learning() {
             <CheckCircle2 size={60} className="text-success" />
           </div>
           <h2 className="mb-2 text-2xl font-bold text-text-main">
-            {sessionCompleted ? 'Session beendet!' : 'Alles gelernt!'}
+            {sessionCompleted ? UI_STRINGS.LEARNING.SESSION_COMPLETED : UI_STRINGS.LEARNING.ALL_LEARNED}
           </h2>
           <p className="max-w-sm mb-8 text-text-secondary">
             {sessionCompleted 
-              ? `Du hast ${vokabeln.length} Vokabeln gelernt.${wrongAnswers.length > 0 ? ` Dabei gab es ${wrongAnswers.length} Fehler.` : ''}`
-              : 'Alle Vokabeln sind im Archiv oder du hast noch keine hinzugefügt.'}
+              ? UI_STRINGS.LEARNING.SESSION_STATS(vokabeln.length, wrongAnswers.length)
+              : UI_STRINGS.LEARNING.EMPTY_STATE}
           </p>
           
           <div className="flex flex-col w-full max-w-xs gap-3">
@@ -345,14 +346,14 @@ export default function Learning() {
               onClick={() => loadVokabeln(false)}
               className="px-8 py-4 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90"
             >
-              {vokabeln.length === 0 ? 'Aktualisieren' : 'Neue Session'}
+              {vokabeln.length === 0 ? UI_STRINGS.LEARNING.REFRESH : UI_STRINGS.LEARNING.NEW_SESSION}
             </button>
             
             <button
               onClick={() => loadVokabeln(true)}
               className="mt-8 text-sm font-medium transition-colors text-text-secondary hover:text-primary"
             >
-              Archivierte Vokabeln wiederholen (Random)
+              {UI_STRINGS.LEARNING.ARCHIVE_REPEAT}
             </button>
           </div>
         </div>
@@ -361,7 +362,7 @@ export default function Learning() {
           <div className="flex flex-col items-center w-full mt-4">
             <div className="flex items-center self-start gap-2 px-6 mb-4 md:self-center">
               <AlertCircle size={20} className="text-error" />
-              <h3 className="text-sm font-bold tracking-wider uppercase text-text-main">Deine Fehler im Überblick</h3>
+              <h3 className="text-sm font-bold tracking-wider uppercase text-text-main">{UI_STRINGS.LEARNING.ERRORS_OVERVIEW}</h3>
             </div>
             
             <div 
@@ -382,11 +383,11 @@ export default function Learning() {
                     className="flex-shrink-0 w-[280px] p-6 bg-surface border border-error-light rounded-[32px] shadow-sm snap-center text-left animate-fade-in-up"
                     style={{ animationDelay: `${idx * 0.1}s` }}
                   >
-                    <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted mb-1 block">Deutsch</span>
+                    <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted mb-1 block">{UI_STRINGS.COMMON.DEUTSCH}</span>
                     <p className="mb-4 text-xl font-bold text-text-main">{item.german}</p>
                     
                     <div className="pt-4 border-t border-border-light">
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-success mb-1 block">Richtig wäre</span>
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-success mb-1 block">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
                       <p className="text-2xl font-bold text-success">{item.spanish}</p>
                     </div>
                   </div>
@@ -407,11 +408,11 @@ export default function Learning() {
         <div className="flex items-center gap-2">
           <GraduationCap className="w-8 h-8 text-primary" />
           <h1 className="hidden text-xl font-bold text-primary sm:block">
-            {isArchiveMode ? 'Archiv Wiederholen' : 'Lernen'}
+            {isArchiveMode ? UI_STRINGS.LEARNING.TITLE_ARCHIVE : UI_STRINGS.LEARNING.TITLE}
           </h1>
           {isArchiveMode && (
             <div className="px-2 py-0.5 rounded-full bg-success/10 border border-success/20">
-              <span className="text-[10px] font-bold text-success uppercase">Archiv</span>
+              <span className="text-[10px] font-bold text-success uppercase">{UI_STRINGS.OVERVIEW.ARCHIVE_TAG}</span>
             </div>
           )}
         </div>
@@ -419,7 +420,7 @@ export default function Learning() {
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
           <button 
-            onClick={() => setInfo({ title: 'Streak', text: 'Deine Serie an aufeinanderfolgenden Lerntagen!' })}
+            onClick={() => setInfo({ title: UI_STRINGS.LEARNING.STREAK_INFO_TITLE, text: UI_STRINGS.LEARNING.STREAK_INFO_TEXT })}
             className="flex items-center gap-1 px-3 py-1.5 text-orange-600 transition-transform border border-orange-100 rounded-full bg-orange-50 active:scale-95 shadow-sm"
           >
             <Flame size={16} fill="currentColor" />
@@ -470,12 +471,12 @@ export default function Learning() {
           <div className="absolute px-3 py-1 border rounded-full top-4 right-4 border-border-light bg-background/50">
             <p className="text-[10px] font-bold text-text-muted">{currentIndex + 1} / {vokabeln.length}</p>
           </div>
-          <span className="mb-2 text-xs font-bold tracking-widest uppercase text-text-muted">Deutsch</span>
+          <span className="mb-2 text-xs font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.COMMON.DEUTSCH}</span>
           <h2 className="text-4xl font-bold text-text-main">{current.german}</h2>
           
           {isCorrect === false && (
             <div className="w-full pt-6 mt-6 border-t border-border-light animate-bounce-in">
-              <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">Lösung</span>
+              <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
               <h3 className="text-3xl font-bold text-error">{current.spanish}</h3>
             </div>
           )}
@@ -498,7 +499,7 @@ export default function Learning() {
       </div>
 
       <form onSubmit={handleCheck} className="flex flex-col flex-1">
-        <label className="mb-2 ml-1 text-sm font-medium text-text-main">Übersetzung</label>
+        <label className="mb-2 ml-1 text-sm font-medium text-text-main">{UI_STRINGS.COMMON.FOREIGN_LANG}</label>
         <div className="flex items-center gap-3">
           <input
             ref={inputRef}
@@ -509,7 +510,7 @@ export default function Learning() {
               isCorrect === false ? "border-error text-error bg-error-light" : 
               "border-border text-text-main focus:ring-primary/20"
             )}
-            placeholder={isListening ? "Höre zu..." : "Hier schreiben..."}
+            placeholder={isListening ? UI_STRINGS.LEARNING.LISTENING_PLACEHOLDER : UI_STRINGS.LEARNING.INPUT_PLACEHOLDER}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             disabled={isCorrect !== null}
@@ -544,7 +545,7 @@ export default function Learning() {
           {isCorrect === true && (
             <div className="h-8 mt-3 text-center">
               <p className="font-medium text-success">
-                {wasTooSoon ? 'Richtig! (Status unverändert - 12h Regel)' : 'Sehr gut! +1 Status'}
+                {wasTooSoon ? UI_STRINGS.LEARNING.TOO_SOON_MSG : UI_STRINGS.LEARNING.STATUS_UP_MSG}
               </p>
             </div>
           )}
@@ -555,7 +556,7 @@ export default function Learning() {
           disabled={isCorrect !== null}
           className="flex items-center justify-center gap-2 p-4 mt-8 mb-6 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50 disabled:bg-text-muted"
         >
-          <span>{!answer && isCorrect === null ? 'Ich weiß es nicht' : 'Prüfen'}</span>
+          <span>{!answer && isCorrect === null ? UI_STRINGS.LEARNING.DONT_KNOW_BUTTON : UI_STRINGS.LEARNING.CHECK_BUTTON}</span>
           <ArrowRight size={20} />
         </button>
       </form>

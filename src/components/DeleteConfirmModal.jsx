@@ -1,7 +1,11 @@
 import React from 'react';
 import { X, Trash2, AlertTriangle } from 'lucide-react';
+import { UI_STRINGS } from '../constants/uiContent';
 
-export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title = "Vokabel löschen", message = "Möchtest du diese Vokabel wirklich unwiderruflich löschen?" }) {
+const { DELETE_MODAL } = UI_STRINGS.COMPONENTS;
+const { COMMON } = UI_STRINGS;
+
+export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title = DELETE_MODAL.TITLE, message = DELETE_MODAL.DESC }) {
   if (!isOpen) return null;
 
   return (
@@ -28,14 +32,14 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title =
               onClick={onClose}
               className="p-4 rounded-2xl bg-surface border border-border text-text-secondary font-bold hover:bg-slate-100 transition-colors"
             >
-              Abbrechen
+              {COMMON.CANCEL}
             </button>
             <button 
               onClick={onConfirm}
               className="p-4 rounded-2xl bg-error text-white font-bold flex items-center justify-center gap-2 hover:bg-error/90 transition-colors shadow-md shadow-error/20"
             >
               <Trash2 size={18} />
-              Löschen
+              {DELETE_MODAL.CONFIRM}
             </button>
           </div>
         </div>

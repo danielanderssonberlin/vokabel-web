@@ -1,0 +1,182 @@
+import React from 'react';
+import { GraduationCap, Globe, Flame, Sparkles } from 'lucide-react';
+
+export const PREDEFINED_LANGUAGES = [
+  { code: 'en', name: 'Englisch', flag: '🇬🇧' },
+  { code: 'es', name: 'Spanisch', flag: '🇪🇸' },
+  { code: 'fr', name: 'Französisch', flag: '🇫🇷' },
+  { code: 'it', name: 'Italienisch', flag: '🇮🇹' },
+  { code: 'pt', name: 'Portugiesisch', flag: '🇵🇹' },
+  { code: 'ru', name: 'Russisch', flag: '🇷🇺' },
+  { code: 'tr', name: 'Türkisch', flag: '🇹🇷' },
+  { code: 'pl', name: 'Polnisch', flag: '🇵🇱' },
+  { code: 'nl', name: 'Niederländisch', flag: '🇳🇱' },
+];
+
+export const UI_STRINGS = {
+  COMMON: {
+    APP_NAME: "Vokabel Master",
+    SAVE: "Speichern",
+    CANCEL: "Abbrechen",
+    DELETE: "Löschen",
+    BACK: "Zurück",
+    CLOSE: "Schließen",
+    LOADING: "Lädt...",
+    ERROR: "Fehler",
+    SUCCESS: "Erfolg",
+    ADD: "Hinzufügen",
+    EDIT: "Bearbeiten",
+    SEARCH: "Suchen...",
+    DEUTSCH: "Deutsch",
+    FOREIGN_LANG: "Fremdsprache",
+    LOGOUT: "Abmelden",
+    YES_DELETE: "Ja, löschen",
+    SELECT_LANGUAGE: "Sprache auswählen",
+    CHOOSE_LANGUAGE: "Wähle eine Sprache...",
+    ADD_LANGUAGE: "Sprache hinzufügen",
+  },
+  
+  LANDING: {
+    TAGLINE: "Die einfache Art, Sprachen zu lernen. Effektiv, schnell und motivierend.",
+    START_BUTTON: "Jetzt loslegen",
+    FEATURES: [
+      {
+        icon: <GraduationCap className="text-primary" size={24} />,
+        title: "Intelligentes Lernen",
+        description: "Lerne Vokabeln basierend auf deinem Fortschritt. Status 0 bis 5 (Archiv)."
+      },
+      {
+        icon: <Globe className="text-secondary" size={24} />,
+        title: "Multi-Language",
+        description: "Lerne mehrere Sprachen gleichzeitig mit automatischer Spracherkennung."
+      },
+      {
+        icon: <Flame className="text-orange-500" size={24} />,
+        title: "Lern-Serie",
+        description: "Bleib motiviert mit täglichen Streaks und Statistiken."
+      },
+      {
+        icon: <Sparkles className="text-success" size={24} />,
+        title: "Modernes UI",
+        description: "Ein sauberes, schnelles Interface für maximale Konzentration."
+      }
+    ],
+    SOCIAL_PROOF: "Bereits +1000 Vokabeln gelernt",
+    FOOTER_INFO: "Kostenlos nutzen • Keine Werbung • Open Source",
+  },
+
+  LOGIN: {
+    SUBTITLE_LOGIN: "Melde dich an",
+    SUBTITLE_SIGNUP: "Erstelle ein Konto",
+    SUBTITLE_FORGOT: "Passwort zurücksetzen",
+    EMAIL_LABEL: "E-Mail",
+    EMAIL_PLACEHOLDER: "deine@email.de",
+    PASSWORD_LABEL: "Passwort",
+    PASSWORD_PLACEHOLDER: "••••••••",
+    FORGOT_PASSWORD: "Vergessen?",
+    LOGIN_BUTTON: "Anmelden",
+    SIGNUP_BUTTON: "Registrieren",
+    SEND_LINK: "Link senden",
+    SIGNUP_PROMPT: "Noch kein Konto? Registrieren",
+    LOGIN_PROMPT: "Bereits ein Konto? Anmelden",
+    BACK_TO_LOGIN: "Zurück zum Login",
+    SUCCESS_SIGNUP: "Registrierung erfolgreich! Bitte prüfe deine E-Mails.",
+    SUCCESS_FORGOT: "E-Mail zum Zurücksetzen wurde gesendet!",
+    ERR_INVALID_CREDENTIALS: "Ungültige Anmeldedaten. Bitte prüfe E-Mail und Passwort.",
+    ERR_ALREADY_REGISTERED: "Diese E-Mail-Adresse ist bereits registriert.",
+    ERR_PASSWORD_SHORT: "Das Passwort muss mindestens 6 Zeichen lang sein.",
+  },
+
+  LEARNING: {
+    TITLE: "Lernen",
+    TITLE_ARCHIVE: "Archiv Wiederholen",
+    ONBOARDING_TITLE: "Willkommen!",
+    ONBOARDING_SUBTITLE: "Wähle eine Sprache aus, um mit dem Lernen zu beginnen.",
+    LOADING_VOKABELN: "Lade Vokabeln...",
+    SESSION_COMPLETED: "Session beendet!",
+    ALL_LEARNED: "Alles gelernt!",
+    SESSION_STATS: (count, errors) => `Du hast ${count} Vokabeln gelernt.${errors > 0 ? ` Dabei gab es ${errors} Fehler.` : ''}`,
+    EMPTY_STATE: "Alle Vokabeln sind im Archiv oder du hast noch keine hinzugefügt.",
+    NEW_SESSION: "Neue Session",
+    REFRESH: "Aktualisieren",
+    ARCHIVE_REPEAT: "Archivierte Vokabeln wiederholen (Random)",
+    ERRORS_OVERVIEW: "Deine Fehler im Überblick",
+    RIGHT_ANSWER: "Richtig wäre",
+    CHECK_BUTTON: "Prüfen",
+    DONT_KNOW_BUTTON: "Ich weiß es nicht",
+    TOO_SOON_MSG: "Richtig! (Status unverändert - 12h Regel)",
+    STATUS_UP_MSG: "Sehr gut! +1 Status",
+    STREAK_INFO_TITLE: "Streak",
+    STREAK_INFO_TEXT: "Deine Serie an aufeinanderfolgenden Lerntagen!",
+    MIC_ERR_NOT_SUPPORTED: "Spracherkennung wird in diesem Browser nicht unterstützt.",
+    INPUT_PLACEHOLDER: "Hier schreiben...",
+    LISTENING_PLACEHOLDER: "Höre zu...",
+    MIC_ERROR: "Spracherkennung wird in diesem Browser nicht unterstützt.",
+    UPDATE_FAILED: "Update fehlgeschlagen:",
+  },
+
+  OVERVIEW: {
+    TITLE: "Übersicht",
+    SEARCH_PLACEHOLDER: "Suchen...",
+    SORT_ALPHA: "Nach Alphabet sortieren",
+    SORT_DATE: "Nach Datum sortieren",
+    ARCHIVE_HEADER: "Archiv",
+    EMPTY_STATE: "Keine Vokabeln gefunden",
+    MODAL_ADD_TITLE: "Neue Vokabel",
+    MODAL_EDIT_TITLE: "Vokabel bearbeiten",
+    GERMAN_LABEL: "Deutsch",
+    GERMAN_PLACEHOLDER: "z.B. Apfel",
+    FOREIGN_LABEL: "Fremdsprache",
+    FOREIGN_PLACEHOLDER: "z.B. apple",
+    ERR_FILL_ALL: "Bitte beide Felder ausfüllen",
+    ERR_SAVE: "Konnte Vokabel nicht speichern",
+    ERR_DELETE: "Konnte Vokabel nicht löschen",
+    ARCHIVE_TAG: "ARCHIV",
+  },
+
+  PROFILE: {
+    TITLE: "Profil & Einstellungen",
+    SUPERADMIN_TAG: "Superadmin",
+    LANGUAGES_SECTION: "Meine Sprachen",
+    ADD_LANGUAGE_LABEL: "Sprache auswählen",
+    ADD_LANGUAGE_PLACEHOLDER: "Wähle eine neue Sprache...",
+    ADD_LANGUAGE_BUTTON: "Sprache hinzufügen",
+    STATS_SECTION: "Statistik",
+    STATS_TOTAL: "Gesamt",
+    STATS_LEARNED: "Gelernt",
+    STATS_OPEN: "Offen",
+    ACTIVITY_SECTION: "Lernaktivität",
+    STREAK_DAYS: (days) => `${days} Tage Serie`,
+    NAME_LABEL: "Name",
+    NAME_PLACEHOLDER: "Dein Name",
+    EMAIL_LABEL: "E-Mail",
+    EMAIL_PLACEHOLDER: "deine@email.de",
+    CHANGE_PASSWORD: "Passwort ändern",
+    SUPERADMIN_SETTINGS: "Superadmin Einstellungen",
+    DISABLE_TOO_SOON_LABEL: "12h Sperre deaktivieren",
+    DISABLE_TOO_SOON_DESC: "Erlaubt das sofortige Hochstufen von Vokabeln",
+    USER_ID_LABEL: "User ID:",
+    SUCCESS_UPDATE: "Profil erfolgreich aktualisiert!",
+    ERR_EMAIL_EXISTS: "Diese E-Mail-Adresse wird bereits verwendet.",
+    WEEKDAYS: ["S", "M", "D", "M", "D", "F", "S"],
+  },
+
+  COMPONENTS: {
+    DELETE_MODAL: {
+      TITLE: "Vokabel löschen?",
+      DESC: "Möchtest du diese Vokabel wirklich unwiderruflich löschen?",
+      CONFIRM: "Ja, löschen",
+    },
+    PASSWORD_MODAL: {
+      TITLE: "Passwort ändern",
+      CURRENT_LABEL: "Aktuelles Passwort",
+      NEW_LABEL: "Neues Passwort",
+      CONFIRM_LABEL: "Passwort bestätigen",
+      SUCCESS: "Passwort erfolgreich geändert!",
+      ERR_MISMATCH: "Die neuen Passwörter stimmen nicht überein.",
+      ERR_SHORT: "Das Passwort muss mindestens 6 Zeichen lang sein.",
+      ERR_OLD_WRONG: "Das alte Passwort ist nicht korrekt.",
+      UPDATE_BUTTON: "Passwort aktualisieren",
+    }
+  }
+};

@@ -5,10 +5,14 @@ import Overview from './screens/Overview';
 import Learning from './screens/Learning';
 import Login from './screens/Login';
 import Profile from './screens/Profile';
+import Welcome from './screens/Welcome';
 import { GraduationCap, BookOpen, LogOut, User } from 'lucide-react';
 import Toast from './components/Toast'; // Optional if I want custom toast
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { UI_STRINGS } from './constants/uiContent';
+
+const { LEARNING, OVERVIEW, PROFILE } = UI_STRINGS;
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -18,9 +22,9 @@ function Navigation() {
   const location = useLocation();
 
   const navItems = [
-    { path: '/', label: 'Lernen', icon: GraduationCap },
-    { path: '/overview', label: 'Übersicht', icon: BookOpen },
-    { path: '/profile', label: 'Profil', icon: User },
+    { path: '/', label: LEARNING.TITLE, icon: GraduationCap },
+    { path: '/overview', label: OVERVIEW.TITLE, icon: BookOpen },
+    { path: '/profile', label: PROFILE.TITLE, icon: User },
   ];
 
   return (
@@ -75,7 +79,7 @@ export default function App() {
   }
 
   if (!session) {
-    return <Login />;
+    return <Welcome />;
   }
 
   return (
