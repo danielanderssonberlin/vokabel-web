@@ -160,7 +160,7 @@ export default function Profile() {
   } 
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto mb-64 overflow-y-auto md:p-8">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-32 mx-auto overflow-y-auto md:p-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <User className="w-8 h-8 text-primary" />
@@ -197,7 +197,7 @@ export default function Profile() {
                   <span className="font-bold text-text-main">
                     {COMMON.PREDEFINED_LANGUAGES.find(l => l.code === lang.code)?.name || lang.name}
                   </span>
-                  <span className="text-xs tracking-wider uppercase text-text-muted">{lang.code}</span>
+                  
                 </div>
               </div>
               <button 

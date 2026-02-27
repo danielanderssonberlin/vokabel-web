@@ -125,7 +125,7 @@ export default function Overview() {
   const archivedVokabeln = filteredData.filter(item => item.status === 5);
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-24 mx-auto mb-25 md:p-8">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-32 mx-auto md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <BookOpen className="w-8 h-8 text-primary" />
@@ -205,7 +205,7 @@ export default function Overview() {
 
       <button 
         onClick={handleOpenAdd}
-        className="fixed z-10 flex items-center justify-center text-white transition-colors rounded-full shadow-lg bottom-24 right-6 md:right-12 w-14 h-14 bg-primary hover:bg-primary/90"
+        className="fixed z-10 flex items-center justify-center text-white transition-colors rounded-full shadow-lg bottom-[calc(5rem+env(safe-area-inset-bottom))] right-6 md:right-12 w-14 h-14 bg-primary hover:bg-primary/90"
       >
         <Plus size={30} />
       </button>

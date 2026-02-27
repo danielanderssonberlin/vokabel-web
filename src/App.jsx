@@ -28,7 +28,7 @@ function Navigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light px-6 py-2 flex flex-col items-center h-auto shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light px-6 pt-2 pb-[env(safe-area-inset-bottom)] flex flex-col items-center shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40">
       <div className="flex items-center justify-around w-full max-w-2xl gap-4 h-14">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -94,15 +94,17 @@ function AppContent({ session }) {
 
   return (
     <Router basename="/">
-      <main className="z-0 flex flex-col flex-1 mb-24 overflow-hidden bg-background">
-        <Routes>
-          <Route path="/" element={<Learning />} />
-          <Route path="/overview" element={<Overview />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-      <Navigation />
+      <div className="flex flex-col h-screen h-[100dvh] bg-background overflow-hidden">
+        <main className="z-0 flex-1 overflow-hidden">
+          <Routes>
+            <Route path="/" element={<Learning />} />
+            <Route path="/overview" element={<Overview />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+        <Navigation />
+      </div>
     </Router>
   );
 }
