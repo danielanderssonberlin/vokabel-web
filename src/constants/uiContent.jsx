@@ -127,6 +127,10 @@ export const UI_STRINGS = {
       ERR_FILL_ALL: "Bitte beide Felder ausfüllen",
       ERR_SAVE: "Konnte Vokabel nicht speichern",
       ERR_DELETE: "Konnte Vokabel nicht löschen",
+      EMPTY_STATE_SUB: "Füge deine ersten Vokabeln hinzu, um zu starten.",
+      NO_LANGUAGE_TITLE: "Keine Sprache ausgewählt",
+      NO_LANGUAGE_SUB: "Bitte füge zuerst eine Sprache in deinem Profil hinzu.",
+      GO_TO_PROFILE: "Zum Profil",
       ARCHIVE_TAG: "ARCHIV",
     },
     PROFILE: {
@@ -300,6 +304,10 @@ export const UI_STRINGS = {
       ERR_FILL_ALL: "Please fill both fields",
       ERR_SAVE: "Could not save vocabulary",
       ERR_DELETE: "Could not delete vocabulary",
+      EMPTY_STATE_SUB: "Add your first words to get started.",
+      NO_LANGUAGE_TITLE: "No language selected",
+      NO_LANGUAGE_SUB: "Please add a language in your profile first.",
+      GO_TO_PROFILE: "Go to Profile",
       ARCHIVE_TAG: "ARCHIVE",
     },
     PROFILE: {

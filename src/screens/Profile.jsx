@@ -7,6 +7,7 @@ import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, Chevro
 import PasswordModal from '../components/PasswordModal';
 import UiLanguageSwitcher from '../components/UiLanguageSwitcher';
 import { useUiLanguage } from '../context/UiLanguageContext';
+import { clsx } from 'clsx';
 
 export default function Profile() {
   const { strings } = useUiLanguage();
@@ -175,7 +176,12 @@ export default function Profile() {
 
       {/* Sprachen Management */}
       <div className="bg-surface border border-border rounded-[32px] p-6 mb-8 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
+        <div 
+        className={clsx(
+          "flex items-center justify-between",
+          availableLanguages.length > 0 && "mb-6"
+        )}>
+          
           <div className="flex items-center gap-2">
             <Globe className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-bold text-text-main">{PROFILE.LANGUAGES_SECTION}</h2>

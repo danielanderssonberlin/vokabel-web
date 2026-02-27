@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { getVocabulary, deleteVocabularyItem, addVocabularyItem, updateVocabularyItem } from '../store/vocabularyStore';
-import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle, SortAsc, Clock } from 'lucide-react';
+import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle, SortAsc, Clock, ArrowDownRight, Languages } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
@@ -32,7 +33,10 @@ export default function Overview() {
   const [error, setError] = useState('');
 
   const loadVokabeln = useCallback(async () => {
-    if (!selectedLanguage) return;
+    if (!selectedLanguage) {
+      setInitialLoading(false);
+      return;
+    }
     try {
       const all = await getVocabulary(selectedLanguage);
       setVokabeln(all);
@@ -164,6 +168,20 @@ export default function Overview() {
             <div className="w-full h-24 rounded-2xl bg-surface/50" />
             <div className="w-full h-24 rounded-2xl bg-surface/50" />
           </div>
+        ) : !selectedLanguage ? (
+          <div className="flex flex-col items-center justify-center h-full px-6 text-center animate-fade-in-up">
+            <div className="p-6 mb-4 rounded-full bg-primary/10">
+              <Languages size={48} className="text-primary" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold text-text-main">{OVERVIEW.NO_LANGUAGE_TITLE}</h2>
+            <p className="mb-8 text-text-secondary">{OVERVIEW.NO_LANGUAGE_SUB}</p>
+            <Link 
+              to="/profile"
+              className="px-8 py-3 font-bold text-white transition-all shadow-md bg-primary rounded-2xl hover:bg-primary/90 active:scale-95"
+            >
+              {OVERVIEW.GO_TO_PROFILE}
+            </Link>
+          </div>
         ) : (
           <>
             {activeVokabeln.map((item, index) => (
@@ -195,20 +213,30 @@ export default function Overview() {
             ))}
 
             {filteredData.length === 0 && (
-              <div className="flex items-center justify-center h-40">
-                <p className="text-text-muted">{OVERVIEW.EMPTY_STATE}</p>
+              <div className="relative flex flex-col items-center justify-center h-64 px-6 text-center animate-fade-in-up">
+                <div className="p-6 mb-4 rounded-full bg-primary/5">
+                  <BookOpen size={48} className="opacity-20 text-primary" />
+                </div>
+                <h2 className="mb-1 text-lg font-bold text-text-main">{OVERVIEW.EMPTY_STATE}</h2>
+                <p className="text-sm text-text-secondary">{OVERVIEW.EMPTY_STATE_SUB}</p>
+                
+                <div className="absolute right-0 flex flex-col items-center gap-2 bottom-4 animate-bounce">
+                  <span className="text-xs font-bold tracking-widest uppercase text-primary">{COMMON.ADD}</span>
+                  <ArrowDownRight size={32} className="text-primary" />
+                </div>
               </div>
             )}
           </>
         )}
       </div>
-
-      <button 
-        onClick={handleOpenAdd}
-        className="fixed z-10 flex items-center justify-center text-white transition-colors rounded-full shadow-lg bottom-[calc(5rem+env(safe-area-inset-bottom))] right-6 md:right-12 w-14 h-14 bg-primary hover:bg-primary/90"
-      >
-        <Plus size={30} />
-      </button>
+      {selectedLanguage && (
+        <button 
+          onClick={handleOpenAdd}
+          className="fixed z-10 flex items-center justify-center text-white transition-colors rounded-full shadow-lg bottom-[calc(5rem+env(safe-area-inset-bottom))] right-6 md:right-12 w-14 h-14 bg-primary hover:bg-primary/90"
+        >
+          <Plus size={30} />
+        </button>
+      )}
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
