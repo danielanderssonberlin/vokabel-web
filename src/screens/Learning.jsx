@@ -406,7 +406,7 @@ export default function Learning() {
     );
   }
 
-  const current = vokabeln[currentIndex];
+  const current = vokabeln[currentIndex] || { german: '', spanish: '', status: 0 };
 
   return (
     <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-32 mx-auto md:p-8">
@@ -471,9 +471,12 @@ export default function Learning() {
           key={currentIndex}
           className={cn(
             "relative flex flex-col items-center p-10 text-center border shadow-sm border-border-light bg-surface rounded-3xl animate-slide-in-top",
-            current.status === 5 && isCorrect === true && "animate-fly-away animate-learned-success"
+            current.status === 5 && isCorrect === true && "animate-fly-away animate-learned-success",
+            loading && "opacity-50 animate-pulse"
           )}
         >
+        {!loading && (
+         <>
           <div className="absolute px-3 py-1 border rounded-full top-4 right-4 border-border-light bg-background/50">
             <p className="text-[10px] font-bold text-text-muted">{currentIndex + 1} / {vokabeln.length}</p>
           </div>
@@ -500,6 +503,8 @@ export default function Learning() {
                 />
               ))}
             </div>
+          )}
+          </>
           )}
         </div>
       </div>
