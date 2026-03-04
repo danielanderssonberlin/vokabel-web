@@ -70,12 +70,35 @@ export default function Learning() {
   const [isListening, setIsListening] = useState(false);
   const recognition = useRef(null);
 
-  const loadVokabeln = useCallback(async (archive = false) => {
+  const loadVokabeln = useCallback(async (archive = false, ignoreSaved = false) => {
     if (!selectedLanguage) {
       setLoading(false);
       return;
     }
     setLoading(true);
+
+    if (!ignoreSaved) {
+      const saved = localStorage.getItem(`learning_session_${selectedLanguage}`);
+      if (saved) {
+        try {
+          const { vokabeln: savedVokabeln, currentIndex: savedIndex, isArchiveMode: savedArchive, wrongAnswers: savedWrong } = JSON.parse(saved);
+          if (savedVokabeln && savedVokabeln.length > 0 && savedIndex < savedVokabeln.length) {
+            setVokabeln(savedVokabeln);
+            setCurrentIndex(savedIndex);
+            setIsArchiveMode(savedArchive);
+            setWrongAnswers(savedWrong || []);
+            
+            const all = await getVocabulary(selectedLanguage);
+            setStats(calculateStatsFromVocabulary(all));
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.error("Failed to restore session", e);
+        }
+      }
+    }
+
     setIsArchiveMode(archive);
     const all = await getVocabulary(selectedLanguage);
     
@@ -118,6 +141,25 @@ export default function Learning() {
     setWrongAnswers([]);
     setLoading(false);
   }, [selectedLanguage]);
+
+  // Save session state
+  useEffect(() => {
+    if (vokabeln.length > 0 && !sessionCompleted && !loading && selectedLanguage) {
+      localStorage.setItem(`learning_session_${selectedLanguage}`, JSON.stringify({
+        vokabeln,
+        currentIndex,
+        isArchiveMode,
+        wrongAnswers
+      }));
+    }
+  }, [vokabeln, currentIndex, isArchiveMode, wrongAnswers, sessionCompleted, loading, selectedLanguage]);
+
+  // Clear session state
+  useEffect(() => {
+    if (sessionCompleted && selectedLanguage) {
+      localStorage.removeItem(`learning_session_${selectedLanguage}`);
+    }
+  }, [sessionCompleted, selectedLanguage]);
 
   useEffect(() => {
     loadVokabeln();
@@ -349,14 +391,14 @@ export default function Learning() {
           
           <div className="flex flex-col w-full max-w-xs gap-3">
             <button 
-              onClick={() => loadVokabeln(false)}
+              onClick={() => loadVokabeln(false, true)}
               className="px-8 py-4 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90"
             >
               {vokabeln.length === 0 ? LEARNING.REFRESH : LEARNING.NEW_SESSION}
             </button>
             
             <button
-              onClick={() => loadVokabeln(true)}
+              onClick={() => loadVokabeln(true, true)}
               className="mt-8 text-sm font-medium transition-colors text-text-secondary hover:text-primary"
             >
               {LEARNING.ARCHIVE_REPEAT}
