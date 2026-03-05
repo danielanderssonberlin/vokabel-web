@@ -23,6 +23,7 @@ export default function Learning() {
   const [vokabeln, setVokabeln] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
+  const [infinitiveAnswer, setInfinitiveAnswer] = useState('');
   const [verbAnswers, setVerbAnswers] = useState({
     yo: '',
     tu: '',
@@ -255,9 +256,11 @@ export default function Learning() {
 
     let correct = false;
     if (isVerb) {
-      correct = Object.keys(parsedVerb.forms).every(key => 
+      const isInfCorrect = (infinitiveAnswer || '').trim().toLowerCase() === (parsedVerb.infinitive || '').trim().toLowerCase();
+      const areFormsCorrect = Object.keys(parsedVerb.forms).every(key => 
         (verbAnswers[key] || '').trim().toLowerCase() === (parsedVerb.forms[key] || '').trim().toLowerCase()
       );
+      correct = isInfCorrect && areFormsCorrect;
     } else {
       correct = answer.trim().toLowerCase() === current.spanish.trim().toLowerCase();
     }
@@ -335,6 +338,7 @@ export default function Learning() {
       if (currentIndex < vokabeln.length - 1) {
         setCurrentIndex(currentIndex + 1);
         setAnswer('');
+        setInfinitiveAnswer('');
         setVerbAnswers({
           yo: '',
           tu: '',
@@ -580,13 +584,19 @@ export default function Learning() {
                   const parsed = JSON.parse(current.spanish);
                   if (parsed && parsed.isVerb) {
                     return (
-                      <div className="grid grid-cols-2 gap-2 mt-2">
-                        {Object.entries(parsed.forms).map(([key, value]) => (
-                          <div key={key} className="text-left bg-error/5 p-2 rounded-lg border border-error/10">
-                            <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW[key.toUpperCase()]}</span>
-                            <span className="text-sm font-bold text-error">{value}</span>
-                          </div>
-                        ))}
+                      <div className="space-y-4 mt-2">
+                        <div className="text-left bg-error/5 p-3 rounded-lg border border-error/10">
+                          <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
+                          <span className="text-lg font-bold text-error">{parsed.infinitive}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.entries(parsed.forms).map(([key, value]) => (
+                            <div key={key} className="text-left bg-error/5 p-2 rounded-lg border border-error/10">
+                              <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW[key.toUpperCase()]}</span>
+                              <span className="text-sm font-bold text-error">{value}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     );
                   }
@@ -617,13 +627,7 @@ export default function Learning() {
 
       <form onSubmit={handleCheck} className="flex flex-col flex-1">
         <label className="mb-2 ml-1 text-sm font-medium text-text-main">
-          {(() => {
-            try {
-              const parsed = JSON.parse(current.spanish);
-              if (parsed && parsed.isVerb) return `${UI_STRINGS.COMMON.FOREIGN_LANG} (${parsed.infinitive})`;
-            } catch (e) {}
-            return UI_STRINGS.COMMON.FOREIGN_LANG;
-          })()}
+          {UI_STRINGS.COMMON.FOREIGN_LANG}
         </label>
         
         {(() => {
@@ -631,35 +635,56 @@ export default function Learning() {
             const parsed = JSON.parse(current.spanish);
             if (parsed && parsed.isVerb) {
               return (
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  {[
-                    { key: 'yo', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.YO} (me)` : UI_STRINGS.OVERVIEW.YO },
-                    { key: 'tu', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.TU} (te)` : UI_STRINGS.OVERVIEW.TU },
-                    { key: 'el', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.EL} (se)` : UI_STRINGS.OVERVIEW.EL },
-                    { key: 'nosotros', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.NOSOTROS} (nos)` : UI_STRINGS.OVERVIEW.NOSOTROS },
-                    { key: 'vosotros', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.VOSOTROS} (os)` : UI_STRINGS.OVERVIEW.VOSOTROS },
-                    { key: 'ellos', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.ELLOS} (se)` : UI_STRINGS.OVERVIEW.ELLOS },
-                  ].map((f) => (
-                    <div key={f.key}>
-                      <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{f.label}</span>
-                      <input
-                        ref={f.key === 'yo' ? inputRef : null}
-                        className={cn(
-                          "w-full bg-surface border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 transition-all",
-                          isCorrect === true ? "border-success text-success bg-success-light" : 
-                          isCorrect === false ? "border-error text-error bg-error-light" : 
-                          "border-border text-text-main focus:ring-primary/20"
-                        )}
-                        value={verbAnswers[f.key]}
-                        onChange={(e) => setVerbAnswers(prev => ({ ...prev, [f.key]: e.target.value }))}
-                        disabled={isCorrect !== null}
-                        autoComplete="off"
-                        autoCapitalize="none"
-                        autoCorrect="off"
-                        spellCheck="false"
-                      />
-                    </div>
-                  ))}
+                <div className="space-y-4 mb-4">
+                  <div>
+                    <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
+                    <input
+                      ref={inputRef}
+                      className={cn(
+                        "w-full bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all",
+                        isCorrect === true ? "border-success text-success bg-success-light" : 
+                        isCorrect === false ? "border-error text-error bg-error-light" : 
+                        "border-border text-text-main focus:ring-primary/20"
+                      )}
+                      value={infinitiveAnswer}
+                      onChange={(e) => setInfinitiveAnswer(e.target.value)}
+                      disabled={isCorrect !== null}
+                      autoComplete="off"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck="false"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { key: 'yo', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.YO} (me)` : UI_STRINGS.OVERVIEW.YO },
+                      { key: 'tu', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.TU} (te)` : UI_STRINGS.OVERVIEW.TU },
+                      { key: 'el', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.EL} (se)` : UI_STRINGS.OVERVIEW.EL },
+                      { key: 'nosotros', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.NOSOTROS} (nos)` : UI_STRINGS.OVERVIEW.NOSOTROS },
+                      { key: 'vosotros', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.VOSOTROS} (os)` : UI_STRINGS.OVERVIEW.VOSOTROS },
+                      { key: 'ellos', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.ELLOS} (se)` : UI_STRINGS.OVERVIEW.ELLOS },
+                    ].map((f) => (
+                      <div key={f.key}>
+                        <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{f.label}</span>
+                        <input
+                          className={cn(
+                            "w-full bg-surface border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 transition-all",
+                            isCorrect === true ? "border-success text-success bg-success-light" : 
+                            isCorrect === false ? "border-error text-error bg-error-light" : 
+                            "border-border text-text-main focus:ring-primary/20"
+                          )}
+                          value={verbAnswers[f.key]}
+                          onChange={(e) => setVerbAnswers(prev => ({ ...prev, [f.key]: e.target.value }))}
+                          disabled={isCorrect !== null}
+                          autoComplete="off"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck="false"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               );
             }
