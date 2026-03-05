@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { getVocabulary, deleteVocabularyItem, addVocabularyItem, updateVocabularyItem } from '../store/vocabularyStore';
-import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle, SortAsc, Clock, ArrowDownRight, Languages } from 'lucide-react';
+import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle, SortAsc, Clock, ArrowDownRight, Languages, HelpCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
@@ -29,6 +29,17 @@ export default function Overview() {
   // Form State
   const [german, setGerman] = useState('');
   const [foreign, setForeign] = useState('');
+  const [isVerb, setIsVerb] = useState(false);
+  const [isReflexive, setIsReflexive] = useState(false);
+  const [showReflexiveHelp, setShowReflexiveHelp] = useState(false);
+  const [forms, setForms] = useState({
+    yo: '',
+    tu: '',
+    el: '',
+    nosotros: '',
+    vosotros: '',
+    ellos: ''
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -53,6 +64,17 @@ export default function Overview() {
     setEditingItem(null);
     setGerman('');
     setForeign('');
+    setIsVerb(false);
+    setIsReflexive(false);
+    setShowReflexiveHelp(false);
+    setForms({
+      yo: '',
+      tu: '',
+      el: '',
+      nosotros: '',
+      vosotros: '',
+      ellos: ''
+    });
     setError('');
     setIsModalOpen(true);
   };
@@ -60,7 +82,35 @@ export default function Overview() {
   const handleOpenEdit = (item) => {
     setEditingItem(item);
     setGerman(item.german);
-    setForeign(item.spanish);
+    
+    try {
+      const parsed = JSON.parse(item.spanish);
+      if (parsed && parsed.isVerb) {
+        setIsVerb(true);
+        setIsReflexive(parsed.isReflexive || false);
+        setShowReflexiveHelp(false);
+        setForeign(parsed.infinitive || '');
+        setForms(parsed.forms || {
+          yo: '',
+          tu: '',
+          el: '',
+          nosotros: '',
+          vosotros: '',
+          ellos: ''
+        });
+      } else {
+        setIsVerb(false);
+        setIsReflexive(false);
+        setShowReflexiveHelp(false);
+        setForeign(item.spanish);
+      }
+    } catch (e) {
+      setIsVerb(false);
+      setIsReflexive(false);
+      setShowReflexiveHelp(false);
+      setForeign(item.spanish);
+    }
+    
     setError('');
     setIsModalOpen(true);
   };
@@ -69,20 +119,43 @@ export default function Overview() {
     e.preventDefault();
     setError('');
     
-    if (!german || !foreign) {
+    if (!german || (!isVerb && !foreign) || (isVerb && !foreign)) {
       setError(OVERVIEW.ERR_FILL_ALL);
       return;
     }
 
+    if (isVerb) {
+      const allFormsFilled = Object.values(forms).every(f => f.trim() !== '');
+      if (!allFormsFilled) {
+        setError(OVERVIEW.ERR_FILL_ALL);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
+      const finalForeign = isVerb 
+        ? JSON.stringify({ isVerb: true, isReflexive, infinitive: foreign.trim(), forms }) 
+        : foreign.trim();
+
       if (editingItem) {
-        await updateVocabularyItem(editingItem.id, german.trim(), foreign.trim());
+        await updateVocabularyItem(editingItem.id, german.trim(), finalForeign);
       } else {
-        await addVocabularyItem(german.trim(), foreign.trim(), selectedLanguage);
+        await addVocabularyItem(german.trim(), finalForeign, selectedLanguage);
       }
       setGerman('');
       setForeign('');
+      setIsVerb(false);
+      setIsReflexive(false);
+      setShowReflexiveHelp(false);
+      setForms({
+        yo: '',
+        tu: '',
+        el: '',
+        nosotros: '',
+        vosotros: '',
+        ellos: ''
+      });
       setIsModalOpen(false);
       setEditingItem(null);
       await loadVokabeln();
@@ -91,6 +164,10 @@ export default function Overview() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFormChange = (key, value) => {
+    setForms(prev => ({ ...prev, [key]: value }));
   };
 
   const handleDelete = (id) => {
@@ -113,10 +190,25 @@ export default function Overview() {
   };
 
   const filteredData = vokabeln
-    .filter(item => 
-      item.german.toLowerCase().includes(search.toLowerCase()) || 
-      item.spanish.toLowerCase().includes(search.toLowerCase())
-    )
+    .filter(item => {
+      const searchLower = search.toLowerCase();
+      const inGerman = item.german.toLowerCase().includes(searchLower);
+      
+      let inForeign = false;
+      try {
+        const parsed = JSON.parse(item.spanish);
+        if (parsed && parsed.isVerb) {
+          inForeign = parsed.infinitive.toLowerCase().includes(searchLower) ||
+                      Object.values(parsed.forms).some(f => f.toLowerCase().includes(searchLower));
+        } else {
+          inForeign = item.spanish.toLowerCase().includes(searchLower);
+        }
+      } catch (e) {
+        inForeign = item.spanish.toLowerCase().includes(searchLower);
+      }
+      
+      return inGerman || inForeign;
+    })
     .sort((a, b) => {
       if (sortBy === 'alpha') {
         return a.german.localeCompare(b.german);
@@ -253,32 +345,126 @@ export default function Overview() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 overflow-y-auto pr-2 no-scrollbar">
               {error && (
                 <div className="flex items-center gap-2 p-4 bg-error/10 text-error rounded-2xl">
                   <AlertCircle size={20} />
                   <p className="text-sm font-medium">{error}</p>
                 </div>
               )}
+              
+              <div className="flex items-center justify-between p-4 border bg-surface/50 border-border-light rounded-2xl">
+                <div className="flex flex-col">
+                  <span className="font-bold text-text-main">{OVERVIEW.VERB_LABEL}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsVerb(!isVerb)}
+                  className={cn(
+                    "w-12 h-6 rounded-full transition-colors relative",
+                    isVerb ? "bg-primary" : "bg-slate-300"
+                  )}
+                >
+                  <div className={cn(
+                    "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                    isVerb ? "left-7" : "left-1"
+                  )} />
+                </button>
+              </div>
+
+              {isVerb && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-4 border bg-surface/50 border-border-light rounded-2xl">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-text-main">{OVERVIEW.REFLEXIVE_LABEL}</span>
+                      <button 
+                        type="button"
+                        onClick={() => setShowReflexiveHelp(!showReflexiveHelp)}
+                        className="text-text-muted hover:text-primary transition-colors"
+                      >
+                        <HelpCircle size={18} />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsReflexive(!isReflexive)}
+                      className={cn(
+                        "w-12 h-6 rounded-full transition-colors relative",
+                        isReflexive ? "bg-primary" : "bg-slate-300"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                        isReflexive ? "left-7" : "left-1"
+                      )} />
+                    </button>
+                  </div>
+                  
+                  {showReflexiveHelp && (
+                    <div className="p-4 mx-1 text-sm bg-primary/5 border border-primary/10 rounded-2xl text-text-secondary animate-fade-in">
+                      {OVERVIEW.REFLEXIVE_DESC}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div>
-                <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.GERMAN_LABEL}</label>
+                <label className="block mb-2 ml-1 text-sm font-medium text-text-main">
+                  {isVerb ? OVERVIEW.INFINITIVE_LABEL : OVERVIEW.GERMAN_LABEL}
+                </label>
                 <textarea
-                  className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder={OVERVIEW.GERMAN_PLACEHOLDER}
+                  className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder={isVerb ? OVERVIEW.INFINITIVE_LABEL : OVERVIEW.GERMAN_PLACEHOLDER}
                   value={german}
                   onChange={(e) => setGerman(e.target.value)}
                 />
               </div>
 
-              <div>
-                <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL}</label>
-                <textarea
-                  className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder={OVERVIEW.FOREIGN_PLACEHOLDER}
-                  value={foreign}
-                  onChange={(e) => setForeign(e.target.value)}
-                />
-              </div>
+              {!isVerb ? (
+                <div>
+                  <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL}</label>
+                  <textarea
+                    className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder={OVERVIEW.FOREIGN_PLACEHOLDER}
+                    value={foreign}
+                    onChange={(e) => setForeign(e.target.value)}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL} ({OVERVIEW.INFINITIVE_LABEL})</label>
+                    <input
+                      type="text"
+                      className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="z.B. comer"
+                      value={foreign}
+                      onChange={(e) => setForeign(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { key: 'yo', label: isReflexive ? `${OVERVIEW.YO} (me)` : OVERVIEW.YO },
+                      { key: 'tu', label: isReflexive ? `${OVERVIEW.TU} (te)` : OVERVIEW.TU },
+                      { key: 'el', label: isReflexive ? `${OVERVIEW.EL} (se)` : OVERVIEW.EL },
+                      { key: 'nosotros', label: isReflexive ? `${OVERVIEW.NOSOTROS} (nos)` : OVERVIEW.NOSOTROS },
+                      { key: 'vosotros', label: isReflexive ? `${OVERVIEW.VOSOTROS} (os)` : OVERVIEW.VOSOTROS },
+                      { key: 'ellos', label: isReflexive ? `${OVERVIEW.ELLOS} (se)` : OVERVIEW.ELLOS },
+                    ].map((f) => (
+                      <div key={f.key}>
+                        <label className="block mb-1 ml-1 text-xs font-medium text-text-secondary">{f.label}</label>
+                        <input
+                          type="text"
+                          className="w-full bg-surface border border-border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          value={forms[f.key]}
+                          onChange={(e) => handleFormChange(f.key, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -303,6 +489,19 @@ export default function Overview() {
 }
 
 function VocabularyItem({ item, onEdit, onDelete, index, OVERVIEW }) {
+  let displayForeign = item.spanish;
+  let isInfinitive = false;
+  
+  try {
+    const parsed = JSON.parse(item.spanish);
+    if (parsed && parsed.isVerb) {
+      displayForeign = parsed.infinitive;
+      isInfinitive = true;
+    }
+  } catch (e) {
+    // Not JSON
+  }
+
   return (
     <div 
       className="flex items-center justify-between p-4 transition-all border shadow-sm cursor-pointer bg-surface border-border-light rounded-2xl hover:border-primary/30 group animate-fade-in-up"
@@ -311,7 +510,12 @@ function VocabularyItem({ item, onEdit, onDelete, index, OVERVIEW }) {
     >
       <div className="flex-1">
         <h3 className="text-lg font-bold text-text-main">{item.german}</h3>
-        <p className="italic text-text-secondary">{item.spanish}</p>
+        <p className={cn(
+          "italic text-text-secondary",
+          isInfinitive && "text-primary font-medium"
+        )}>
+          {displayForeign} {isInfinitive && `(${OVERVIEW.INFINITIVE_LABEL})`}
+        </p>
         
         <div className="flex items-center gap-1 mt-2">
           {[1, 2, 3, 4].map((i) => (

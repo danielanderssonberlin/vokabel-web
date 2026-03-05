@@ -23,6 +23,14 @@ export default function Learning() {
   const [vokabeln, setVokabeln] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
+  const [verbAnswers, setVerbAnswers] = useState({
+    yo: '',
+    tu: '',
+    el: '',
+    nosotros: '',
+    vosotros: '',
+    ellos: ''
+  });
   const [isCorrect, setIsCorrect] = useState(null);
   const [wasTooSoon, setWasTooSoon] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -237,7 +245,22 @@ export default function Learning() {
     if (isCorrect !== null) return;
 
     const current = vokabeln[currentIndex];
-    const correct = answer.trim().toLowerCase() === current.spanish.trim().toLowerCase();
+    
+    let isVerb = false;
+    let parsedVerb = null;
+    try {
+      parsedVerb = JSON.parse(current.spanish);
+      isVerb = !!(parsedVerb && parsedVerb.isVerb);
+    } catch (e) {}
+
+    let correct = false;
+    if (isVerb) {
+      correct = Object.keys(parsedVerb.forms).every(key => 
+        (verbAnswers[key] || '').trim().toLowerCase() === (parsedVerb.forms[key] || '').trim().toLowerCase()
+      );
+    } else {
+      correct = answer.trim().toLowerCase() === current.spanish.trim().toLowerCase();
+    }
     
     // Sofortige Prüfung für direktes Feedback
     if (correct) {
@@ -312,6 +335,14 @@ export default function Learning() {
       if (currentIndex < vokabeln.length - 1) {
         setCurrentIndex(currentIndex + 1);
         setAnswer('');
+        setVerbAnswers({
+          yo: '',
+          tu: '',
+          el: '',
+          nosotros: '',
+          vosotros: '',
+          ellos: ''
+        });
         setIsCorrect(null);
         setWasTooSoon(false);
       } else {
@@ -436,7 +467,23 @@ export default function Learning() {
                     
                     <div className="pt-4 border-t border-border-light">
                       <span className="text-[10px] font-bold tracking-widest uppercase text-success mb-1 block">{LEARNING.RIGHT_ANSWER}</span>
-                      <p className="text-2xl font-bold text-success">{item.spanish}</p>
+                      {(() => {
+                        try {
+                          const parsed = JSON.parse(item.spanish);
+                          if (parsed && parsed.isVerb) {
+                            return (
+                              <div className="grid grid-cols-2 gap-1 mt-1">
+                                {Object.entries(parsed.forms).map(([key, value]) => (
+                                  <div key={key} className="text-[10px]">
+                                    <span className="font-bold text-success/70">{UI_STRINGS.OVERVIEW[key.toUpperCase()]}:</span> {value}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+                        } catch (e) {}
+                        return <p className="text-2xl font-bold text-success">{item.spanish}</p>;
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -528,7 +575,24 @@ export default function Learning() {
           {isCorrect === false && (
             <div className="w-full pt-6 mt-6 border-t border-border-light animate-bounce-in">
               <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
-              <h3 className="text-3xl font-bold text-error">{current.spanish}</h3>
+              {(() => {
+                try {
+                  const parsed = JSON.parse(current.spanish);
+                  if (parsed && parsed.isVerb) {
+                    return (
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {Object.entries(parsed.forms).map(([key, value]) => (
+                          <div key={key} className="text-left bg-error/5 p-2 rounded-lg border border-error/10">
+                            <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW[key.toUpperCase()]}</span>
+                            <span className="text-sm font-bold text-error">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                } catch (e) {}
+                return <h3 className="text-3xl font-bold text-error">{current.spanish}</h3>;
+              })()}
             </div>
           )}
 
@@ -552,40 +616,91 @@ export default function Learning() {
       </div>
 
       <form onSubmit={handleCheck} className="flex flex-col flex-1">
-        <label className="mb-2 ml-1 text-sm font-medium text-text-main">{UI_STRINGS.COMMON.FOREIGN_LANG}</label>
-        <div className="flex items-center gap-3">
-          <input
-            ref={inputRef}
-            autoFocus
-            className={cn(
-              "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all",
-              isCorrect === true ? "border-success text-success bg-success-light" : 
-              isCorrect === false ? "border-error text-error bg-error-light" : 
-              "border-border text-text-main focus:ring-primary/20"
-            )}
-            placeholder={isListening ? UI_STRINGS.LEARNING.LISTENING_PLACEHOLDER : UI_STRINGS.LEARNING.INPUT_PLACEHOLDER}
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            disabled={isCorrect !== null}
-            autoComplete="off"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck="false"
-          />
-          
-          { isCorrect === null && (
-            <button 
-              type="button"
-              onClick={handleMicPress}
-              className={cn(
-                "p-4 rounded-2xl shadow-sm transition-all",
-                isMicEnabled ? "bg-error text-white scale-110" : "bg-primary-light text-primary hover:bg-primary-light/80"
+        <label className="mb-2 ml-1 text-sm font-medium text-text-main">
+          {(() => {
+            try {
+              const parsed = JSON.parse(current.spanish);
+              if (parsed && parsed.isVerb) return `${UI_STRINGS.COMMON.FOREIGN_LANG} (${parsed.infinitive})`;
+            } catch (e) {}
+            return UI_STRINGS.COMMON.FOREIGN_LANG;
+          })()}
+        </label>
+        
+        {(() => {
+          try {
+            const parsed = JSON.parse(current.spanish);
+            if (parsed && parsed.isVerb) {
+              return (
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {[
+                    { key: 'yo', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.YO} (me)` : UI_STRINGS.OVERVIEW.YO },
+                    { key: 'tu', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.TU} (te)` : UI_STRINGS.OVERVIEW.TU },
+                    { key: 'el', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.EL} (se)` : UI_STRINGS.OVERVIEW.EL },
+                    { key: 'nosotros', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.NOSOTROS} (nos)` : UI_STRINGS.OVERVIEW.NOSOTROS },
+                    { key: 'vosotros', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.VOSOTROS} (os)` : UI_STRINGS.OVERVIEW.VOSOTROS },
+                    { key: 'ellos', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.ELLOS} (se)` : UI_STRINGS.OVERVIEW.ELLOS },
+                  ].map((f) => (
+                    <div key={f.key}>
+                      <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{f.label}</span>
+                      <input
+                        ref={f.key === 'yo' ? inputRef : null}
+                        className={cn(
+                          "w-full bg-surface border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 transition-all",
+                          isCorrect === true ? "border-success text-success bg-success-light" : 
+                          isCorrect === false ? "border-error text-error bg-error-light" : 
+                          "border-border text-text-main focus:ring-primary/20"
+                        )}
+                        value={verbAnswers[f.key]}
+                        onChange={(e) => setVerbAnswers(prev => ({ ...prev, [f.key]: e.target.value }))}
+                        disabled={isCorrect !== null}
+                        autoComplete="off"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck="false"
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+          } catch (e) {}
+
+          return (
+            <div className="flex items-center gap-3">
+              <input
+                ref={inputRef}
+                autoFocus
+                className={cn(
+                  "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all",
+                  isCorrect === true ? "border-success text-success bg-success-light" : 
+                  isCorrect === false ? "border-error text-error bg-error-light" : 
+                  "border-border text-text-main focus:ring-primary/20"
+                )}
+                placeholder={isListening ? UI_STRINGS.LEARNING.LISTENING_PLACEHOLDER : UI_STRINGS.LEARNING.INPUT_PLACEHOLDER}
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                disabled={isCorrect !== null}
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
+              />
+              
+              { isCorrect === null && (
+                <button 
+                  type="button"
+                  onClick={handleMicPress}
+                  className={cn(
+                    "p-4 rounded-2xl shadow-sm transition-all",
+                    isMicEnabled ? "bg-error text-white scale-110" : "bg-primary-light text-primary hover:bg-primary-light/80"
+                  )}
+                >
+                  {isMicEnabled ? <MicOff size={24} /> : <Mic size={24} />}
+                </button>
               )}
-            >
-              {isMicEnabled ? <MicOff size={24} /> : <Mic size={24} />}
-            </button>
-          )}
-        </div>
+            </div>
+          );
+        })()}
         
         {error && (
           <div className="flex items-center gap-2 p-3 mt-4 bg-error/10 text-error rounded-xl">
