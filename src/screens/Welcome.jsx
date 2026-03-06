@@ -3,6 +3,7 @@ import { BookOpen, ArrowRight } from 'lucide-react';
 import Login from './Login';
 import UiLanguageSwitcher from '../components/UiLanguageSwitcher';
 import { useUiLanguage } from '../context/UiLanguageContext';
+import logo from '../assets/logo.png';
 
 export default function Welcome() {
   const [showLogin, setShowLogin] = useState(false);
@@ -17,8 +18,8 @@ export default function Welcome() {
     <div className="flex flex-col items-center min-h-screen p-6 pb-12 overflow-y-auto bg-background no-scrollbar">
       {/* Hero Section */}
       <div className="w-full max-w-2xl pt-12 pb-16 text-center animate-fade-in-up">
-        <div className="inline-flex items-center justify-center p-4 mb-6 rounded-full bg-primary/10 text-primary">
-          <BookOpen size={48} />
+        <div className="inline-flex items-center justify-center w-64 p-4 mb-6 rounded-full bg-primary/10 text-primary">
+          <img src={logo} alt="Logo"/>
         </div>
         <h1 className="mb-4 text-4xl font-black tracking-tight md:text-5xl text-text-main">
           {COMMON.APP_NAME.split(' ')[0]} <span className="text-primary">{COMMON.APP_NAME.split(' ')[1]}</span>

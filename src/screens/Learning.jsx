@@ -241,9 +241,50 @@ export default function Learning() {
     setIsMicEnabled(!isMicEnabled);
   };
 
+  const getReflexiveLabel = (key) => {
+    const map = {
+      yo: `me (${UI_STRINGS.OVERVIEW.YO})`,
+      tu: `te (${UI_STRINGS.OVERVIEW.TU})`,
+      el: `se (${UI_STRINGS.OVERVIEW.EL})`,
+      nosotros: `nos (${UI_STRINGS.OVERVIEW.NOSOTROS})`,
+      vosotros: `os (${UI_STRINGS.OVERVIEW.VOSOTROS})`,
+      ellos: `se (${UI_STRINGS.OVERVIEW.ELLOS})`
+    };
+    return map[key] || key;
+  };
+
+  const handleNext = useCallback(() => {
+    if (currentIndex < vokabeln.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setAnswer('');
+      setInfinitiveAnswer('');
+      setVerbAnswers({
+        yo: '',
+        tu: '',
+        el: '',
+        nosotros: '',
+        vosotros: '',
+        ellos: ''
+      });
+      setIsCorrect(null);
+      setWasTooSoon(false);
+    } else {
+      setSessionCompleted(true);
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#41A8BF', '#26A653', '#ffffff']
+      });
+    }
+  }, [currentIndex, vokabeln.length]);
+
   const handleCheck = async (e) => {
     if (e) e.preventDefault();
-    if (isCorrect !== null) return;
+    if (isCorrect !== null) {
+      handleNext();
+      return;
+    }
 
     const current = vokabeln[currentIndex];
     
@@ -297,7 +338,10 @@ export default function Learning() {
         console.error('Audio play failed:', e);
       }
     } else {
-      setWrongAnswers(prev => [...prev, current]);
+      setWrongAnswers(prev => [...prev, { 
+        item: current, 
+        userAnswer: isVerb ? { infinitive: infinitiveAnswer, forms: { ...verbAnswers } } : answer 
+      }]);
     }
 
     setIsCorrect(correct);
@@ -334,31 +378,11 @@ export default function Learning() {
       setPendingUpdate(false);
     }
     
-    setTimeout(() => {
-      if (currentIndex < vokabeln.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-        setAnswer('');
-        setInfinitiveAnswer('');
-        setVerbAnswers({
-          yo: '',
-          tu: '',
-          el: '',
-          nosotros: '',
-          vosotros: '',
-          ellos: ''
-        });
-        setIsCorrect(null);
-        setWasTooSoon(false);
-      } else {
-        setSessionCompleted(true);
-        confetti({
-          particleCount: 150,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#41A8BF', '#26A653', '#ffffff']
-        });
-      }
-    }, isLearned ? 1500 : 2000); 
+    if (correct) {
+      setTimeout(() => {
+        handleNext();
+      }, isLearned ? 1500 : 1200); 
+    }
   };
 
   if (loading || isLangLoading) {
@@ -374,7 +398,7 @@ export default function Learning() {
       return (
         <div className="flex flex-col items-center justify-center flex-1 h-full p-6 text-center">
           <div className="p-6 mb-8 rounded-full bg-primary/10 animate-bounce-in">
-            <BookOpen size={60} className="text-primary" />
+            <BookOpen size={64} className="text-primary" />
           </div>
           <h2 className="mb-4 text-3xl font-black text-text-main">{LEARNING.ONBOARDING_TITLE}</h2>
           <p className="max-w-sm mb-10 text-text-secondary">
@@ -460,37 +484,77 @@ export default function Learning() {
               )}
             >
               <div className="flex justify-center min-w-full gap-4 px-6 pb-8 w-max">
-                {wrongAnswers.map((item, idx) => (
-                  <div 
-                    key={`wrong-${idx}`}
-                    className="flex-shrink-0 w-[280px] p-6 bg-surface border border-error-light rounded-[32px] shadow-sm snap-center text-left animate-fade-in-up"
-                    style={{ animationDelay: `${idx * 0.1}s` }}
-                  >
-                    <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted mb-1 block">{COMMON.DEUTSCH}</span>
-                    <p className="mb-4 text-xl font-bold text-text-main">{item.german}</p>
-                    
-                    <div className="pt-4 border-t border-border-light">
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-success mb-1 block">{LEARNING.RIGHT_ANSWER}</span>
-                      {(() => {
-                        try {
-                          const parsed = JSON.parse(item.spanish);
-                          if (parsed && parsed.isVerb) {
-                            return (
-                              <div className="grid grid-cols-2 gap-1 mt-1">
-                                {Object.entries(parsed.forms).map(([key, value]) => (
-                                  <div key={key} className="text-[10px]">
-                                    <span className="font-bold text-success/70">{UI_STRINGS.OVERVIEW[key.toUpperCase()]}:</span> {value}
+                {wrongAnswers.map((wrong, idx) => {
+                  const item = wrong.item;
+                  const userAnswer = wrong.userAnswer;
+                  let isVerb = false;
+                  let parsed = null;
+                  try {
+                    parsed = JSON.parse(item.spanish);
+                    isVerb = !!(parsed && parsed.isVerb);
+                  } catch (e) {}
+
+                  return (
+                    <div 
+                      key={`wrong-${idx}`}
+                      className="flex-shrink-0 w-[340px] md:w-[380px] p-6 bg-surface border border-error-light rounded-[32px] shadow-sm snap-center text-left animate-fade-in-up"
+                      style={{ animationDelay: `${idx * 0.1}s` }}
+                    >
+                      <span className="text-[10px] font-black tracking-widest uppercase text-text-muted mb-1 block">{COMMON.DEUTSCH}</span>
+                      <p className="mb-4 text-xl font-bold text-text-main leading-tight">{item.german}</p>
+                      
+                      {!isVerb ? (
+                        <div className="space-y-4">
+                          <div className="pt-3 border-t border-border-light">
+                            <span className="text-[10px] font-bold tracking-widest uppercase text-error mb-1 block">Deine Antwort</span>
+                            <p className="text-lg font-bold text-error/70 line-through opacity-70">{userAnswer || '---'}</p>
+                          </div>
+                          <div className="pt-1">
+                            <span className="text-[10px] font-bold tracking-widest uppercase text-success mb-1 block">{LEARNING.RIGHT_ANSWER}</span>
+                            <p className="text-2xl font-black text-success">{item.spanish}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 pt-3 border-t border-border-light">
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                            {/* Infinitiv Header */}
+                            <div className="col-span-2 pb-2 border-b border-border-light/50">
+                               <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted mb-1 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
+                               <div className="flex items-center gap-2">
+                                 <span className="text-sm font-bold text-error line-through opacity-60">{userAnswer.infinitive || '---'}</span>
+                                 <ArrowRight size={12} className="text-text-muted" />
+                                 <span className="text-base font-black text-success">{parsed.infinitive}</span>
+                               </div>
+                            </div>
+
+                            {Object.entries(parsed.forms).map(([key, correctValue]) => {
+                              const userVal = userAnswer.forms[key];
+                              const isMatch = userVal?.trim().toLowerCase() === correctValue?.trim().toLowerCase();
+                              return (
+                                <div key={key} className="flex flex-col min-w-0">
+                                  <span className="text-[9px] font-bold tracking-widest uppercase text-text-muted mb-1 truncate">
+                                    {parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()]}
+                                  </span>
+                                  <div className="flex flex-col bg-slate-50/50 p-2 rounded-lg border border-border-light/30">
+                                    {!isMatch && (
+                                      <span className="text-[11px] font-bold text-error line-through opacity-60 mb-1 truncate">
+                                        {userVal || '---'}
+                                      </span>
+                                    )}
+                                    <span className={cn(
+                                      "text-sm font-black truncate",
+                                      isMatch ? "text-text-main opacity-30" : "text-success"
+                                    )}>{correctValue}</span>
                                   </div>
-                                ))}
-                              </div>
-                            );
-                          }
-                        } catch (e) {}
-                        return <p className="text-2xl font-bold text-success">{item.spanish}</p>;
-                      })()}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -503,7 +567,7 @@ export default function Learning() {
 
   return (
     <div className="flex flex-col flex-1 w-full h-full max-w-2xl mx-auto overflow-hidden">
-      <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-32 md:p-8">
+      <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-20 md:p-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
             <GraduationCap className="w-8 h-8 text-primary" />
@@ -593,7 +657,9 @@ export default function Learning() {
                           <div className="grid grid-cols-2 gap-2">
                             {Object.entries(parsed.forms).map(([key, value]) => (
                               <div key={key} className="text-left bg-error/5 p-2 rounded-lg border border-error/10">
-                                <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW[key.toUpperCase()]}</span>
+                                <span className="text-[10px] uppercase font-bold text-error/60 block">
+                                  {parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()]}
+                                </span>
                                 <span className="text-sm font-bold text-error">{value}</span>
                               </div>
                             ))}
@@ -644,7 +710,10 @@ export default function Learning() {
                         className={cn(
                           "w-full bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all",
                           isCorrect === true ? "border-success text-success bg-success-light" : 
-                          isCorrect === false ? "border-error text-error bg-error-light" : 
+                          isCorrect === false && (infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() 
+                            ? "border-error text-error bg-error-light" : 
+                          isCorrect === false && (infinitiveAnswer || '').trim().toLowerCase() === (parsed.infinitive || '').trim().toLowerCase()
+                            ? "border-success text-success bg-success-light/30" :
                           "border-border text-text-main focus:ring-primary/20"
                         )}
                         value={infinitiveAnswer}
@@ -659,12 +728,12 @@ export default function Learning() {
 
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { key: 'yo', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.YO} (me)` : UI_STRINGS.OVERVIEW.YO },
-                        { key: 'tu', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.TU} (te)` : UI_STRINGS.OVERVIEW.TU },
-                        { key: 'el', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.EL} (se)` : UI_STRINGS.OVERVIEW.EL },
-                        { key: 'nosotros', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.NOSOTROS} (nos)` : UI_STRINGS.OVERVIEW.NOSOTROS },
-                        { key: 'vosotros', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.VOSOTROS} (os)` : UI_STRINGS.OVERVIEW.VOSOTROS },
-                        { key: 'ellos', label: parsed.isReflexive ? `${UI_STRINGS.OVERVIEW.ELLOS} (se)` : UI_STRINGS.OVERVIEW.ELLOS },
+                        { key: 'yo', label: parsed.isReflexive ? `me (${UI_STRINGS.OVERVIEW.YO})` : UI_STRINGS.OVERVIEW.YO },
+                        { key: 'tu', label: parsed.isReflexive ? `te (${UI_STRINGS.OVERVIEW.TU})` : UI_STRINGS.OVERVIEW.TU },
+                        { key: 'el', label: parsed.isReflexive ? `se (${UI_STRINGS.OVERVIEW.EL})` : UI_STRINGS.OVERVIEW.EL },
+                        { key: 'nosotros', label: parsed.isReflexive ? `nos (${UI_STRINGS.OVERVIEW.NOSOTROS})` : UI_STRINGS.OVERVIEW.NOSOTROS },
+                        { key: 'vosotros', label: parsed.isReflexive ? `os (${UI_STRINGS.OVERVIEW.VOSOTROS})` : UI_STRINGS.OVERVIEW.VOSOTROS },
+                        { key: 'ellos', label: parsed.isReflexive ? `se (${UI_STRINGS.OVERVIEW.ELLOS})` : UI_STRINGS.OVERVIEW.ELLOS },
                       ].map((f) => (
                         <div key={f.key}>
                           <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{f.label}</span>
@@ -672,7 +741,10 @@ export default function Learning() {
                             className={cn(
                               "w-full bg-surface border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 transition-all",
                               isCorrect === true ? "border-success text-success bg-success-light" : 
-                              isCorrect === false ? "border-error text-error bg-error-light" : 
+                              isCorrect === false && (verbAnswers[f.key] || '').trim().toLowerCase() !== (parsed.forms[f.key] || '').trim().toLowerCase() 
+                                ? "border-error text-error bg-error-light" : 
+                              isCorrect === false && (verbAnswers[f.key] || '').trim().toLowerCase() === (parsed.forms[f.key] || '').trim().toLowerCase()
+                                ? "border-success text-success bg-success-light/30" :
                               "border-border text-text-main focus:ring-primary/20"
                             )}
                             value={verbAnswers[f.key]}
@@ -747,10 +819,14 @@ export default function Learning() {
 
           <button
             type="submit"
-            disabled={isCorrect !== null}
-            className="flex items-center justify-center gap-2 p-4 mt-8 mb-6 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50 disabled:bg-text-muted"
+            className="flex items-center justify-center gap-2 p-4 mt-8 mb-6 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
           >
-            <span>{!answer && !infinitiveAnswer && isCorrect === null ? UI_STRINGS.LEARNING.DONT_KNOW_BUTTON : UI_STRINGS.LEARNING.CHECK_BUTTON}</span>
+            <span>
+              {isCorrect !== null 
+                ? UI_STRINGS.LEARNING.NEXT_BUTTON 
+                : (!answer && !infinitiveAnswer ? UI_STRINGS.LEARNING.DONT_KNOW_BUTTON : UI_STRINGS.LEARNING.CHECK_BUTTON)
+              }
+            </span>
             <ArrowRight size={20} />
           </button>
         </form>

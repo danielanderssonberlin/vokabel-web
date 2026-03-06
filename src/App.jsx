@@ -28,7 +28,7 @@ function Navigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light px-6 pt-2 pb-[env(safe-area-inset-bottom)] flex flex-col items-center shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40">
+    <nav className="bg-white border-t border-border-light px-6 pt-2 pb-[env(safe-area-inset-bottom)] flex flex-col items-center shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40">
       <div className="flex items-center justify-around w-full max-w-2xl gap-4 h-14">
         {navItems.map((item) => {
           const Icon = item.icon;

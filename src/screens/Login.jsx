@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { BookOpen, Mail, Lock, Loader2, CheckCircle, AlertCircle, ChevronLeft } from 'lucide-react';
+import { Mail, Lock, Loader2, CheckCircle, AlertCircle, ChevronLeft } from 'lucide-react';
 import { useUiLanguage } from '../context/UiLanguageContext';
 import UiLanguageSwitcher from '../components/UiLanguageSwitcher';
+import logo from '../assets/logo.png';
 
 export default function Login({ onBack }) {
   const { strings } = useUiLanguage();
@@ -67,8 +68,8 @@ export default function Login({ onBack }) {
       )}
       <div className="w-full max-w-sm space-y-8">
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="p-4 bg-primary/10 rounded-3xl">
-            <BookOpen className="w-12 h-12 text-primary" />
+          <div className="inline-flex items-center justify-center w-24 p-2 rounded-full bg-primary/10 text-primary">
+            <img src={logo} alt="Logo"/>
           </div>
           <h1 className="text-3xl font-bold text-text-main">{COMMON.APP_NAME.split(' ')[0]} <span className="text-primary">{COMMON.APP_NAME.split(' ')[1]}</span></h1>
           
@@ -156,7 +157,7 @@ export default function Login({ onBack }) {
           </button>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-border-light">
+        <div className="pt-8 mt-8 border-t border-border-light">
           <UiLanguageSwitcher />
         </div>
       </div>

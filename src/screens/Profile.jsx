@@ -161,7 +161,7 @@ export default function Profile() {
   } 
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 mx-auto overflow-y-auto md:p-8">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-20 mx-auto overflow-y-auto no-scrollbar md:p-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <User className="w-8 h-8 text-primary" />

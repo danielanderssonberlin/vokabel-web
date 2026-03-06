@@ -221,7 +221,7 @@ export default function Overview() {
   const archivedVokabeln = filteredData.filter(item => item.status === 5);
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-32 mx-auto md:p-8">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-0 mx-auto mb-10 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <BookOpen className="w-8 h-8 text-primary" />
@@ -331,9 +331,9 @@ export default function Overview() {
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
-          <div className="bg-background rounded-t-[40px] p-6 shadow-2xl w-full max-w-2xl h-[80%] animate-slide-up">
-            <div className="flex items-center justify-between mb-8">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-background rounded-t-[40px] p-6 shadow-2xl w-full max-w-2xl h-[90%] md:h-[85%] animate-slide-up flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between mb-6 shrink-0">
               <h2 className="text-2xl font-bold text-text-main">
                 {editingItem ? OVERVIEW.MODAL_EDIT_TITLE : OVERVIEW.MODAL_ADD_TITLE}
               </h2>
@@ -345,135 +345,139 @@ export default function Overview() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6 overflow-y-auto pr-2 no-scrollbar">
-              {error && (
-                <div className="flex items-center gap-2 p-4 bg-error/10 text-error rounded-2xl">
-                  <AlertCircle size={20} />
-                  <p className="text-sm font-medium">{error}</p>
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+              <div className="flex-1 pb-20 pr-2 space-y-6 overflow-y-auto no-scrollbar overscroll-contain">
+                {error && (
+                  <div className="flex items-center gap-2 p-4 bg-error/10 text-error rounded-2xl">
+                    <AlertCircle size={20} />
+                    <p className="text-sm font-medium">{error}</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between p-4 border bg-surface/50 border-border-light rounded-2xl">
+                  <div className="flex flex-col">
+                    <span className="font-bold text-text-main">{OVERVIEW.VERB_LABEL}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsVerb(!isVerb)}
+                    className={cn(
+                      "w-12 h-6 rounded-full transition-colors relative",
+                      isVerb ? "bg-primary" : "bg-slate-300"
+                    )}
+                  >
+                    <div className={cn(
+                      "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                      isVerb ? "left-7" : "left-1"
+                    )} />
+                  </button>
                 </div>
-              )}
-              
-              <div className="flex items-center justify-between p-4 border bg-surface/50 border-border-light rounded-2xl">
-                <div className="flex flex-col">
-                  <span className="font-bold text-text-main">{OVERVIEW.VERB_LABEL}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsVerb(!isVerb)}
-                  className={cn(
-                    "w-12 h-6 rounded-full transition-colors relative",
-                    isVerb ? "bg-primary" : "bg-slate-300"
-                  )}
-                >
-                  <div className={cn(
-                    "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
-                    isVerb ? "left-7" : "left-1"
-                  )} />
-                </button>
-              </div>
 
-              {isVerb && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between p-4 border bg-surface/50 border-border-light rounded-2xl">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-text-main">{OVERVIEW.REFLEXIVE_LABEL}</span>
-                      <button 
+                {isVerb && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-4 border bg-surface/50 border-border-light rounded-2xl">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-text-main">{OVERVIEW.REFLEXIVE_LABEL}</span>
+                        <button 
+                          type="button"
+                          onClick={() => setShowReflexiveHelp(!showReflexiveHelp)}
+                          className="transition-colors text-text-muted hover:text-primary"
+                        >
+                          <HelpCircle size={18} />
+                        </button>
+                      </div>
+                      <button
                         type="button"
-                        onClick={() => setShowReflexiveHelp(!showReflexiveHelp)}
-                        className="text-text-muted hover:text-primary transition-colors"
+                        onClick={() => setIsReflexive(!isReflexive)}
+                        className={cn(
+                          "w-12 h-6 rounded-full transition-colors relative",
+                          isReflexive ? "bg-primary" : "bg-slate-300"
+                        )}
                       >
-                        <HelpCircle size={18} />
+                        <div className={cn(
+                          "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                          isReflexive ? "left-7" : "left-1"
+                        )} />
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsReflexive(!isReflexive)}
-                      className={cn(
-                        "w-12 h-6 rounded-full transition-colors relative",
-                        isReflexive ? "bg-primary" : "bg-slate-300"
-                      )}
-                    >
-                      <div className={cn(
-                        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
-                        isReflexive ? "left-7" : "left-1"
-                      )} />
-                    </button>
+                    
+                    {showReflexiveHelp && (
+                      <div className="p-4 mx-1 text-sm border bg-primary/5 border-primary/10 rounded-2xl text-text-secondary animate-fade-in">
+                        {OVERVIEW.REFLEXIVE_DESC}
+                      </div>
+                    )}
                   </div>
-                  
-                  {showReflexiveHelp && (
-                    <div className="p-4 mx-1 text-sm bg-primary/5 border border-primary/10 rounded-2xl text-text-secondary animate-fade-in">
-                      {OVERVIEW.REFLEXIVE_DESC}
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
 
-              <div>
-                <label className="block mb-2 ml-1 text-sm font-medium text-text-main">
-                  {isVerb ? OVERVIEW.INFINITIVE_LABEL : OVERVIEW.GERMAN_LABEL}
-                </label>
-                <textarea
-                  className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder={isVerb ? OVERVIEW.INFINITIVE_LABEL : OVERVIEW.GERMAN_PLACEHOLDER}
-                  value={german}
-                  onChange={(e) => setGerman(e.target.value)}
-                />
-              </div>
-
-              {!isVerb ? (
                 <div>
-                  <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL}</label>
+                  <label className="block mb-2 ml-1 text-sm font-medium text-text-main">
+                    {isVerb ? OVERVIEW.INFINITIVE_LABEL : OVERVIEW.GERMAN_LABEL}
+                  </label>
                   <textarea
                     className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder={OVERVIEW.FOREIGN_PLACEHOLDER}
-                    value={foreign}
-                    onChange={(e) => setForeign(e.target.value)}
+                    placeholder={isVerb ? OVERVIEW.INFINITIVE_LABEL : OVERVIEW.GERMAN_PLACEHOLDER}
+                    value={german}
+                    onChange={(e) => setGerman(e.target.value)}
                   />
                 </div>
-              ) : (
-                <div className="space-y-4">
+
+                {!isVerb ? (
                   <div>
-                    <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL} ({OVERVIEW.INFINITIVE_LABEL})</label>
-                    <input
-                      type="text"
-                      className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="z.B. comer"
+                    <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL}</label>
+                    <textarea
+                      className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder={OVERVIEW.FOREIGN_PLACEHOLDER}
                       value={foreign}
                       onChange={(e) => setForeign(e.target.value)}
                     />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    {[
-                      { key: 'yo', label: isReflexive ? `${OVERVIEW.YO} (me)` : OVERVIEW.YO },
-                      { key: 'tu', label: isReflexive ? `${OVERVIEW.TU} (te)` : OVERVIEW.TU },
-                      { key: 'el', label: isReflexive ? `${OVERVIEW.EL} (se)` : OVERVIEW.EL },
-                      { key: 'nosotros', label: isReflexive ? `${OVERVIEW.NOSOTROS} (nos)` : OVERVIEW.NOSOTROS },
-                      { key: 'vosotros', label: isReflexive ? `${OVERVIEW.VOSOTROS} (os)` : OVERVIEW.VOSOTROS },
-                      { key: 'ellos', label: isReflexive ? `${OVERVIEW.ELLOS} (se)` : OVERVIEW.ELLOS },
-                    ].map((f) => (
-                      <div key={f.key}>
-                        <label className="block mb-1 ml-1 text-xs font-medium text-text-secondary">{f.label}</label>
-                        <input
-                          type="text"
-                          className="w-full bg-surface border border-border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          value={forms[f.key]}
-                          onChange={(e) => handleFormChange(f.key, e.target.value)}
-                        />
-                      </div>
-                    ))}
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL} ({OVERVIEW.INFINITIVE_LABEL})</label>
+                      <input
+                        type="text"
+                        className="w-full p-4 text-lg border shadow-sm bg-surface border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        placeholder="z.B. comer"
+                        value={foreign}
+                        onChange={(e) => setForeign(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      {[
+                        { key: 'yo', label: isReflexive ? `me (${OVERVIEW.YO})` : OVERVIEW.YO },
+                        { key: 'tu', label: isReflexive ? `te (${OVERVIEW.TU})` : OVERVIEW.TU },
+                        { key: 'el', label: isReflexive ? `se (${OVERVIEW.EL})` : OVERVIEW.EL },
+                        { key: 'nosotros', label: isReflexive ? `nos (${OVERVIEW.NOSOTROS})` : OVERVIEW.NOSOTROS },
+                        { key: 'vosotros', label: isReflexive ? `os (${OVERVIEW.VOSOTROS})` : OVERVIEW.VOSOTROS },
+                        { key: 'ellos', label: isReflexive ? `se (${OVERVIEW.ELLOS})` : OVERVIEW.ELLOS },
+                      ].map((f) => (
+                        <div key={f.key}>
+                          <label className="block mb-1 ml-1 text-xs font-medium text-text-secondary">{f.label}</label>
+                          <input
+                            type="text"
+                            className="w-full p-3 text-base border shadow-sm bg-surface border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            value={forms[f.key]}
+                            onChange={(e) => handleFormChange(f.key, e.target.value)}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex items-center justify-center w-full gap-2 p-4 mt-4 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
-              >
-                <PlusCircle size={24} />
-                {editingItem ? COMMON.SAVE : COMMON.ADD}
-              </button>
+              <div className="pt-4 mt-auto shrink-0">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex items-center justify-center w-full gap-2 p-4 font-bold text-white transition-colors shadow-lg bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
+                >
+                  <PlusCircle size={24} />
+                  {editingItem ? COMMON.SAVE : COMMON.ADD}
+                </button>
+              </div>
             </form>
           </div>
         </div>
