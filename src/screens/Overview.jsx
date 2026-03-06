@@ -337,7 +337,7 @@ export default function Overview() {
       {selectedLanguage && (
         <button 
           onClick={handleOpenAdd}
-          className="fixed z-10 flex items-center justify-center text-white transition-colors rounded-full shadow-lg bottom-[calc(5rem+env(safe-area-inset-bottom))] right-6 md:right-12 w-14 h-14 bg-primary hover:bg-primary/90"
+          className="fixed z-10 flex items-center justify-center text-white transition-colors rounded-full shadow-lg bottom-35 right-6 md:right-12 w-14 h-14 bg-primary hover:bg-primary/90"
         >
           <Plus size={30} />
         </button>
