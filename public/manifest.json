@@ -3,13 +3,13 @@
   "name": "Vokabro - Learning App",
   "icons": [
     {
-      "src": "svg",
+      "src": "png",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/logo-white.svg",
+      "src": "/logo-white.png",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "maskable"
