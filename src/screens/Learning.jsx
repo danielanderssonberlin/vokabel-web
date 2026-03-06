@@ -434,7 +434,7 @@ export default function Learning() {
     }
 
     return (
-      <div className="flex flex-col items-center justify-center flex-1 h-full py-6 overflow-hidden text-center">
+      <div className="flex flex-col items-center flex-1 h-full py-10 overflow-y-auto no-scrollbar text-center pb-32">
         <div className="flex flex-col items-center px-6 mb-8">
           <div className="p-6 mb-6 rounded-full bg-success-light animate-bounce-in">
             <CheckCircle2 size={60} className="text-success" />
