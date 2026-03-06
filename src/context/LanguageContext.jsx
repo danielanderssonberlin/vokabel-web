@@ -61,11 +61,21 @@ export const LanguageProvider = ({ children }) => {
   const addLanguage = async (lang) => {
     const newLangs = [...availableLanguages, lang];
     setAvailableLanguages(newLangs);
+    
+    let newSelected = selectedLanguage;
+    if (!selectedLanguage) {
+      newSelected = lang.code;
+      setSelectedLanguage(newSelected);
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase
         .from('profiles')
-        .update({ languages: newLangs })
+        .update({ 
+          languages: newLangs,
+          current_language: newSelected
+        })
         .eq('id', user.id);
     }
   };

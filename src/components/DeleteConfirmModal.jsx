@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Trash2, AlertTriangle } from 'lucide-react';
 import { useUiLanguage } from '../context/UiLanguageContext';
 
@@ -6,6 +6,17 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title, 
   const { strings } = useUiLanguage();
   const { COMPONENTS, COMMON } = strings;
   const { DELETE_MODAL } = COMPONENTS;
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   const displayTitle = title || DELETE_MODAL.TITLE;
   const displayMessage = message || DELETE_MODAL.DESC;

@@ -60,6 +60,17 @@ export default function Overview() {
     loadVokabeln();
   }, [loadVokabeln]);
 
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
+
   const handleOpenAdd = () => {
     setEditingItem(null);
     setGerman('');
@@ -227,31 +238,33 @@ export default function Overview() {
           <BookOpen className="w-8 h-8 text-primary" />
           <h1 className="text-xl font-bold text-primary">{OVERVIEW.TITLE}</h1>
         </div>
-        <LanguageSwitcher />
+        {selectedLanguage && <LanguageSwitcher />}
       </div>
 
-      <div className="relative flex items-center gap-2 mb-6">
-        <div className="relative flex-1">
-          <div className="absolute inset-y-0 flex items-center pointer-events-none left-4">
-            <Search className="w-5 h-5 text-text-muted" />
+      {selectedLanguage && (
+        <div className="relative flex items-center gap-2 mb-6">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 flex items-center pointer-events-none left-4">
+              <Search className="w-5 h-5 text-text-muted" />
+            </div>
+            <input
+              type="text"
+              className="w-full py-4 pl-12 pr-4 border shadow-sm bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
+              placeholder={OVERVIEW.SEARCH_PLACEHOLDER}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-          <input
-            type="text"
-            className="w-full py-4 pl-12 pr-4 border shadow-sm bg-surface border-border rounded-2xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder={OVERVIEW.SEARCH_PLACEHOLDER}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          
+          <button
+            onClick={() => setSortBy(sortBy === 'date' ? 'alpha' : 'date')}
+            className="flex items-center justify-center transition-all border shadow-sm w-14 h-14 bg-surface border-border rounded-2xl text-primary active:scale-95 hover:bg-slate-50"
+            title={sortBy === 'date' ? OVERVIEW.SORT_ALPHA : OVERVIEW.SORT_DATE}
+          >
+            {sortBy === 'date' ? <Clock size={24} /> : <SortAsc size={24} />}
+          </button>
         </div>
-        
-        <button
-          onClick={() => setSortBy(sortBy === 'date' ? 'alpha' : 'date')}
-          className="flex items-center justify-center transition-all border shadow-sm w-14 h-14 bg-surface border-border rounded-2xl text-primary active:scale-95 hover:bg-slate-50"
-          title={sortBy === 'date' ? OVERVIEW.SORT_ALPHA : OVERVIEW.SORT_DATE}
-        >
-          {sortBy === 'date' ? <Clock size={24} /> : <SortAsc size={24} />}
-        </button>
-      </div>
+      )}
 
       <div className="flex-1 space-y-3 overflow-y-auto no-scrollbar">
         {initialLoading ? (
@@ -331,8 +344,8 @@ export default function Overview() {
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm pb-[calc(5rem+env(safe-area-inset-bottom))]">
-          <div className="bg-background rounded-t-[40px] p-6 shadow-2xl w-full max-w-2xl h-[90%] md:h-[85%] animate-slide-up flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-background rounded-[40px] p-6 shadow-2xl w-full max-w-2xl h-[85%] md:h-[80%] mb-[calc(5rem+env(safe-area-inset-bottom))] animate-slide-up flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-6 shrink-0">
               <h2 className="text-2xl font-bold text-text-main">
                 {editingItem ? OVERVIEW.MODAL_EDIT_TITLE : OVERVIEW.MODAL_ADD_TITLE}

@@ -169,6 +169,8 @@ export const UI_STRINGS = {
       USER_ID_LABEL: "User ID:",
       SUCCESS_UPDATE: "Profil erfolgreich aktualisiert!",
       ERR_EMAIL_EXISTS: "Diese E-Mail-Adresse wird bereits verwendet.",
+      DELETE_LANG_TITLE: "Sprache löschen?",
+      DELETE_LANG_DESC: "Möchtest du diese Sprache wirklich löschen? Alle zugehörigen Vokabeln gehen verloren.",
       WEEKDAYS: ["S", "M", "D", "M", "D", "F", "S"],
     },
     COMPONENTS: {
@@ -357,6 +359,8 @@ export const UI_STRINGS = {
       USER_ID_LABEL: "User ID:",
       SUCCESS_UPDATE: "Profile updated successfully!",
       ERR_EMAIL_EXISTS: "This email address is already in use.",
+      DELETE_LANG_TITLE: "Delete language?",
+      DELETE_LANG_DESC: "Do you really want to delete this language? All associated vocabulary will be lost.",
       WEEKDAYS: ["S", "M", "T", "W", "T", "F", "S"],
     },
     COMPONENTS: {

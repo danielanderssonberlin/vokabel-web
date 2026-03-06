@@ -5,6 +5,7 @@ import { calculateStatsFromVocabulary } from '../store/userStore';
 import { useLanguage } from '../context/LanguageContext';
 import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, ChevronRight, Calendar, XCircle, CheckCircle2, Plus, Trash2, Globe } from 'lucide-react';
 import PasswordModal from '../components/PasswordModal';
+import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import UiLanguageSwitcher from '../components/UiLanguageSwitcher';
 import { useUiLanguage } from '../context/UiLanguageContext';
 import { clsx } from 'clsx';
@@ -19,6 +20,8 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [langToDelete, setLangToDelete] = useState(null);
   const [stats, setStats] = useState({ total: 0, learned: 0, inProgress: 0, studyHistory: [], streak: 0 });
 
   // Language Form State
@@ -110,6 +113,17 @@ export default function Profile() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (isPasswordModalOpen || isDeleteModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isPasswordModalOpen, isDeleteModalOpen]);
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -150,6 +164,19 @@ export default function Profile() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+  };
+
+  const handleOpenDeleteModal = (code) => {
+    setLangToDelete(code);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDeleteLang = async () => {
+    if (langToDelete) {
+      await removeLanguage(langToDelete);
+      setIsDeleteModalOpen(false);
+      setLangToDelete(null);
+    }
   };
 
   if (loading) {
@@ -207,7 +234,7 @@ export default function Profile() {
                 </div>
               </div>
               <button 
-                onClick={() => removeLanguage(lang.code)}
+                onClick={() => handleOpenDeleteModal(lang.code)}
                 className="p-2 transition-colors rounded-full text-text-muted hover:text-error hover:bg-error/10"
               >
                 <Trash2 size={18} />
@@ -424,6 +451,14 @@ export default function Profile() {
       <PasswordModal 
         isOpen={isPasswordModalOpen} 
         onClose={() => setIsPasswordModalOpen(false)} 
+      />
+
+      <DeleteConfirmModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDeleteLang}
+        title={PROFILE.DELETE_LANG_TITLE}
+        message={PROFILE.DELETE_LANG_DESC}
       />
     </div>
   );

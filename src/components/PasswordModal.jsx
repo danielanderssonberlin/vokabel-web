@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Lock, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useUiLanguage } from '../context/UiLanguageContext';
@@ -14,6 +14,17 @@ export default function PasswordModal({ isOpen, onClose }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
