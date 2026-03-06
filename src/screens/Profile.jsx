@@ -308,9 +308,32 @@ export default function Profile() {
       {/* Study Activity / Calendar */}
       <div className="bg-surface border border-border rounded-[32px] p-6 mb-8 shadow-sm">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-bold text-text-main">{PROFILE.ACTIVITY_SECTION}</h2>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-bold text-text-main">{PROFILE.ACTIVITY_SECTION}</h2>
+            </div>
+            {(() => {
+              const today = new Date();
+              const day = today.getDay();
+              const diffToMonday = (day === 0 ? 6 : day - 1);
+              const startOfCurrentWeek = new Date(today);
+              startOfCurrentWeek.setDate(today.getDate() - diffToMonday);
+              const startOfHistory = new Date(startOfCurrentWeek);
+              startOfHistory.setDate(startOfHistory.getDate() - 7);
+              const endOfHistory = new Date(startOfHistory);
+              endOfHistory.setDate(startOfHistory.getDate() + 13);
+
+              const monthFormatter = new Intl.DateTimeFormat(strings.uiLanguage || 'de', { month: 'long', year: 'numeric' });
+              const startMonth = monthFormatter.format(startOfHistory);
+              const endMonth = monthFormatter.format(endOfHistory);
+              
+              return (
+                <span className="ml-7 text-[10px] font-black tracking-widest uppercase text-text-muted">
+                  {startMonth === endMonth ? startMonth : `${startMonth.split(' ')[0]} - ${endMonth}`}
+                </span>
+              );
+            })()}
           </div>
           <div className="flex items-center gap-1 px-3 py-1 text-orange-600 border border-orange-100 rounded-full bg-orange-50">
             <span className="text-xs font-bold">{PROFILE.STREAK_DAYS(stats.streak)}</span>
@@ -319,8 +342,19 @@ export default function Profile() {
         
         <div className="grid grid-cols-7 gap-2">
           {Array.from({ length: 14 }).map((_, i) => {
-            const date = new Date();
-            date.setDate(date.getDate() - (13 - i));
+            const today = new Date();
+            const day = today.getDay(); // 0 (Sun) to 6 (Sat)
+            const diffToMonday = (day === 0 ? 6 : day - 1); // 0 for Mon, 1 for Tue... 6 for Sun
+            
+            const startOfCurrentWeek = new Date(today);
+            startOfCurrentWeek.setDate(today.getDate() - diffToMonday);
+            
+            const startOfHistory = new Date(startOfCurrentWeek);
+            startOfHistory.setDate(startOfHistory.getDate() - 7); // Start of previous week (Monday)
+            
+            const date = new Date(startOfHistory);
+            date.setDate(startOfHistory.getDate() + i);
+            
             const dateStr = date.toDateString();
             const isToday = dateStr === new Date().toDateString();
             const hasStudied = stats.studyHistory.includes(dateStr);

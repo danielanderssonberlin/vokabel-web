@@ -171,7 +171,7 @@ export const UI_STRINGS = {
       ERR_EMAIL_EXISTS: "Diese E-Mail-Adresse wird bereits verwendet.",
       DELETE_LANG_TITLE: "Sprache löschen?",
       DELETE_LANG_DESC: "Möchtest du diese Sprache wirklich löschen? Alle zugehörigen Vokabeln gehen verloren.",
-      WEEKDAYS: ["S", "M", "D", "M", "D", "F", "S"],
+      WEEKDAYS: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
     },
     COMPONENTS: {
       DELETE_MODAL: {
@@ -361,7 +361,7 @@ export const UI_STRINGS = {
       ERR_EMAIL_EXISTS: "This email address is already in use.",
       DELETE_LANG_TITLE: "Delete language?",
       DELETE_LANG_DESC: "Do you really want to delete this language? All associated vocabulary will be lost.",
-      WEEKDAYS: ["S", "M", "T", "W", "T", "F", "S"],
+      WEEKDAYS: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
     },
     COMPONENTS: {
       DELETE_MODAL: {
