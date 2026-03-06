@@ -42,7 +42,7 @@ export const UI_STRINGS = {
         {
           icon: <GraduationCap className="text-primary" size={24} />,
           title: "Intelligentes Lernen",
-          description: "Lerne Vokabeln basierend auf deinem Fortschritt. Status 0 bis 5 (Archiv)."
+          description: "Vokabeln mit Hilfe von Karteikarten lernen"
         },
         {
           icon: <Globe className="text-secondary" size={24} />,
