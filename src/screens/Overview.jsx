@@ -331,7 +331,7 @@ export default function Overview() {
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm pb-[calc(5rem+env(safe-area-inset-bottom))]">
           <div className="bg-background rounded-t-[40px] p-6 shadow-2xl w-full max-w-2xl h-[90%] md:h-[85%] animate-slide-up flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-6 shrink-0">
               <h2 className="text-2xl font-bold text-text-main">
@@ -346,7 +346,7 @@ export default function Overview() {
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-              <div className="flex-1 pb-20 pr-2 space-y-6 overflow-y-auto no-scrollbar overscroll-contain">
+              <div className="flex-1 pr-2 space-y-6 overflow-y-auto no-scrollbar overscroll-contain">
                 {error && (
                   <div className="flex items-center gap-2 p-4 bg-error/10 text-error rounded-2xl">
                     <AlertCircle size={20} />
@@ -468,7 +468,7 @@ export default function Overview() {
                 )}
               </div>
 
-              <div className="pt-4 mt-auto shrink-0">
+              <div className="pt-4 shrink-0">
                 <button
                   type="submit"
                   disabled={loading}
