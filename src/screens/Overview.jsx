@@ -232,7 +232,7 @@ export default function Overview() {
   const archivedVokabeln = filteredData.filter(item => item.status === 5);
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-0 mx-auto mb-10 md:p-8">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-0 mx-auto mb-10 md:p-8 md:pb-0">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <BookOpen className="w-8 h-8 text-primary" />
@@ -344,8 +344,8 @@ export default function Overview() {
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="bg-background rounded-[40px] p-6 shadow-2xl w-full max-w-2xl h-[85%] md:h-[80%] mb-[calc(5rem+env(safe-area-inset-bottom))] animate-slide-up flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-background rounded-[40px] p-6 shadow-2xl w-full max-w-2xl max-h-[85vh] mb-[calc(5rem+env(safe-area-inset-bottom))] animate-slide-up flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-6 shrink-0">
               <h2 className="text-2xl font-bold text-text-main">
                 {editingItem ? OVERVIEW.MODAL_EDIT_TITLE : OVERVIEW.MODAL_ADD_TITLE}
@@ -427,9 +427,10 @@ export default function Overview() {
                     {isVerb ? OVERVIEW.INFINITIVE_LABEL : OVERVIEW.GERMAN_LABEL}
                   </label>
                   <textarea
-                    className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full p-4 text-lg border shadow-sm bg-surface border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder={isVerb ? OVERVIEW.INFINITIVE_LABEL : OVERVIEW.GERMAN_PLACEHOLDER}
                     value={german}
+                    rows={1}
                     onChange={(e) => setGerman(e.target.value)}
                   />
                 </div>
@@ -438,9 +439,10 @@ export default function Overview() {
                   <div>
                     <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL}</label>
                     <textarea
-                      className="w-full bg-surface border border-border p-4 rounded-2xl text-lg shadow-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="w-full p-4 text-lg border shadow-sm bg-surface border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
                       placeholder={OVERVIEW.FOREIGN_PLACEHOLDER}
                       value={foreign}
+                      rows={1}
                       onChange={(e) => setForeign(e.target.value)}
                     />
                   </div>
