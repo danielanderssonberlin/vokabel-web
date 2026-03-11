@@ -44,6 +44,8 @@ export default function Learning() {
   const [isArchiveMode, setIsArchiveMode] = useState(false);
   const [disableTooSoon, setDisableTooSoon] = useState(false);
   const inputRef = useRef(null);
+  const mainScrollRef = useRef(null);
+  const submitButtonRef = useRef(null);
   
   // Carousel Drag State
   const scrollRef = useRef(null);
@@ -201,6 +203,18 @@ export default function Learning() {
       };
     }
   }, [loadVokabeln, selectedLanguage, LEARNING.MIC_ERROR]);
+
+  useEffect(() => {
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTo(0, 0);
+    }
+  }, [currentIndex, sessionCompleted]);
+
+  useEffect(() => {
+    if (isCorrect !== null && submitButtonRef.current) {
+      submitButtonRef.current.focus();
+    }
+  }, [isCorrect]);
 
   useEffect(() => {
     if (isCorrect === null && !loading && !sessionCompleted && inputRef.current) {
@@ -434,7 +448,7 @@ export default function Learning() {
     }
 
     return (
-      <div className="flex flex-col items-center flex-1 h-full py-10 overflow-y-auto no-scrollbar text-center pb-32">
+      <div ref={mainScrollRef} className="flex flex-col items-center flex-1 h-full py-10 overflow-y-auto no-scrollbar text-center pb-32">
         <div className="flex flex-col items-center px-6 mb-8">
           <div className="p-6 mb-6 rounded-full bg-success-light animate-bounce-in">
             <CheckCircle2 size={60} className="text-success" />
@@ -567,7 +581,7 @@ export default function Learning() {
 
   return (
     <div className="flex flex-col flex-1 w-full h-full max-w-2xl mx-auto overflow-hidden">
-      <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-20 md:p-8">
+      <div ref={mainScrollRef} className="flex-1 overflow-y-auto no-scrollbar p-4 pb-20 md:p-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
             <GraduationCap className="w-8 h-8 text-primary" />
@@ -818,6 +832,7 @@ export default function Learning() {
           
 
           <button
+            ref={submitButtonRef}
             type="submit"
             className="flex items-center justify-center gap-2 p-4 mt-8 mb-6 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
           >
