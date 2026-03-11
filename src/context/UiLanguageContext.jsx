@@ -20,7 +20,9 @@ export const UiLanguageProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('ui_language', uiLanguage);
-    setStrings(UI_STRINGS[uiLanguage] || UI_STRINGS.de);
+    const newStrings = UI_STRINGS[uiLanguage] || UI_STRINGS.de;
+    // Nur setzen wenn wirklich anders, um unnötige Renders zu vermeiden
+    setStrings(prev => prev === newStrings ? prev : newStrings);
   }, [uiLanguage]);
 
   const toggleUiLanguage = (lang) => {

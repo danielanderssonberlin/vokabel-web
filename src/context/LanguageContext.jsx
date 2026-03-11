@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 const LanguageContext = createContext();
@@ -12,11 +12,16 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const [selectedLanguage, setSelectedLanguage] = useState(null);
-  const [availableLanguages, setAvailableLanguages] = useState([]);
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    return localStorage.getItem('vokabro_current_language');
+  });
+  const [availableLanguages, setAvailableLanguages] = useState(() => {
+    const saved = localStorage.getItem('vokabro_languages');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [loading, setLoading] = useState(true);
 
-  const fetchLanguages = async () => {
+  const fetchLanguages = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setLoading(false);
@@ -41,11 +46,40 @@ export const LanguageProvider = ({ children }) => {
       setSelectedLanguage(null);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchLanguages();
-  }, []);
+    
+    // Auth-Status Änderungen überwachen
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        fetchLanguages();
+      } else if (event === 'SIGNED_OUT') {
+        setSelectedLanguage(null);
+        setAvailableLanguages([]);
+        localStorage.removeItem('vokabro_current_language');
+        localStorage.removeItem('vokabro_languages');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchLanguages]);
+
+  // Synchronisation mit localStorage
+  useEffect(() => {
+    if (selectedLanguage) {
+      localStorage.setItem('vokabro_current_language', selectedLanguage);
+    } else {
+      localStorage.removeItem('vokabro_current_language');
+    }
+  }, [selectedLanguage]);
+
+  useEffect(() => {
+    localStorage.setItem('vokabro_languages', JSON.stringify(availableLanguages));
+  }, [availableLanguages]);
 
   const changeLanguage = async (code) => {
     setSelectedLanguage(code);
