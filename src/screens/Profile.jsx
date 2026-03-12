@@ -94,8 +94,10 @@ export default function Profile() {
       setIsSuperadmin(Boolean(data.superadmin));
       setDisableTooSoon(Boolean(data.disable_too_soon));
     } else {
-      console.error('No profile found for this user.');
+      // Das ist kein harter Fehler, da Profile erst bei der ersten Einstellungsergänzung erstellt werden
+      console.info('No profile row found yet. It will be created when you update your settings.');
       setIsSuperadmin(false);
+      setDisableTooSoon(false);
     }
   };
 

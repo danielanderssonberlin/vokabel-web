@@ -10,6 +10,7 @@ import confetti from 'canvas-confetti';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useUiLanguage } from '../context/UiLanguageContext';
+import { STORAGE_KEYS } from '../lib/storage';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -20,6 +21,7 @@ export default function Learning() {
   const { LEARNING, COMMON } = UI_STRINGS;
   const navigate = useNavigate();
   const { selectedLanguage, availableLanguages, addLanguage, changeLanguage, loading: isLangLoading } = useLanguage();
+  const [user, setUser] = useState(null);
   const [vokabeln, setVokabeln] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -38,7 +40,7 @@ export default function Learning() {
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [error, setError] = useState('');
   const [wrongAnswers, setWrongAnswers] = useState([]);
-  const [stats, setStats] = useState(getUserStats());
+  const [stats, setStats] = useState({ streak: 0, lastStudyDate: null, studyHistory: [] });
   const [info, setInfo] = useState(null);
   const [pendingUpdate, setPendingUpdate] = useState(false);
   const [isArchiveMode, setIsArchiveMode] = useState(false);
@@ -46,7 +48,7 @@ export default function Learning() {
   const inputRef = useRef(null);
   const mainScrollRef = useRef(null);
   const submitButtonRef = useRef(null);
-  
+
   // Carousel Drag State
   const scrollRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -81,6 +83,21 @@ export default function Learning() {
   const [isListening, setIsListening] = useState(false);
   const recognition = useRef(null);
 
+  // Fetch current user on mount
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      if (user) {
+        setStats(getUserStats(user.id));
+      }
+    });
+  }, []);
+
+  const getSessionKey = useCallback(() => {
+    if (!selectedLanguage || !user) return null;
+    return `${STORAGE_KEYS.LEARNING_SESSION(selectedLanguage)}_${user.id}`;
+  }, [selectedLanguage, user]);
+
   const loadVokabeln = useCallback(async (archive = false, ignoreSaved = false) => {
     if (!selectedLanguage) {
       setLoading(false);
@@ -88,8 +105,11 @@ export default function Learning() {
     }
     setLoading(true);
 
-    if (!ignoreSaved) {
-      const saved = localStorage.getItem(`learning_session_${selectedLanguage}`);
+    const { data: { user } } = await supabase.auth.getUser();
+    const sessionKey = user ? `${STORAGE_KEYS.LEARNING_SESSION(selectedLanguage)}_${user.id}` : null;
+
+    if (!ignoreSaved && sessionKey) {
+      const saved = localStorage.getItem(sessionKey);
       if (saved) {
         try {
           const { vokabeln: savedVokabeln, currentIndex: savedIndex, isArchiveMode: savedArchive, wrongAnswers: savedWrong } = JSON.parse(saved);
@@ -133,7 +153,6 @@ export default function Learning() {
     setStats(calculateStatsFromVocabulary(all));
 
     // Superadmin Einstellungen laden
-    const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -155,22 +174,24 @@ export default function Learning() {
 
   // Save session state
   useEffect(() => {
-    if (vokabeln.length > 0 && !sessionCompleted && !loading && selectedLanguage) {
-      localStorage.setItem(`learning_session_${selectedLanguage}`, JSON.stringify({
+    const sessionKey = getSessionKey();
+    if (vokabeln.length > 0 && !sessionCompleted && !loading && sessionKey) {
+      localStorage.setItem(sessionKey, JSON.stringify({
         vokabeln,
         currentIndex,
         isArchiveMode,
         wrongAnswers
       }));
     }
-  }, [vokabeln, currentIndex, isArchiveMode, wrongAnswers, sessionCompleted, loading, selectedLanguage]);
+  }, [vokabeln, currentIndex, isArchiveMode, wrongAnswers, sessionCompleted, loading, getSessionKey]);
 
   // Clear session state
   useEffect(() => {
-    if (sessionCompleted && selectedLanguage) {
-      localStorage.removeItem(`learning_session_${selectedLanguage}`);
+    const sessionKey = getSessionKey();
+    if (sessionCompleted && sessionKey) {
+      localStorage.removeItem(sessionKey);
     }
-  }, [sessionCompleted, selectedLanguage]);
+  }, [sessionCompleted, getSessionKey]);
 
   useEffect(() => {
     loadVokabeln();
@@ -378,7 +399,7 @@ export default function Learning() {
         setVokabeln(prev => prev.map(v => v.id === current.id ? updated : v));
 
         if (correct) {
-          setStats(updateStudyStats());
+          setStats(updateStudyStats(user?.id));
         }
 
         // Eine Vokabel gilt NUR als gelernt, wenn sie Status 5 erreicht hat

@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UI_STRINGS } from '../constants/uiContent';
 
+import { STORAGE_KEYS } from '../lib/storage';
+
 const UiLanguageContext = createContext();
 
 export const useUiLanguage = () => {
@@ -13,13 +15,13 @@ export const useUiLanguage = () => {
 
 export const UiLanguageProvider = ({ children }) => {
   const [uiLanguage, setUiLanguage] = useState(() => {
-    return localStorage.getItem('ui_language') || 'de';
+    return localStorage.getItem(STORAGE_KEYS.UI_LANGUAGE) || 'de';
   });
 
   const [strings, setStrings] = useState(UI_STRINGS[uiLanguage] || UI_STRINGS.de);
 
   useEffect(() => {
-    localStorage.setItem('ui_language', uiLanguage);
+    localStorage.setItem(STORAGE_KEYS.UI_LANGUAGE, uiLanguage);
     const newStrings = UI_STRINGS[uiLanguage] || UI_STRINGS.de;
     // Nur setzen wenn wirklich anders, um unnötige Renders zu vermeiden
     setStrings(prev => prev === newStrings ? prev : newStrings);

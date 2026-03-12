@@ -1,5 +1,8 @@
-export const getUserStats = () => {
-  const stats = localStorage.getItem('user_stats');
+import { STORAGE_KEYS } from '../lib/storage';
+
+export const getUserStats = (userId) => {
+  const key = userId ? `${STORAGE_KEYS.USER_STATS}_${userId}` : STORAGE_KEYS.USER_STATS;
+  const stats = localStorage.getItem(key);
   if (!stats) {
     return {
       streak: 0,
@@ -24,8 +27,8 @@ export const getUserStats = () => {
   return parsed;
 };
 
-export const updateStudyStats = () => {
-  const stats = getUserStats();
+export const updateStudyStats = (userId) => {
+  const stats = getUserStats(userId);
   const today = new Date().toDateString();
   
   // Update streak if not already updated today
@@ -47,7 +50,8 @@ export const updateStudyStats = () => {
     stats.studyHistory.push(today);
   }
 
-  localStorage.setItem('user_stats', JSON.stringify(stats));
+  const key = userId ? `${STORAGE_KEYS.USER_STATS}_${userId}` : STORAGE_KEYS.USER_STATS;
+  localStorage.setItem(key, JSON.stringify(stats));
   return stats;
 };
 
