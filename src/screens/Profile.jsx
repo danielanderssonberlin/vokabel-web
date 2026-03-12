@@ -145,9 +145,11 @@ export default function Profile() {
       if (isSuperadmin) {
         const { data, error } = await supabase
           .from('profiles')
-          .update({ disable_too_soon: disableTooSoon })
-          .eq('id', user.id)
-          .select(); // <-- hier bekommst du die aktualisierte Zeile zurück
+          .upsert({ 
+            id: user.id,
+            disable_too_soon: disableTooSoon 
+          })
+          .select(); 
 
         console.log('Update result:', data, error);
       }

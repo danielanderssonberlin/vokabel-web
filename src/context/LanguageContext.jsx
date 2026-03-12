@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { UI_STRINGS } from '../constants/uiContent';
 
 const LanguageContext = createContext();
 
@@ -36,15 +37,43 @@ export const LanguageProvider = ({ children }) => {
 
     if (error) {
       console.error('Error fetching languages:', error);
-    } else if (profile) {
-      const langs = profile.languages || [];
-      setAvailableLanguages(langs);
-      setSelectedLanguage(profile.current_language || (langs.length > 0 ? langs[0].code : null));
-    } else {
-      // Fallback: Keine Sprachen
-      setAvailableLanguages([]);
-      setSelectedLanguage(null);
+    } 
+
+    let langs = profile?.languages || [];
+    let currentLang = profile?.current_language;
+
+    // Falls keine Sprachen im Profil, prüfen ob Vokabeln in der DB existieren
+    if (langs.length === 0) {
+      const { data: vocabLangs, error: vocabError } = await supabase
+        .from('vocabulary')
+        .select('language')
+        .eq('user_id', user.id);
+
+      if (!vocabError && vocabLangs && vocabLangs.length > 0) {
+        const uniqueCodes = [...new Set(vocabLangs.map(v => v.language))];
+        const predefined = UI_STRINGS.de.COMMON.PREDEFINED_LANGUAGES;
+        
+        langs = uniqueCodes
+          .map(code => predefined.find(p => p.code === code))
+          .filter(Boolean);
+
+        if (langs.length > 0) {
+          currentLang = langs[0].code;
+          
+          // Profil automatisch aktualisieren, damit es beim nächsten Mal da ist
+          await supabase
+            .from('profiles')
+            .upsert({ 
+              id: user.id,
+              languages: langs,
+              current_language: currentLang
+            });
+        }
+      }
     }
+
+    setAvailableLanguages(langs);
+    setSelectedLanguage(currentLang || (langs.length > 0 ? langs[0].code : null));
     setLoading(false);
   }, []);
 
@@ -87,8 +116,10 @@ export const LanguageProvider = ({ children }) => {
     if (user) {
       await supabase
         .from('profiles')
-        .update({ current_language: code })
-        .eq('id', user.id);
+        .upsert({ 
+          id: user.id,
+          current_language: code 
+        });
     }
   };
 
@@ -106,11 +137,11 @@ export const LanguageProvider = ({ children }) => {
     if (user) {
       await supabase
         .from('profiles')
-        .update({ 
+        .upsert({ 
+          id: user.id,
           languages: newLangs,
           current_language: newSelected
-        })
-        .eq('id', user.id);
+        });
     }
   };
 
@@ -128,11 +159,11 @@ export const LanguageProvider = ({ children }) => {
     if (user) {
       await supabase
         .from('profiles')
-        .update({ 
+        .upsert({ 
+          id: user.id,
           languages: newLangs,
           current_language: newSelected
-        })
-        .eq('id', user.id);
+        });
     }
   };
 
