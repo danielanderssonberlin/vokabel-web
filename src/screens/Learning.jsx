@@ -244,6 +244,17 @@ export default function Learning() {
   }, [currentIndex, isCorrect, loading, sessionCompleted]);
 
   useEffect(() => {
+    if (isCorrect === false && mainScrollRef.current) {
+      setTimeout(() => {
+        mainScrollRef.current.scrollTo({
+          top: mainScrollRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 150);
+    }
+  }, [isCorrect]);
+
+  useEffect(() => {
     if (info) {
       const timer = setTimeout(() => setInfo(null), 3000);
       return () => clearTimeout(timer);
@@ -536,17 +547,17 @@ export default function Learning() {
                       style={{ animationDelay: `${idx * 0.1}s` }}
                     >
                       <span className="text-[10px] font-black tracking-widest uppercase text-text-muted mb-1 block">{COMMON.DEUTSCH}</span>
-                      <p className="mb-4 text-xl font-bold text-text-main leading-tight">{item.german}</p>
+                      <p className="mb-4 text-xl font-bold text-text-main leading-tight break-all">{item.german}</p>
                       
                       {!isVerb ? (
                         <div className="space-y-4">
                           <div className="pt-3 border-t border-border-light">
                             <span className="text-[10px] font-bold tracking-widest uppercase text-error mb-1 block">Deine Antwort</span>
-                            <p className="text-lg font-bold text-error/70 line-through opacity-70">{userAnswer || '---'}</p>
+                            <p className="text-lg font-bold text-error/70 line-through opacity-70 break-all">{userAnswer || '---'}</p>
                           </div>
                           <div className="pt-1">
                             <span className="text-[10px] font-bold tracking-widest uppercase text-success mb-1 block">{LEARNING.RIGHT_ANSWER}</span>
-                            <p className="text-2xl font-black text-success">{item.spanish}</p>
+                            <p className="text-2xl font-black text-success break-all">{item.spanish}</p>
                           </div>
                         </div>
                       ) : (
@@ -556,9 +567,9 @@ export default function Learning() {
                             <div className="col-span-2 pb-2 border-b border-border-light/50">
                                <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted mb-1 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
                                <div className="flex items-center gap-2">
-                                 <span className="text-sm font-bold text-error line-through opacity-60">{userAnswer.infinitive || '---'}</span>
-                                 <ArrowRight size={12} className="text-text-muted" />
-                                 <span className="text-base font-black text-success">{parsed.infinitive}</span>
+                                 <span className="text-sm font-bold text-error line-through opacity-60 break-all">{userAnswer.infinitive || '---'}</span>
+                                 <ArrowRight size={12} className="text-text-muted shrink-0" />
+                                 <span className="text-base font-black text-success break-all">{parsed.infinitive}</span>
                                </div>
                             </div>
 
@@ -572,12 +583,12 @@ export default function Learning() {
                                   </span>
                                   <div className="flex flex-col bg-slate-50/50 p-2 rounded-lg border border-border-light/30">
                                     {!isMatch && (
-                                      <span className="text-[11px] font-bold text-error line-through opacity-60 mb-1 truncate">
+                                      <span className="text-[11px] font-bold text-error line-through opacity-60 mb-1 break-all">
                                         {userVal || '---'}
                                       </span>
                                     )}
                                     <span className={cn(
-                                      "text-sm font-black truncate",
+                                      "text-sm font-black break-all",
                                       isMatch ? "text-text-main opacity-30" : "text-success"
                                     )}>{correctValue}</span>
                                   </div>
@@ -674,20 +685,23 @@ export default function Learning() {
               <p className="text-[10px] font-bold text-text-muted">{currentIndex + 1} / {vokabeln.length}</p>
             </div>
             <span className="mb-2 text-xs font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.COMMON.DEUTSCH}</span>
-            <h2 className="text-4xl font-bold text-text-main">{current.german}</h2>
+            <h2 className="text-4xl font-bold text-text-main break-all">{current.german}</h2>
             
             {isCorrect === false && (
               <div className="w-full pt-6 mt-6 border-t border-border-light animate-bounce-in">
-                <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
                 {(() => {
                   try {
                     const parsed = JSON.parse(current.spanish);
                     if (parsed && parsed.isVerb) {
                       return (
-                        <div className="space-y-4 mt-2">
+                        <div className="space-y-4">
+                          <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
                           <div className="text-left bg-error/5 p-3 rounded-lg border border-error/10">
                             <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
-                            <span className="text-lg font-bold text-error">{parsed.infinitive}</span>
+                            {(infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() && (
+                              <span className="text-sm font-bold text-error/60 line-through block break-all mb-1">{infinitiveAnswer || '---'}</span>
+                            )}
+                            <span className="text-lg font-bold text-error break-all">{parsed.infinitive}</span>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             {Object.entries(parsed.forms).map(([key, value]) => (
@@ -695,7 +709,10 @@ export default function Learning() {
                                 <span className="text-[10px] uppercase font-bold text-error/60 block">
                                   {parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()]}
                                 </span>
-                                <span className="text-sm font-bold text-error">{value}</span>
+                                {(verbAnswers[key] || '').trim().toLowerCase() !== (value || '').trim().toLowerCase() && (
+                                  <span className="text-[11px] font-bold text-error/60 line-through block break-all">{verbAnswers[key] || '---'}</span>
+                                )}
+                                <span className="text-sm font-bold text-error break-all">{value}</span>
                               </div>
                             ))}
                           </div>
@@ -703,7 +720,16 @@ export default function Learning() {
                       );
                     }
                   } catch (e) {}
-                  return <h3 className="text-3xl font-bold text-error">{current.spanish}</h3>;
+                  return (
+                    <>
+                      <div className="mb-4 text-left">
+                        <span className="mb-1 text-[10px] font-bold tracking-widest uppercase text-error/60 block">Deine Antwort</span>
+                        <p className="text-lg font-bold text-error/70 line-through break-all">{answer || '---'}</p>
+                      </div>
+                      <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
+                      <h3 className="text-3xl font-bold text-error break-all">{current.spanish}</h3>
+                    </>
+                  );
                 })()}
               </div>
             )}
