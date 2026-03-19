@@ -461,12 +461,12 @@ export default function Overview() {
                     
                     <div className="grid grid-cols-2 gap-4">
                       {[
-                        { key: 'yo', label: isReflexive ? `me (${OVERVIEW.YO})` : OVERVIEW.YO },
-                        { key: 'tu', label: isReflexive ? `te (${OVERVIEW.TU})` : OVERVIEW.TU },
-                        { key: 'el', label: isReflexive ? `se (${OVERVIEW.EL})` : OVERVIEW.EL },
-                        { key: 'nosotros', label: isReflexive ? `nos (${OVERVIEW.NOSOTROS})` : OVERVIEW.NOSOTROS },
-                        { key: 'vosotros', label: isReflexive ? `os (${OVERVIEW.VOSOTROS})` : OVERVIEW.VOSOTROS },
-                        { key: 'ellos', label: isReflexive ? `se (${OVERVIEW.ELLOS})` : OVERVIEW.ELLOS },
+                        { key: 'yo', label: isReflexive ? `${OVERVIEW.YO} me` : OVERVIEW.YO },
+                        { key: 'tu', label: isReflexive ? `${OVERVIEW.TU} te` : OVERVIEW.TU },
+                        { key: 'el', label: isReflexive ? `${OVERVIEW.EL} se` : OVERVIEW.EL },
+                        { key: 'nosotros', label: isReflexive ? `${OVERVIEW.NOSOTROS} nos` : OVERVIEW.NOSOTROS },
+                        { key: 'vosotros', label: isReflexive ? `${OVERVIEW.VOSOTROS} os` : OVERVIEW.VOSOTROS },
+                        { key: 'ellos', label: isReflexive ? `${OVERVIEW.ELLOS} se` : OVERVIEW.ELLOS },
                       ].map((f) => (
                         <div key={f.key}>
                           <label className="block mb-1 ml-1 text-xs font-medium text-text-secondary">{f.label}</label>

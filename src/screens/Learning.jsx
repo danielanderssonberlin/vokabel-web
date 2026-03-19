@@ -35,6 +35,8 @@ export default function Learning() {
     ellos: ''
   });
   const [isCorrect, setIsCorrect] = useState(null);
+  const [accentWarning, setAccentWarning] = useState(false);
+  const [isNextDisabled, setIsNextDisabled] = useState(false);
   const [wasTooSoon, setWasTooSoon] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sessionCompleted, setSessionCompleted] = useState(false);
@@ -166,6 +168,7 @@ export default function Learning() {
     
     setCurrentIndex(0);
     setIsCorrect(null);
+    setAccentWarning(false);
     setAnswer('');
     setSessionCompleted(false);
     setWrongAnswers([]);
@@ -255,6 +258,27 @@ export default function Learning() {
   }, [isCorrect]);
 
   useEffect(() => {
+    if (vokabeln.length > 0 && !sessionCompleted && !loading) {
+      const current = vokabeln[currentIndex];
+      let isVerb = false;
+      try {
+        const parsed = JSON.parse(current.spanish);
+        isVerb = !!(parsed && parsed.isVerb);
+      } catch (e) {}
+
+      if (isVerb) {
+        setIsNextDisabled(true);
+        const timer = setTimeout(() => {
+          setIsNextDisabled(false);
+        }, 2000);
+        return () => clearTimeout(timer);
+      } else {
+        setIsNextDisabled(false);
+      }
+    }
+  }, [currentIndex, vokabeln, sessionCompleted, loading]);
+
+  useEffect(() => {
     if (info) {
       const timer = setTimeout(() => setInfo(null), 3000);
       return () => clearTimeout(timer);
@@ -289,14 +313,19 @@ export default function Learning() {
 
   const getReflexiveLabel = (key) => {
     const map = {
-      yo: `me (${UI_STRINGS.OVERVIEW.YO})`,
-      tu: `te (${UI_STRINGS.OVERVIEW.TU})`,
-      el: `se (${UI_STRINGS.OVERVIEW.EL})`,
-      nosotros: `nos (${UI_STRINGS.OVERVIEW.NOSOTROS})`,
-      vosotros: `os (${UI_STRINGS.OVERVIEW.VOSOTROS})`,
-      ellos: `se (${UI_STRINGS.OVERVIEW.ELLOS})`
+      yo: `${UI_STRINGS.OVERVIEW.YO} me`,
+      tu: `${UI_STRINGS.OVERVIEW.TU} te`,
+      el: `${UI_STRINGS.OVERVIEW.EL} se`,
+      nosotros: `${UI_STRINGS.OVERVIEW.NOSOTROS} nos`,
+      vosotros: `${UI_STRINGS.OVERVIEW.VOSOTROS} os`,
+      ellos: `${UI_STRINGS.OVERVIEW.ELLOS} se`
     };
     return map[key] || key;
+  };
+
+  const normalizeForAccentCheck = (str) => {
+    if (!str) return '';
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
   };
 
   const handleNext = useCallback(() => {
@@ -313,6 +342,7 @@ export default function Learning() {
         ellos: ''
       });
       setIsCorrect(null);
+      setAccentWarning(false);
       setWasTooSoon(false);
     } else {
       setSessionCompleted(true);
@@ -342,14 +372,38 @@ export default function Learning() {
     } catch (e) {}
 
     let correct = false;
+    let onlyAccentWrong = false;
+
     if (isVerb) {
       const isInfCorrect = (infinitiveAnswer || '').trim().toLowerCase() === (parsedVerb.infinitive || '').trim().toLowerCase();
       const areFormsCorrect = Object.keys(parsedVerb.forms).every(key => 
         (verbAnswers[key] || '').trim().toLowerCase() === (parsedVerb.forms[key] || '').trim().toLowerCase()
       );
       correct = isInfCorrect && areFormsCorrect;
+
+      if (!correct) {
+        const infMatch = normalizeForAccentCheck(infinitiveAnswer) === normalizeForAccentCheck(parsedVerb.infinitive);
+        const formsMatch = Object.keys(parsedVerb.forms).every(key => 
+          normalizeForAccentCheck(verbAnswers[key]) === normalizeForAccentCheck(parsedVerb.forms[key])
+        );
+        if (infMatch && formsMatch) {
+          onlyAccentWrong = true;
+        }
+      }
     } else {
       correct = answer.trim().toLowerCase() === current.spanish.trim().toLowerCase();
+      if (!correct && normalizeForAccentCheck(answer) === normalizeForAccentCheck(current.spanish)) {
+        onlyAccentWrong = true;
+      }
+    }
+
+    if (onlyAccentWrong && !accentWarning) {
+      setAccentWarning(true);
+      setInfo({ 
+        title: LEARNING.ACCENT_WARNING_TITLE, 
+        text: LEARNING.ACCENT_WARNING_TEXT 
+      });
+      return;
     }
     
     // Sofortige Prüfung für direktes Feedback
@@ -789,12 +843,12 @@ export default function Learning() {
 
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { key: 'yo', label: parsed.isReflexive ? `me (${UI_STRINGS.OVERVIEW.YO})` : UI_STRINGS.OVERVIEW.YO },
-                        { key: 'tu', label: parsed.isReflexive ? `te (${UI_STRINGS.OVERVIEW.TU})` : UI_STRINGS.OVERVIEW.TU },
-                        { key: 'el', label: parsed.isReflexive ? `se (${UI_STRINGS.OVERVIEW.EL})` : UI_STRINGS.OVERVIEW.EL },
-                        { key: 'nosotros', label: parsed.isReflexive ? `nos (${UI_STRINGS.OVERVIEW.NOSOTROS})` : UI_STRINGS.OVERVIEW.NOSOTROS },
-                        { key: 'vosotros', label: parsed.isReflexive ? `os (${UI_STRINGS.OVERVIEW.VOSOTROS})` : UI_STRINGS.OVERVIEW.VOSOTROS },
-                        { key: 'ellos', label: parsed.isReflexive ? `se (${UI_STRINGS.OVERVIEW.ELLOS})` : UI_STRINGS.OVERVIEW.ELLOS },
+                        { key: 'yo', label: parsed.isReflexive ? getReflexiveLabel('yo') : UI_STRINGS.OVERVIEW.YO },
+                        { key: 'tu', label: parsed.isReflexive ? getReflexiveLabel('tu') : UI_STRINGS.OVERVIEW.TU },
+                        { key: 'el', label: parsed.isReflexive ? getReflexiveLabel('el') : UI_STRINGS.OVERVIEW.EL },
+                        { key: 'nosotros', label: parsed.isReflexive ? getReflexiveLabel('nosotros') : UI_STRINGS.OVERVIEW.NOSOTROS },
+                        { key: 'vosotros', label: parsed.isReflexive ? getReflexiveLabel('vosotros') : UI_STRINGS.OVERVIEW.VOSOTROS },
+                        { key: 'ellos', label: parsed.isReflexive ? getReflexiveLabel('ellos') : UI_STRINGS.OVERVIEW.ELLOS },
                       ].map((f) => (
                         <div key={f.key}>
                           <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{f.label}</span>
@@ -881,12 +935,13 @@ export default function Learning() {
           <button
             ref={submitButtonRef}
             type="submit"
+            disabled={isNextDisabled && isCorrect === null}
             className="flex items-center justify-center gap-2 p-4 mt-8 mb-6 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
           >
             <span>
               {isCorrect !== null 
                 ? UI_STRINGS.LEARNING.NEXT_BUTTON 
-                : (!answer && !infinitiveAnswer ? UI_STRINGS.LEARNING.DONT_KNOW_BUTTON : UI_STRINGS.LEARNING.CHECK_BUTTON)
+                : (isNextDisabled ? `...` : (!answer && !infinitiveAnswer ? UI_STRINGS.LEARNING.DONT_KNOW_BUTTON : UI_STRINGS.LEARNING.CHECK_BUTTON))
               }
             </span>
             <ArrowRight size={20} />

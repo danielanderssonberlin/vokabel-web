@@ -111,6 +111,8 @@ export const UI_STRINGS = {
       LISTENING_PLACEHOLDER: "Höre zu...",
       MIC_ERROR: "Spracherkennung wird in diesem Browser nicht unterstützt.",
       UPDATE_FAILED: "Update fehlgeschlagen:",
+      ACCENT_WARNING_TITLE: "Fast richtig!",
+      ACCENT_WARNING_TEXT: "Nur ein Akzent ist falsch. Du hast noch einen Versuch!",
     },
     OVERVIEW: {
       TITLE: "Übersicht",
@@ -301,6 +303,8 @@ export const UI_STRINGS = {
       LISTENING_PLACEHOLDER: "Listening...",
       MIC_ERROR: "Speech recognition is not supported in this browser.",
       UPDATE_FAILED: "Update failed:",
+      ACCENT_WARNING_TITLE: "Almost correct!",
+      ACCENT_WARNING_TEXT: "Just an accent is wrong. You have one more try!",
     },
     OVERVIEW: {
       TITLE: "Overview",
