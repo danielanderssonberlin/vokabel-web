@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getVocabulary, updateVocabularyStatus } from '../store/vocabularyStore';
 import { updateStudyStats, getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, GraduationCap } from 'lucide-react';
+import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, GraduationCap, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -20,6 +20,7 @@ export default function Learning() {
   const { strings: UI_STRINGS } = useUiLanguage();
   const { LEARNING, COMMON } = UI_STRINGS;
   const navigate = useNavigate();
+  const location = useLocation();
   const { selectedLanguage, availableLanguages, addLanguage, changeLanguage, loading: isLangLoading } = useLanguage();
   const [user, setUser] = useState(null);
   const [vokabeln, setVokabeln] = useState([]);
@@ -42,6 +43,7 @@ export default function Learning() {
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [error, setError] = useState('');
   const [wrongAnswers, setWrongAnswers] = useState([]);
+  const [sessionFinishedCount, setSessionFinishedCount] = useState(0);
   const [stats, setStats] = useState({ streak: 0, lastStudyDate: null, studyHistory: [] });
   const [info, setInfo] = useState(null);
   const [pendingUpdate, setPendingUpdate] = useState(false);
@@ -100,7 +102,7 @@ export default function Learning() {
     return `${STORAGE_KEYS.LEARNING_SESSION(selectedLanguage)}_${user.id}`;
   }, [selectedLanguage, user]);
 
-  const loadVokabeln = useCallback(async (archive = false, ignoreSaved = false) => {
+  const loadVokabeln = useCallback(async (archive = false, ignoreSaved = false, archiveMode = 'random') => {
     if (!selectedLanguage) {
       setLoading(false);
       return;
@@ -137,11 +139,23 @@ export default function Learning() {
     
     let toLearn = [];
     if (archive) {
-      // Archiv-Modus: Zufällige 20 gelerne Vokabeln (Status 5)
-      toLearn = all
-        .filter(v => v.status === 5)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 20);
+      // Archiv-Modus: Filtered by status 5
+      const archived = all.filter(v => v.status === 5);
+      
+      if (archiveMode === 'last50') {
+        toLearn = archived
+          .sort((a, b) => new Date(b.lastReviewed || b.created_at) - new Date(a.lastReviewed || a.created_at))
+          .slice(0, 50);
+      } else if (archiveMode === 'all') {
+        toLearn = archived
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 100); // Limit to 100 for performance
+      } else {
+        // Default: random 20
+        toLearn = archived
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 20);
+      }
     } else {
       // Normaler Modus: Alles unter Status 5
       toLearn = all
@@ -172,6 +186,7 @@ export default function Learning() {
     setAnswer('');
     setSessionCompleted(false);
     setWrongAnswers([]);
+    setSessionFinishedCount(0);
     setLoading(false);
   }, [selectedLanguage]);
 
@@ -197,7 +212,15 @@ export default function Learning() {
   }, [sessionCompleted, getSessionKey]);
 
   useEffect(() => {
-    loadVokabeln();
+    const isArchiveFromState = location.state?.archive;
+    const archiveModeFromState = location.state?.archiveMode || 'random';
+    
+    if (isArchiveFromState) {
+      loadVokabeln(true, true, archiveModeFromState); // Force archive mode and ignore saved session
+      navigate(location.pathname, { replace: true, state: {} });
+    } else {
+      loadVokabeln();
+    }
     
     // Initialize Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -468,8 +491,9 @@ export default function Learning() {
         }
 
         // Eine Vokabel gilt NUR als gelernt, wenn sie Status 5 erreicht hat
-        if (updated.status === 5) {
+        if (updated.status === 5 && current.status < 5) {
           isLearned = true;
+          setSessionFinishedCount(prev => prev + 1);
         }
       }
     } catch (err) {
@@ -534,7 +558,7 @@ export default function Learning() {
     }
 
     return (
-      <div ref={mainScrollRef} className="flex flex-col items-center flex-1 h-full py-10 overflow-y-auto no-scrollbar text-center pb-32">
+      <div ref={mainScrollRef} className="flex flex-col items-center flex-1 h-full py-10 pb-32 overflow-y-auto text-center no-scrollbar">
         <div className="flex flex-col items-center px-6 mb-8">
           <div className="p-6 mb-6 rounded-full bg-success-light animate-bounce-in">
             <CheckCircle2 size={60} className="text-success" />
@@ -547,6 +571,28 @@ export default function Learning() {
               ? LEARNING.SESSION_STATS(vokabeln.length, wrongAnswers.length)
               : LEARNING.EMPTY_STATE}
           </p>
+
+          {sessionCompleted && (
+            <div className="grid w-full max-w-sm grid-cols-3 gap-3 mb-10">
+              <div className="bg-surface border border-border-light rounded-[24px] p-4 flex flex-col items-center shadow-sm">
+                <span className="text-2xl font-black text-text-main">{vokabeln.length}</span>
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{LEARNING.SESSION_STATS_PRACTICED}</span>
+              </div>
+              {!isArchiveMode && (
+                <div className="bg-surface border border-border-light rounded-[24px] p-4 flex flex-col items-center shadow-sm">
+                  <span className="text-2xl font-black text-success">{sessionFinishedCount}</span>
+                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{LEARNING.SESSION_STATS_FINISHED}</span>
+                </div>
+              )}
+              <div className={cn(
+                  "bg-surface border border-border-light rounded-[24px] p-4 flex flex-col items-center shadow-sm",
+                  isArchiveMode && "col-span-2"
+                )}>
+                <span className="text-2xl font-black text-primary">{vokabeln.length - wrongAnswers.length}</span>
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{LEARNING.SESSION_STATS_KNOWN}</span>
+              </div>
+            </div>
+          )}
           
           <div className="flex flex-col w-full max-w-xs gap-3">
             <button 
@@ -555,13 +601,15 @@ export default function Learning() {
             >
               {vokabeln.length === 0 ? LEARNING.REFRESH : LEARNING.NEW_SESSION}
             </button>
-            
-            <button
-              onClick={() => loadVokabeln(true, true)}
-              className="mt-8 text-sm font-medium transition-colors text-text-secondary hover:text-primary"
-            >
-              {LEARNING.ARCHIVE_REPEAT}
-            </button>
+
+            {vokabeln.length === 0 && !loading && (
+              <button
+                onClick={() => loadVokabeln(true, true)}
+                className="mt-8 text-sm font-medium transition-colors text-text-secondary hover:text-primary"
+              >
+                {LEARNING.ARCHIVE_REPEAT}
+              </button>
+            )}
           </div>
         </div>
 
@@ -601,29 +649,29 @@ export default function Learning() {
                       style={{ animationDelay: `${idx * 0.1}s` }}
                     >
                       <span className="text-[10px] font-black tracking-widest uppercase text-text-muted mb-1 block">{COMMON.DEUTSCH}</span>
-                      <p className="mb-4 text-xl font-bold text-text-main leading-tight break-all">{item.german}</p>
+                      <p className="mb-4 text-xl font-bold leading-tight break-all text-text-main">{item.german}</p>
                       
                       {!isVerb ? (
                         <div className="space-y-4">
                           <div className="pt-3 border-t border-border-light">
                             <span className="text-[10px] font-bold tracking-widest uppercase text-error mb-1 block">Deine Antwort</span>
-                            <p className="text-lg font-bold text-error/70 line-through opacity-70 break-all">{userAnswer || '---'}</p>
+                            <p className="text-lg font-bold line-through break-all text-error/70 opacity-70">{userAnswer || '---'}</p>
                           </div>
                           <div className="pt-1">
                             <span className="text-[10px] font-bold tracking-widest uppercase text-success mb-1 block">{LEARNING.RIGHT_ANSWER}</span>
-                            <p className="text-2xl font-black text-success break-all">{item.spanish}</p>
+                            <p className="text-2xl font-black break-all text-success">{item.spanish}</p>
                           </div>
                         </div>
                       ) : (
-                        <div className="space-y-4 pt-3 border-t border-border-light">
+                        <div className="pt-3 space-y-4 border-t border-border-light">
                           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                             {/* Infinitiv Header */}
                             <div className="col-span-2 pb-2 border-b border-border-light/50">
                                <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted mb-1 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
                                <div className="flex items-center gap-2">
-                                 <span className="text-sm font-bold text-error line-through opacity-60 break-all">{userAnswer.infinitive || '---'}</span>
+                                 <span className="text-sm font-bold line-through break-all text-error opacity-60">{userAnswer.infinitive || '---'}</span>
                                  <ArrowRight size={12} className="text-text-muted shrink-0" />
-                                 <span className="text-base font-black text-success break-all">{parsed.infinitive}</span>
+                                 <span className="text-base font-black break-all text-success">{parsed.infinitive}</span>
                                </div>
                             </div>
 
@@ -635,7 +683,7 @@ export default function Learning() {
                                   <span className="text-[9px] font-bold tracking-widest uppercase text-text-muted mb-1 truncate">
                                     {parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()]}
                                   </span>
-                                  <div className="flex flex-col bg-slate-50/50 p-2 rounded-lg border border-border-light/30">
+                                  <div className="flex flex-col p-2 border rounded-lg bg-slate-50/50 border-border-light/30">
                                     {!isMatch && (
                                       <span className="text-[11px] font-bold text-error line-through opacity-60 mb-1 break-all">
                                         {userVal || '---'}
@@ -667,287 +715,301 @@ export default function Learning() {
 
   return (
     <div className="flex flex-col flex-1 w-full h-full max-w-2xl mx-auto overflow-hidden">
-      <div ref={mainScrollRef} className="flex-1 overflow-y-auto no-scrollbar p-4 pb-20 md:p-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-8 h-8 text-primary" />
-            <h1 className="hidden text-xl font-bold text-primary sm:block">
-              {isArchiveMode ? UI_STRINGS.LEARNING.TITLE_ARCHIVE : UI_STRINGS.LEARNING.TITLE}
-            </h1>
-            {isArchiveMode && (
-              <div className="px-2 py-0.5 rounded-full bg-success/10 border border-success/20">
-                <span className="text-[10px] font-bold text-success uppercase">{UI_STRINGS.OVERVIEW.ARCHIVE_TAG}</span>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <button 
-              onClick={() => setInfo({ title: UI_STRINGS.LEARNING.STREAK_INFO_TITLE, text: UI_STRINGS.LEARNING.STREAK_INFO_TEXT })}
-              className="flex items-center gap-1 px-3 py-1.5 text-orange-600 transition-transform border border-orange-100 rounded-full bg-orange-50 active:scale-95 shadow-sm"
-            >
-              <Flame size={16} fill="currentColor" />
-              <span className="text-sm font-bold">{stats.streak}</span>
-            </button>
-          </div>
-        </div>
-
-        {info && (
-          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-sm animate-bounce-in">
-            <div className="p-4 text-white border shadow-xl bg-text-main rounded-2xl border-white/10">
-              <div className="flex items-center gap-2 mb-1">
-                <Flame size={16} className="text-orange-400" fill="currentColor" />
-                <span className="text-xs font-bold tracking-widest uppercase opacity-70">{info.title}</span>
-              </div>
-              <p className="text-sm font-medium">{info.text}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="relative pt-1 mb-8">
-          {/* Stapel-Effekt (Hintergrundkarten) */}
-          {[1, 2, 3, 4].map((i) => {
-            const remaining = vokabeln.length - currentIndex - 1;
-            if (i > remaining) return null;
-            
-            return (
-              <div 
-                key={`stack-${i}`}
-                className="card-stack-layer"
-                style={{ 
-                  top: `${(i * -8)}px`, // Karten nach oben versetzt
-                  transform: `scale(${1 - i * 0.04})`,
-                  opacity: 1 - i * 0.2,
-                  zIndex: -i
-                }}
-              />
-            );
-          })}
-          
-          <div 
-            key={current.id}
-            className={cn(
-              "relative flex flex-col items-center p-10 text-center border shadow-sm border-border-light bg-surface rounded-3xl animate-slide-in-top",
-              current.status === 5 && isCorrect === true && "animate-fly-away animate-learned-success",
-              loading && "opacity-50 animate-pulse"
-            )}
-          >
-          {!loading && (
-           <>
-            <div className="absolute px-3 py-1 border rounded-full top-4 right-4 border-border-light bg-background/50">
-              <p className="text-[10px] font-bold text-text-muted">{currentIndex + 1} / {vokabeln.length}</p>
-            </div>
-            <span className="mb-2 text-xs font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.COMMON.DEUTSCH}</span>
-            <h2 className="text-4xl font-bold text-text-main break-all">{current.german}</h2>
-            
-            {isCorrect === false && (
-              <div className="w-full pt-6 mt-6 border-t border-border-light animate-bounce-in">
-                {(() => {
-                  try {
-                    const parsed = JSON.parse(current.spanish);
-                    if (parsed && parsed.isVerb) {
-                      return (
-                        <div className="space-y-4">
-                          <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
-                          <div className="text-left bg-error/5 p-3 rounded-lg border border-error/10">
-                            <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
-                            {(infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() && (
-                              <span className="text-sm font-bold text-error/60 line-through block break-all mb-1">{infinitiveAnswer || '---'}</span>
-                            )}
-                            <span className="text-lg font-bold text-error break-all">{parsed.infinitive}</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(parsed.forms).map(([key, value]) => (
-                              <div key={key} className="text-left bg-error/5 p-2 rounded-lg border border-error/10">
-                                <span className="text-[10px] uppercase font-bold text-error/60 block">
-                                  {parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()]}
-                                </span>
-                                {(verbAnswers[key] || '').trim().toLowerCase() !== (value || '').trim().toLowerCase() && (
-                                  <span className="text-[11px] font-bold text-error/60 line-through block break-all">{verbAnswers[key] || '---'}</span>
-                                )}
-                                <span className="text-sm font-bold text-error break-all">{value}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    }
-                  } catch (e) {}
-                  return (
-                    <>
-                      <div className="mb-4 text-left">
-                        <span className="mb-1 text-[10px] font-bold tracking-widest uppercase text-error/60 block">Deine Antwort</span>
-                        <p className="text-lg font-bold text-error/70 line-through break-all">{answer || '---'}</p>
-                      </div>
-                      <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
-                      <h3 className="text-3xl font-bold text-error break-all">{current.spanish}</h3>
-                    </>
-                  );
-                })()}
-              </div>
-            )}
-
-            {current.status < 5 && (
-              <div className="flex gap-2 mt-6">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "w-4 h-4 rounded-full border transition-all duration-500",
-                      current.status >= i ? "bg-primary border-primary" : "bg-transparent border-primary-light",
-                      current.status === i && isCorrect === true && !wasTooSoon && !pendingUpdate && "animate-status-pop"
-                    )}
-                  />
-                ))}
-              </div>
-            )}
-            </>
-            )}
-          </div>
-        </div>
-
-        <form onSubmit={handleCheck} className="flex flex-col">
-          <label className="mb-2 ml-1 text-sm font-medium text-text-main">
-            {UI_STRINGS.COMMON.FOREIGN_LANG}
-          </label>
-          
-          {(() => {
-            try {
-              const parsed = JSON.parse(current.spanish);
-              if (parsed && parsed.isVerb) {
-                return (
-                  <div className="space-y-4 mb-4">
-                    <div>
-                      <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
-                      <input
-                        ref={inputRef}
-                        className={cn(
-                          "w-full bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all",
-                          isCorrect === true ? "border-success text-success bg-success-light" : 
-                          isCorrect === false && (infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() 
-                            ? "border-error text-error bg-error-light" : 
-                          isCorrect === false && (infinitiveAnswer || '').trim().toLowerCase() === (parsed.infinitive || '').trim().toLowerCase()
-                            ? "border-success text-success bg-success-light/30" :
-                          "border-border text-text-main focus:ring-primary/20"
-                        )}
-                        value={infinitiveAnswer}
-                        onChange={(e) => setInfinitiveAnswer(e.target.value)}
-                        disabled={isCorrect !== null}
-                        autoComplete="off"
-                        autoCapitalize="none"
-                        autoCorrect="off"
-                        spellCheck="false"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { key: 'yo', label: parsed.isReflexive ? getReflexiveLabel('yo') : UI_STRINGS.OVERVIEW.YO },
-                        { key: 'tu', label: parsed.isReflexive ? getReflexiveLabel('tu') : UI_STRINGS.OVERVIEW.TU },
-                        { key: 'el', label: parsed.isReflexive ? getReflexiveLabel('el') : UI_STRINGS.OVERVIEW.EL },
-                        { key: 'nosotros', label: parsed.isReflexive ? getReflexiveLabel('nosotros') : UI_STRINGS.OVERVIEW.NOSOTROS },
-                        { key: 'vosotros', label: parsed.isReflexive ? getReflexiveLabel('vosotros') : UI_STRINGS.OVERVIEW.VOSOTROS },
-                        { key: 'ellos', label: parsed.isReflexive ? getReflexiveLabel('ellos') : UI_STRINGS.OVERVIEW.ELLOS },
-                      ].map((f) => (
-                        <div key={f.key}>
-                          <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{f.label}</span>
-                          <input
-                            className={cn(
-                              "w-full bg-surface border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 transition-all",
-                              isCorrect === true ? "border-success text-success bg-success-light" : 
-                              isCorrect === false && (verbAnswers[f.key] || '').trim().toLowerCase() !== (parsed.forms[f.key] || '').trim().toLowerCase() 
-                                ? "border-error text-error bg-error-light" : 
-                              isCorrect === false && (verbAnswers[f.key] || '').trim().toLowerCase() === (parsed.forms[f.key] || '').trim().toLowerCase()
-                                ? "border-success text-success bg-success-light/30" :
-                              "border-border text-text-main focus:ring-primary/20"
-                            )}
-                            value={verbAnswers[f.key]}
-                            onChange={(e) => setVerbAnswers(prev => ({ ...prev, [f.key]: e.target.value }))}
-                            disabled={isCorrect !== null}
-                            autoComplete="off"
-                            autoCapitalize="none"
-                            autoCorrect="off"
-                            spellCheck="false"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-            } catch (e) {}
-
-            return (
-              <div className="flex items-center gap-3">
-                <input
-                  ref={inputRef}
-                  autoFocus
-                  className={cn(
-                    "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all",
-                    isCorrect === true ? "border-success text-success bg-success-light" : 
-                    isCorrect === false ? "border-error text-error bg-error-light" : 
-                    "border-border text-text-main focus:ring-primary/20"
-                  )}
-                  placeholder={isListening ? UI_STRINGS.LEARNING.LISTENING_PLACEHOLDER : UI_STRINGS.LEARNING.INPUT_PLACEHOLDER}
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  disabled={isCorrect !== null}
-                  autoComplete="off"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck="false"
-                />
-                
-                { isCorrect === null && (
+      <form onSubmit={handleCheck} className="flex flex-col flex-1 overflow-hidden">
+        <div ref={mainScrollRef} className="flex-1 p-4 pb-32 overflow-y-auto no-scrollbar md:p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="w-8 h-8 text-primary" />
+              <h1 className="hidden text-xl font-bold text-primary sm:block">
+                {isArchiveMode ? UI_STRINGS.LEARNING.TITLE_ARCHIVE : UI_STRINGS.LEARNING.TITLE}
+              </h1>
+              {isArchiveMode && (
+                <div className="flex items-center gap-2">
                   <button 
                     type="button"
-                    onClick={handleMicPress}
-                    className={cn(
-                      "p-4 rounded-2xl shadow-sm transition-all",
-                      isMicEnabled ? "bg-error text-white scale-110" : "bg-primary-light text-primary hover:bg-primary-light/80"
-                    )}
+                    onClick={() => loadVokabeln(false, true)}
+                    className="flex items-center gap-1 px-2 py-1 transition-colors border rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted border-slate-200"
+                    title={UI_STRINGS.COMMON.CLOSE}
                   >
-                    {isMicEnabled ? <MicOff size={24} /> : <Mic size={24} />}
+                    <X size={12} />
+                    <span className="text-[10px] font-bold uppercase">{UI_STRINGS.COMMON.CLOSE}</span>
                   </button>
-                )}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              <button 
+                type="button"
+                onClick={() => setInfo({ title: UI_STRINGS.LEARNING.STREAK_INFO_TITLE, text: UI_STRINGS.LEARNING.STREAK_INFO_TEXT })}
+                className="flex items-center gap-1 px-3 py-1.5 text-orange-600 transition-transform border border-orange-100 rounded-full bg-orange-50 active:scale-95 shadow-sm"
+              >
+                <Flame size={16} fill="currentColor" />
+                <span className="text-sm font-bold">{stats.streak}</span>
+              </button>
+            </div>
+          </div>
+
+          {info && (
+            <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-sm animate-bounce-in">
+              <div className="p-4 text-white border shadow-xl bg-text-main rounded-2xl border-white/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <Flame size={16} className="text-orange-400" fill="currentColor" />
+                  <span className="text-xs font-bold tracking-widest uppercase opacity-70">{info.title}</span>
+                </div>
+                <p className="text-sm font-medium">{info.text}</p>
               </div>
-            );
-          })()}
-          
-          {error && (
-            <div className="flex items-center gap-2 p-3 mt-4 bg-error/10 text-error rounded-xl">
-              <AlertCircle size={18} />
-              <p className="text-sm font-medium">{error}</p>
+            </div>
+          )}
+
+          <div className="relative pt-1 mb-8">
+            {/* Stapel-Effekt (Hintergrundkarten) */}
+            {[1, 2, 3, 4].map((i) => {
+              const remaining = vokabeln.length - currentIndex - 1;
+              if (i > remaining) return null;
+              
+              return (
+                <div 
+                  key={`stack-${i}`}
+                  className="card-stack-layer"
+                  style={{ 
+                    top: `${(i * -8)}px`, // Karten nach oben versetzt
+                    transform: `scale(${1 - i * 0.04})`,
+                    opacity: 1 - i * 0.2,
+                    zIndex: -i
+                  }}
+                />
+              );
+            })}
+            
+            <div 
+              key={current.id}
+              className={cn(
+                "relative flex flex-col items-center p-10 text-center border shadow-sm border-border-light bg-surface rounded-3xl animate-slide-in-top",
+                current.status === 5 && isCorrect === true && "animate-fly-away animate-learned-success",
+                loading && "opacity-50 animate-pulse"
+              )}
+            >
+            {!loading && (
+             <>
+              <div className="absolute px-3 py-1 border rounded-full top-4 right-4 border-border-light bg-background/50">
+                <p className="text-[10px] font-bold text-text-muted">{currentIndex + 1} / {vokabeln.length}</p>
+              </div>
+              <span className="mb-2 text-xs font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.COMMON.DEUTSCH}</span>
+              <h2 className="text-4xl font-bold text-text-main break-word">{current.german}</h2>
+              
+              {isCorrect === false && (
+                <div className="w-full pt-6 mt-6 border-t border-border-light animate-bounce-in">
+                  {(() => {
+                    try {
+                      const parsed = JSON.parse(current.spanish);
+                      if (parsed && parsed.isVerb) {
+                        return (
+                          <div className="space-y-4">
+                            <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
+                            <div className="p-3 text-left border rounded-lg bg-error/5 border-error/10">
+                              <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
+                              {(infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() && (
+                                <span className="block mb-1 text-sm font-bold line-through break-all text-error/60">{infinitiveAnswer || '---'}</span>
+                              )}
+                              <span className="text-lg font-bold break-all text-error">{parsed.infinitive}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {Object.entries(parsed.forms).map(([key, value]) => (
+                                <div key={key} className="p-2 text-left border rounded-lg bg-error/5 border-error/10">
+                                  <span className="text-[10px] uppercase font-bold text-error/60 block">
+                                    {parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()]}
+                                  </span>
+                                  {(verbAnswers[key] || '').trim().toLowerCase() !== (value || '').trim().toLowerCase() && (
+                                    <span className="text-[11px] font-bold text-error/60 line-through block break-all">{verbAnswers[key] || '---'}</span>
+                                  )}
+                                  <span className="text-sm font-bold break-all text-error">{value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                    } catch (e) {}
+                    return (
+                      <>
+                        <div className="mb-4 text-left">
+                          <span className="mb-1 text-[10px] font-bold tracking-widest uppercase text-error/60 block">Deine Antwort</span>
+                          <p className="text-lg font-bold line-through break-all text-error/70">{answer || '---'}</p>
+                        </div>
+                        <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
+                        <h3 className="text-3xl font-bold break-all text-error">{current.spanish}</h3>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {current.status < 5 && (
+                <div className="flex gap-2 mt-6">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        "w-4 h-4 rounded-full border transition-all duration-500",
+                        current.status >= i ? "bg-primary border-primary" : "bg-transparent border-primary-light",
+                        current.status === i && isCorrect === true && !wasTooSoon && !pendingUpdate && "animate-status-pop"
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
+              </>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="mb-2 ml-1 text-sm font-medium text-text-main">
+              {UI_STRINGS.COMMON.FOREIGN_LANG}
+            </label>
+            
+            {(() => {
+              try {
+                const parsed = JSON.parse(current.spanish);
+                if (parsed && parsed.isVerb) {
+                  return (
+                    <div className="mb-4 space-y-4">
+                      <div>
+                        <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
+                        <input
+                          ref={inputRef}
+                          className={cn(
+                            "w-full bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all",
+                            isCorrect === true ? "border-success text-success bg-success-light" : 
+                            isCorrect === false && (infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() 
+                              ? "border-error text-error bg-error-light" : 
+                            isCorrect === false && (infinitiveAnswer || '').trim().toLowerCase() === (parsed.infinitive || '').trim().toLowerCase()
+                              ? "border-success text-success bg-success-light/30" :
+                            "border-border text-text-main focus:ring-primary/20"
+                          )}
+                          value={infinitiveAnswer}
+                          onChange={(e) => setInfinitiveAnswer(e.target.value)}
+                          disabled={isCorrect !== null}
+                          autoComplete="off"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck="false"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { key: 'yo', label: parsed.isReflexive ? getReflexiveLabel('yo') : UI_STRINGS.OVERVIEW.YO },
+                          { key: 'tu', label: parsed.isReflexive ? getReflexiveLabel('tu') : UI_STRINGS.OVERVIEW.TU },
+                          { key: 'el', label: parsed.isReflexive ? getReflexiveLabel('el') : UI_STRINGS.OVERVIEW.EL },
+                          { key: 'nosotros', label: parsed.isReflexive ? getReflexiveLabel('nosotros') : UI_STRINGS.OVERVIEW.NOSOTROS },
+                          { key: 'vosotros', label: parsed.isReflexive ? getReflexiveLabel('vosotros') : UI_STRINGS.OVERVIEW.VOSOTROS },
+                          { key: 'ellos', label: parsed.isReflexive ? getReflexiveLabel('ellos') : UI_STRINGS.OVERVIEW.ELLOS },
+                        ].map((f) => (
+                          <div key={f.key}>
+                            <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{f.label}</span>
+                            <input
+                              className={cn(
+                                "w-full bg-surface border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 transition-all",
+                                isCorrect === true ? "border-success text-success bg-success-light" : 
+                                isCorrect === false && (verbAnswers[f.key] || '').trim().toLowerCase() !== (parsed.forms[f.key] || '').trim().toLowerCase() 
+                                  ? "border-error text-error bg-error-light" : 
+                                isCorrect === false && (verbAnswers[f.key] || '').trim().toLowerCase() === (parsed.forms[f.key] || '').trim().toLowerCase()
+                                  ? "border-success text-success bg-success-light/30" :
+                                "border-border text-text-main focus:ring-primary/20"
+                              )}
+                              value={verbAnswers[f.key]}
+                              onChange={(e) => setVerbAnswers(prev => ({ ...prev, [f.key]: e.target.value }))}
+                              disabled={isCorrect !== null}
+                              autoComplete="off"
+                              autoCapitalize="none"
+                              autoCorrect="off"
+                              spellCheck="false"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+              } catch (e) {}
+
+              return (
+                <div className="flex items-center gap-3">
+                  <input
+                    ref={inputRef}
+                    autoFocus
+                    className={cn(
+                      "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all",
+                      isCorrect === true ? "border-success text-success bg-success-light" : 
+                      isCorrect === false ? "border-error text-error bg-error-light" : 
+                      "border-border text-text-main focus:ring-primary/20"
+                    )}
+                    placeholder={isListening ? UI_STRINGS.LEARNING.LISTENING_PLACEHOLDER : UI_STRINGS.LEARNING.INPUT_PLACEHOLDER}
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    disabled={isCorrect !== null}
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
+                  />
+                  
+                  { isCorrect === null && (
+                    <button 
+                      type="button"
+                      onClick={handleMicPress}
+                      className={cn(
+                        "p-4 rounded-2xl shadow-sm transition-all",
+                        isMicEnabled ? "bg-error text-white scale-110" : "bg-primary-light text-primary hover:bg-primary-light/80"
+                      )}
+                    >
+                      {isMicEnabled ? <MicOff size={24} /> : <Mic size={24} />}
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
+            
+            {error && (
+              <div className="flex items-center gap-2 p-3 mt-4 bg-error/10 text-error rounded-xl">
+                <AlertCircle size={18} />
+                <p className="text-sm font-medium">{error}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="px-4 pt-4 pb-4 border-t border-border-light">
+          {isCorrect === true && (
+            <div className="h-6 mb-2 text-center">
+              <p className="text-sm font-bold text-success animate-bounce-in">
+                {wasTooSoon ? UI_STRINGS.LEARNING.TOO_SOON_MSG : UI_STRINGS.LEARNING.STATUS_UP_MSG}
+              </p>
             </div>
           )}
           
-          
-            {isCorrect === true && (
-              <div className="h-8 mt-3 text-center">
-                <p className="font-medium text-success">
-                  {wasTooSoon ? UI_STRINGS.LEARNING.TOO_SOON_MSG : UI_STRINGS.LEARNING.STATUS_UP_MSG}
-                </p>
-              </div>
-            )}
-          
-
           <button
             ref={submitButtonRef}
             type="submit"
             disabled={isNextDisabled && isCorrect === null}
-            className="flex items-center justify-center gap-2 p-4 mt-8 mb-6 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90 disabled:opacity-50"
+            className={cn(
+              "flex items-center justify-center gap-2 w-full p-4 font-black text-white transition-all shadow-lg active:scale-[0.98] rounded-2xl bg-primary hover:bg-primary-dark",
+              isNextDisabled && isCorrect === null && "opacity-50 grayscale"
+            )}
           >
-            <span>
+            <span className="text-lg">
               {isCorrect !== null 
                 ? UI_STRINGS.LEARNING.NEXT_BUTTON 
                 : (isNextDisabled ? `...` : (!answer && !infinitiveAnswer ? UI_STRINGS.LEARNING.DONT_KNOW_BUTTON : UI_STRINGS.LEARNING.CHECK_BUTTON))
               }
             </span>
-            <ArrowRight size={20} />
+            <ArrowRight size={22} className={cn(isCorrect === null && !isNextDisabled && "animate-pulse")} />
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }

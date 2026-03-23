@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getVocabulary, deleteVocabularyItem, addVocabularyItem, updateVocabularyItem } from '../store/vocabularyStore';
-import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle, SortAsc, Clock, ArrowDownRight, Languages, HelpCircle } from 'lucide-react';
+import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle, SortAsc, Clock, ArrowDownRight, Languages, HelpCircle, RotateCcw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
@@ -15,6 +15,7 @@ function cn(...inputs) {
 
 export default function Overview() {
   const { strings } = useUiLanguage();
+  const navigate = useNavigate();
   const { OVERVIEW, COMMON } = strings;
   const { selectedLanguage } = useLanguage();
   const [vokabeln, setVokabeln] = useState([]);
@@ -23,6 +24,7 @@ export default function Overview() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
   
@@ -301,8 +303,15 @@ export default function Overview() {
             ))}
 
             {archivedVokabeln.length > 0 && (
-              <div className="pt-4 pb-2 mt-4 mb-2 animate-fade-in-up">
+              <div className="flex items-center justify-between pt-4 pb-2 mt-4 mb-2 animate-fade-in-up">
                 <h2 className="text-xl font-bold text-text-secondary">{OVERVIEW.ARCHIVE_HEADER}</h2>
+                <button
+                  onClick={() => setIsArchiveModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary bg-primary/10 rounded-full transition-all hover:bg-primary/20 active:scale-95 border border-primary/10"
+                >
+                  <RotateCcw size={14} />
+                  {OVERVIEW.ARCHIVE_REPEAT}
+                </button>
               </div>
             )}
 
@@ -503,6 +512,47 @@ export default function Overview() {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
       />
+
+      {isArchiveModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-background rounded-[40px] p-8 shadow-2xl w-full max-w-sm animate-slide-up flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-text-main">{strings.LEARNING.ARCHIVE_MODAL_TITLE}</h2>
+              <button 
+                onClick={() => setIsArchiveModalOpen(false)}
+                className="p-2 transition-colors rounded-full bg-slate-200 hover:bg-slate-300"
+              >
+                <X size={20} className="text-text-secondary" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3">
+              {[
+                { id: 'random', label: strings.LEARNING.ARCHIVE_OPTION_RANDOM, icon: <RotateCcw size={18} /> },
+                { id: 'last50', label: strings.LEARNING.ARCHIVE_OPTION_LAST_50, icon: <Clock size={18} /> },
+                { id: 'all', label: strings.LEARNING.ARCHIVE_OPTION_ALL, icon: <BookOpen size={18} /> },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    setIsArchiveModalOpen(false);
+                    navigate('/', { state: { archive: true, archiveMode: opt.id } });
+                  }}
+                  className="flex items-center justify-between p-5 transition-all border shadow-sm bg-surface border-border-light rounded-2xl hover:border-primary/50 hover:bg-primary/5 group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 transition-colors rounded-xl bg-slate-100 group-hover:bg-primary/10 group-hover:text-primary">
+                      {opt.icon}
+                    </div>
+                    <span className="font-bold text-text-main">{opt.label}</span>
+                  </div>
+                  <ArrowDownRight className="transition-transform -rotate-90 text-text-muted group-hover:text-primary group-hover:translate-x-1" size={18} />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
