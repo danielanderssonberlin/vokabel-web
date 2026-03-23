@@ -1015,9 +1015,12 @@ export default function Learning() {
               </div>
             )}
           </div>
+          
+          {/* Spacer für Abstand zwischen Input und Sticky Button */}
+          <div className="h-12 shrink-0" />
         </div>
 
-        <div className="px-4 pt-4 pb-4 border-t border-border-light">
+        <div className="px-4 pb-8 pt-6 bg-surface border-t border-border-light shadow-[0_-12px_40px_rgba(0,0,0,0.06)] backdrop-blur-md">
           {isCorrect === true && (
             <div className="h-6 mb-2 text-center">
               <p className="text-sm font-bold text-success animate-bounce-in">
