@@ -658,7 +658,7 @@ export default function Learning() {
                       {!isVerb ? (
                         <div className="space-y-4">
                           <div className="pt-3 border-t border-border-light">
-                            <span className="text-[10px] font-bold tracking-widest uppercase text-error mb-1 block">Deine Antwort</span>
+                            <span className="text-[10px] font-bold tracking-widest uppercase text-error mb-1 block">{LEARNING.USER_ANSWER}</span>
                             <p className="text-lg font-bold line-through break-word text-error/70 opacity-70">{userAnswer || '---'}</p>
                           </div>
                           <div className="pt-1">
@@ -815,11 +815,11 @@ export default function Learning() {
                             <div className="p-3 text-left border rounded-lg bg-error/5 border-error/10">
                               <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
                               {(infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() && (
-                                <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                                <div className="break-word">
                                   <span className="block mb-1 text-sm font-bold line-through text-error/60">{infinitiveAnswer || '---'}</span>
                                 </div>
                               )}
-                              <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                              <div className="break-word">
                                 <span className="text-lg font-bold text-error">{parsed.infinitive}</span>
                               </div>
                             </div>
@@ -830,11 +830,11 @@ export default function Learning() {
                                     {parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()]}
                                   </span>
                                   {(verbAnswers[key] || '').trim().toLowerCase() !== (value || '').trim().toLowerCase() && (
-                                    <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                                    <div className="break-word">
                                       <span className="text-[11px] font-bold text-error/60 line-through block">{verbAnswers[key] || '---'}</span>
                                     </div>
                                   )}
-                                  <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                                  <div className="break-word">
                                     <span className="text-sm font-bold text-error">{value}</span>
                                   </div>
                                 </div>
@@ -847,13 +847,13 @@ export default function Learning() {
                     return (
                       <>
                         <div className="mb-4 text-left">
-                          <span className="mb-1 text-[10px] font-bold tracking-widest uppercase text-error/60 block">Deine Antwort</span>
-                          <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                          <span className="mb-1 text-[10px] font-bold tracking-widest uppercase text-error/60 block">{LEARNING.USER_ANSWER}</span>
+                          <div className="break-word">
                             <p className="text-lg font-bold line-through text-error/70">{answer || '---'}</p>
                           </div>
                         </div>
                         <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
-                        <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                        <div className="break-word">
                           <h3 className="text-3xl font-bold text-error">{current.spanish}</h3>
                         </div>
                       </>
@@ -909,7 +909,7 @@ export default function Learning() {
                           />
                         ) : (
                           <div className={cn(
-                            "w-full bg-surface border p-4 rounded-2xl text-xl shadow-sm transition-all overflow-x-auto no-scrollbar whitespace-nowrap",
+                            "w-full bg-surface border p-4 rounded-2xl text-xl shadow-sm transition-all break-word",
                             isCorrect === true ? "border-success text-success bg-success-light" : 
                             isCorrect === false && (infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() 
                               ? "border-error text-error bg-error-light" : 
@@ -947,7 +947,7 @@ export default function Learning() {
                               />
                             ) : (
                               <div className={cn(
-                                "w-full bg-surface border p-3 rounded-xl text-base shadow-sm transition-all overflow-x-auto no-scrollbar whitespace-nowrap",
+                                "w-full bg-surface border p-3 rounded-xl text-base shadow-sm transition-all break-word",
                                 isCorrect === true ? "border-success text-success bg-success-light" : 
                                 isCorrect === false && (verbAnswers[f.key] || '').trim().toLowerCase() !== (parsed.forms[f.key] || '').trim().toLowerCase() 
                                   ? "border-error text-error bg-error-light" : 
@@ -985,7 +985,7 @@ export default function Learning() {
                     />
                   ) : (
                     <div className={cn(
-                      "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm transition-all overflow-x-auto no-scrollbar whitespace-nowrap",
+                      "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm transition-all break-word",
                       isCorrect === true ? "border-success text-success bg-success-light" : "border-error text-error bg-error-light"
                     )}>
                       {answer || '---'}
@@ -1020,7 +1020,7 @@ export default function Learning() {
           <div className="h-12 shrink-0" />
         </div>
 
-        <div className="px-4 pb-8 pt-6 bg-surface border-t border-border-light shadow-[0_-12px_40px_rgba(0,0,0,0.06)] backdrop-blur-md">
+        <div className="px-4 pt-6 pb-4 border-t border-border-light">
           {isCorrect === true && (
             <div className="h-6 mb-2 text-center">
               <p className="text-sm font-bold text-success animate-bounce-in">
