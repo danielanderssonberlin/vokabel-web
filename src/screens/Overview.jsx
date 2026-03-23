@@ -17,7 +17,10 @@ export default function Overview() {
   const { strings } = useUiLanguage();
   const navigate = useNavigate();
   const { OVERVIEW, COMMON } = strings;
-  const { selectedLanguage } = useLanguage();
+  const { selectedLanguage, availableLanguages } = useLanguage();
+  const selectedLangData = availableLanguages.find(l => l.code === selectedLanguage);
+  const selectedLanguageName = selectedLangData?.name || OVERVIEW.FOREIGN_LABEL;
+  const selectedLanguageExample = selectedLangData?.example || 'apple';
   const [vokabeln, setVokabeln] = useState([]);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('date'); // 'date' or 'alpha'
@@ -446,10 +449,10 @@ export default function Overview() {
 
                 {!isVerb ? (
                   <div>
-                    <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL}</label>
+                    <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{selectedLanguageName}</label>
                     <textarea
                       className="w-full p-4 text-lg border shadow-sm bg-surface border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder={OVERVIEW.FOREIGN_PLACEHOLDER}
+                      placeholder={`z.B. ${selectedLanguageExample}`}
                       value={foreign}
                       rows={1}
                       onChange={(e) => setForeign(e.target.value)}
@@ -458,11 +461,11 @@ export default function Overview() {
                 ) : (
                   <div className="space-y-4">
                     <div>
-                      <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{OVERVIEW.FOREIGN_LABEL} ({OVERVIEW.INFINITIVE_LABEL})</label>
+                      <label className="block mb-2 ml-1 text-sm font-medium text-text-main">{selectedLanguageName} ({OVERVIEW.INFINITIVE_LABEL})</label>
                       <input
                         type="text"
                         className="w-full p-4 text-lg border shadow-sm bg-surface border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        placeholder="z.B. comer"
+                        placeholder={`z.B. ${selectedLanguageExample}`}
                         value={foreign}
                         onChange={(e) => setForeign(e.target.value)}
                       />

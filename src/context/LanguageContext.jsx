@@ -67,9 +67,16 @@ export const LanguageProvider = ({ children }) => {
     }
 
     setAvailableLanguages(langs);
-    setSelectedLanguage(currentLang || (langs.length > 0 ? langs[0].code : null));
+    
+    // Nur setzen, wenn noch keine Sprache ausgewählt ist
+    if (!selectedLanguage) {
+      const nextLang = currentLang || (langs.length > 0 ? langs[0].code : null);
+      if (nextLang) {
+        setSelectedLanguage(nextLang);
+      }
+    }
     setLoading(false);
-  }, []);
+  }, [selectedLanguage]);
 
   useEffect(() => {
     fetchLanguages();

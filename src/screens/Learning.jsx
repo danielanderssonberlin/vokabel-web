@@ -22,6 +22,7 @@ export default function Learning() {
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedLanguage, availableLanguages, addLanguage, changeLanguage, loading: isLangLoading } = useLanguage();
+  const selectedLanguageName = availableLanguages.find(l => l.code === selectedLanguage)?.name || COMMON.FOREIGN_LANG;
   const [user, setUser] = useState(null);
   const [vokabeln, setVokabeln] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -44,6 +45,7 @@ export default function Learning() {
   const [error, setError] = useState('');
   const [wrongAnswers, setWrongAnswers] = useState([]);
   const [sessionFinishedCount, setSessionFinishedCount] = useState(0);
+  const [learnedThisSession, setLearnedThisSession] = useState([]); // IDs von Wörtern die in dieser Session Status 5 erreicht haben
   const [stats, setStats] = useState({ streak: 0, lastStudyDate: null, studyHistory: [] });
   const [info, setInfo] = useState(null);
   const [pendingUpdate, setPendingUpdate] = useState(false);
@@ -102,31 +104,47 @@ export default function Learning() {
     return `${STORAGE_KEYS.LEARNING_SESSION(selectedLanguage)}_${user.id}`;
   }, [selectedLanguage, user]);
 
-  const loadVokabeln = useCallback(async (archive = false, ignoreSaved = false, archiveMode = 'random') => {
-    if (!selectedLanguage) {
+  const loadVokabeln = useCallback(async (archive = false, ignoreSaved = false, archiveMode = 'random', lang = selectedLanguage) => {
+    if (!lang) {
       setLoading(false);
       return;
     }
     setLoading(true);
+    setVokabeln([]); // Vokabeln leeren um Stale-Daten zu vermeiden
+    setWrongAnswers([]);
+    setSessionFinishedCount(0);
+    setLearnedThisSession([]);
 
     const { data: { user } } = await supabase.auth.getUser();
-    const sessionKey = user ? `${STORAGE_KEYS.LEARNING_SESSION(selectedLanguage)}_${user.id}` : null;
+    const sessionKey = user ? `${STORAGE_KEYS.LEARNING_SESSION(lang)}_${user.id}` : null;
 
     if (!ignoreSaved && sessionKey) {
       const saved = localStorage.getItem(sessionKey);
       if (saved) {
         try {
-          const { vokabeln: savedVokabeln, currentIndex: savedIndex, isArchiveMode: savedArchive, wrongAnswers: savedWrong } = JSON.parse(saved);
+          const { 
+            vokabeln: savedVokabeln, 
+            currentIndex: savedIndex, 
+            isArchiveMode: savedArchive, 
+            wrongAnswers: savedWrong, 
+            sessionFinishedCount: savedFinished,
+            learnedThisSession: savedLearned
+          } = JSON.parse(saved);
           if (savedVokabeln && savedVokabeln.length > 0 && savedIndex < savedVokabeln.length) {
-            setVokabeln(savedVokabeln);
-            setCurrentIndex(savedIndex);
-            setIsArchiveMode(savedArchive);
-            setWrongAnswers(savedWrong || []);
-            
-            const all = await getVocabulary(selectedLanguage);
-            setStats(calculateStatsFromVocabulary(all));
-            setLoading(false);
-            return;
+            // Validierung: Passt die gespeicherte Session zur gewählten Sprache?
+            if (savedVokabeln[0].language === lang) {
+              setVokabeln(savedVokabeln);
+              setCurrentIndex(savedIndex);
+              setIsArchiveMode(savedArchive);
+              setWrongAnswers(savedWrong || []);
+              setSessionFinishedCount(savedFinished || 0);
+              setLearnedThisSession(savedLearned || []);
+              
+              const all = await getVocabulary(lang);
+              setStats(calculateStatsFromVocabulary(all));
+              setLoading(false);
+              return;
+            }
           }
         } catch (e) {
           console.error("Failed to restore session", e);
@@ -135,7 +153,7 @@ export default function Learning() {
     }
 
     setIsArchiveMode(archive);
-    const all = await getVocabulary(selectedLanguage);
+    const all = await getVocabulary(lang);
     
     let toLearn = [];
     if (archive) {
@@ -187,6 +205,7 @@ export default function Learning() {
     setSessionCompleted(false);
     setWrongAnswers([]);
     setSessionFinishedCount(0);
+    setLearnedThisSession([]);
     setLoading(false);
   }, [selectedLanguage]);
 
@@ -194,14 +213,19 @@ export default function Learning() {
   useEffect(() => {
     const sessionKey = getSessionKey();
     if (vokabeln.length > 0 && !sessionCompleted && !loading && sessionKey) {
-      localStorage.setItem(sessionKey, JSON.stringify({
-        vokabeln,
-        currentIndex,
-        isArchiveMode,
-        wrongAnswers
-      }));
+      // Sicherstellen, dass wir keine Session speichern, deren Vokabeln nicht zur aktuellen Sprache passen
+      if (vokabeln[0].language === selectedLanguage) {
+        localStorage.setItem(sessionKey, JSON.stringify({
+          vokabeln,
+          currentIndex,
+          isArchiveMode,
+          wrongAnswers,
+          sessionFinishedCount,
+          learnedThisSession
+        }));
+      }
     }
-  }, [vokabeln, currentIndex, isArchiveMode, wrongAnswers, sessionCompleted, loading, getSessionKey]);
+  }, [vokabeln, currentIndex, isArchiveMode, wrongAnswers, sessionFinishedCount, learnedThisSession, sessionCompleted, loading, getSessionKey, selectedLanguage]);
 
   // Clear session state
   useEffect(() => {
@@ -212,16 +236,20 @@ export default function Learning() {
   }, [sessionCompleted, getSessionKey]);
 
   useEffect(() => {
-    const isArchiveFromState = location.state?.archive;
-    const archiveModeFromState = location.state?.archiveMode || 'random';
-    
-    if (isArchiveFromState) {
-      loadVokabeln(true, true, archiveModeFromState); // Force archive mode and ignore saved session
-      navigate(location.pathname, { replace: true, state: {} });
-    } else {
-      loadVokabeln();
+    if (selectedLanguage) {
+      const isArchiveFromState = location.state?.archive;
+      const archiveModeFromState = location.state?.archiveMode || 'random';
+      
+      if (isArchiveFromState) {
+        loadVokabeln(true, true, archiveModeFromState, selectedLanguage);
+        navigate(location.pathname, { replace: true, state: {} });
+      } else {
+        loadVokabeln(false, false, 'random', selectedLanguage);
+      }
     }
-    
+  }, [selectedLanguage, loadVokabeln]);
+
+  useEffect(() => {
     // Initialize Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -249,7 +277,7 @@ export default function Learning() {
         // Fallback: Wenn Fehler (z.B. no-speech), Modus nicht hart beenden
       };
     }
-  }, [loadVokabeln, selectedLanguage, LEARNING.MIC_ERROR]);
+  }, [selectedLanguage, LEARNING.MIC_ERROR]);
 
   useEffect(() => {
     if (mainScrollRef.current) {
@@ -495,9 +523,11 @@ export default function Learning() {
         }
 
         // Eine Vokabel gilt NUR als gelernt, wenn sie Status 5 erreicht hat
-        if (updated.status === 5 && current.status < 5) {
+        // Wir prüfen ob sie es in DIESER Session zum ersten mal erreicht hat
+        if (updated.status === 5 && current.status < 5 && !learnedThisSession.includes(current.id)) {
           isLearned = true;
           setSessionFinishedCount(prev => prev + 1);
+          setLearnedThisSession(prev => [...prev, current.id]);
         }
       }
     } catch (err) {
@@ -600,7 +630,7 @@ export default function Learning() {
           
           <div className="flex flex-col w-full max-w-xs gap-3">
             <button 
-              onClick={() => loadVokabeln(false, true)}
+              onClick={() => loadVokabeln(false, true, 'random', selectedLanguage)}
               className="px-8 py-4 font-bold text-white transition-colors shadow-md bg-primary rounded-2xl hover:bg-primary/90"
             >
               {vokabeln.length === 0 ? LEARNING.REFRESH : LEARNING.NEW_SESSION}
@@ -608,7 +638,7 @@ export default function Learning() {
 
             {vokabeln.length === 0 && !loading && (
               <button
-                onClick={() => loadVokabeln(true, true)}
+                onClick={() => loadVokabeln(true, true, 'random', selectedLanguage)}
                 className="mt-8 text-sm font-medium transition-colors text-text-secondary hover:text-primary"
               >
                 {LEARNING.ARCHIVE_REPEAT}
@@ -731,7 +761,7 @@ export default function Learning() {
                 <div className="flex items-center gap-2">
                   <button 
                     type="button"
-                    onClick={() => loadVokabeln(false, true)}
+                    onClick={() => loadVokabeln(false, true, 'random', selectedLanguage)}
                     className="flex items-center gap-1 px-2 py-1 transition-colors border rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted border-slate-200"
                     title={UI_STRINGS.COMMON.CLOSE}
                   >
@@ -883,7 +913,7 @@ export default function Learning() {
 
           <div className="flex flex-col">
             <label className="mb-2 ml-1 text-sm font-medium text-text-main">
-              {UI_STRINGS.COMMON.FOREIGN_LANG}
+              {selectedLanguageName}
             </label>
             
             {(() => {
