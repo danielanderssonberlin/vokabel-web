@@ -318,8 +318,8 @@ export default function Learning() {
       }
     }
     
-    // Stoppen wenn eine Antwort geprüft wird
-    if (isCorrect !== null && isListening && recognition.current) {
+    // Stoppen wenn eine Antwort geprüft wird ODER Mikrofon deaktiviert wurde
+    if ((isCorrect !== null || !isMicEnabled) && isListening && recognition.current) {
       recognition.current.stop();
     }
   }, [currentIndex, isMicEnabled, isCorrect, loading, sessionCompleted, isListening]);
@@ -329,6 +329,10 @@ export default function Learning() {
     if (!recognition.current) {
       setError(LEARNING.MIC_ERROR);
       return;
+    }
+
+    if (isMicEnabled && isListening) {
+      recognition.current.stop();
     }
 
     setIsMicEnabled(!isMicEnabled);
