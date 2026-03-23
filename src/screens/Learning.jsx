@@ -815,9 +815,13 @@ export default function Learning() {
                             <div className="p-3 text-left border rounded-lg bg-error/5 border-error/10">
                               <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
                               {(infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() && (
-                                <span className="block mb-1 text-sm font-bold line-through break-word text-error/60">{infinitiveAnswer || '---'}</span>
+                                <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                                  <span className="block mb-1 text-sm font-bold line-through text-error/60">{infinitiveAnswer || '---'}</span>
+                                </div>
                               )}
-                              <span className="text-lg font-bold break-word text-error">{parsed.infinitive}</span>
+                              <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                                <span className="text-lg font-bold text-error">{parsed.infinitive}</span>
+                              </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                               {Object.entries(parsed.forms).map(([key, value]) => (
@@ -826,9 +830,13 @@ export default function Learning() {
                                     {parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()]}
                                   </span>
                                   {(verbAnswers[key] || '').trim().toLowerCase() !== (value || '').trim().toLowerCase() && (
-                                    <span className="text-[11px] font-bold text-error/60 line-through block break-word">{verbAnswers[key] || '---'}</span>
+                                    <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                                      <span className="text-[11px] font-bold text-error/60 line-through block">{verbAnswers[key] || '---'}</span>
+                                    </div>
                                   )}
-                                  <span className="text-sm font-bold break-word text-error">{value}</span>
+                                  <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                                    <span className="text-sm font-bold text-error">{value}</span>
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -840,10 +848,14 @@ export default function Learning() {
                       <>
                         <div className="mb-4 text-left">
                           <span className="mb-1 text-[10px] font-bold tracking-widest uppercase text-error/60 block">Deine Antwort</span>
-                          <p className="text-lg font-bold line-through break-awordll text-error/70">{answer || '---'}</p>
+                          <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                            <p className="text-lg font-bold line-through text-error/70">{answer || '---'}</p>
+                          </div>
                         </div>
                         <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
-                        <h3 className="text-3xl font-bold break-word text-error">{current.spanish}</h3>
+                        <div className="overflow-x-auto no-scrollbar whitespace-nowrap">
+                          <h3 className="text-3xl font-bold text-error">{current.spanish}</h3>
+                        </div>
                       </>
                     );
                   })()}
@@ -882,25 +894,32 @@ export default function Learning() {
                     <div className="mb-4 space-y-4">
                       <div>
                         <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
-                        <input
-                          ref={inputRef}
-                          className={cn(
-                            "w-full bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all",
+                        {isCorrect === null ? (
+                          <input
+                            ref={inputRef}
+                            className={cn(
+                              "w-full bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-border text-text-main focus:ring-primary/20"
+                            )}
+                            value={infinitiveAnswer}
+                            onChange={(e) => setInfinitiveAnswer(e.target.value)}
+                            autoComplete="off"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck="false"
+                          />
+                        ) : (
+                          <div className={cn(
+                            "w-full bg-surface border p-4 rounded-2xl text-xl shadow-sm transition-all overflow-x-auto no-scrollbar whitespace-nowrap",
                             isCorrect === true ? "border-success text-success bg-success-light" : 
                             isCorrect === false && (infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() 
                               ? "border-error text-error bg-error-light" : 
                             isCorrect === false && (infinitiveAnswer || '').trim().toLowerCase() === (parsed.infinitive || '').trim().toLowerCase()
                               ? "border-success text-success bg-success-light/30" :
-                            "border-border text-text-main focus:ring-primary/20"
-                          )}
-                          value={infinitiveAnswer}
-                          onChange={(e) => setInfinitiveAnswer(e.target.value)}
-                          disabled={isCorrect !== null}
-                          autoComplete="off"
-                          autoCapitalize="none"
-                          autoCorrect="off"
-                          spellCheck="false"
-                        />
+                            "border-border text-text-main"
+                          )}>
+                            {infinitiveAnswer || '---'}
+                          </div>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
@@ -914,24 +933,31 @@ export default function Learning() {
                         ].map((f) => (
                           <div key={f.key}>
                             <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{f.label}</span>
-                            <input
-                              className={cn(
-                                "w-full bg-surface border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 transition-all",
+                            {isCorrect === null ? (
+                              <input
+                                className={cn(
+                                  "w-full bg-surface border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 transition-all border-border text-text-main focus:ring-primary/20"
+                                )}
+                                value={verbAnswers[f.key]}
+                                onChange={(e) => setVerbAnswers(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                autoComplete="off"
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck="false"
+                              />
+                            ) : (
+                              <div className={cn(
+                                "w-full bg-surface border p-3 rounded-xl text-base shadow-sm transition-all overflow-x-auto no-scrollbar whitespace-nowrap",
                                 isCorrect === true ? "border-success text-success bg-success-light" : 
                                 isCorrect === false && (verbAnswers[f.key] || '').trim().toLowerCase() !== (parsed.forms[f.key] || '').trim().toLowerCase() 
                                   ? "border-error text-error bg-error-light" : 
                                 isCorrect === false && (verbAnswers[f.key] || '').trim().toLowerCase() === (parsed.forms[f.key] || '').trim().toLowerCase()
                                   ? "border-success text-success bg-success-light/30" :
-                                "border-border text-text-main focus:ring-primary/20"
-                              )}
-                              value={verbAnswers[f.key]}
-                              onChange={(e) => setVerbAnswers(prev => ({ ...prev, [f.key]: e.target.value }))}
-                              disabled={isCorrect !== null}
-                              autoComplete="off"
-                              autoCapitalize="none"
-                              autoCorrect="off"
-                              spellCheck="false"
-                            />
+                                "border-border text-text-main"
+                              )}>
+                                {verbAnswers[f.key] || '---'}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -942,24 +968,29 @@ export default function Learning() {
 
               return (
                 <div className="flex items-center gap-3">
-                  <input
-                    ref={inputRef}
-                    autoFocus
-                    className={cn(
-                      "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all",
-                      isCorrect === true ? "border-success text-success bg-success-light" : 
-                      isCorrect === false ? "border-error text-error bg-error-light" : 
-                      "border-border text-text-main focus:ring-primary/20"
-                    )}
-                    placeholder={isListening ? UI_STRINGS.LEARNING.LISTENING_PLACEHOLDER : UI_STRINGS.LEARNING.INPUT_PLACEHOLDER}
-                    value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
-                    disabled={isCorrect !== null}
-                    autoComplete="off"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck="false"
-                  />
+                  {isCorrect === null ? (
+                    <input
+                      ref={inputRef}
+                      autoFocus
+                      className={cn(
+                        "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-border text-text-main focus:ring-primary/20"
+                      )}
+                      placeholder={isListening ? UI_STRINGS.LEARNING.LISTENING_PLACEHOLDER : UI_STRINGS.LEARNING.INPUT_PLACEHOLDER}
+                      value={answer}
+                      onChange={(e) => setAnswer(e.target.value)}
+                      autoComplete="off"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck="false"
+                    />
+                  ) : (
+                    <div className={cn(
+                      "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm transition-all overflow-x-auto no-scrollbar whitespace-nowrap",
+                      isCorrect === true ? "border-success text-success bg-success-light" : "border-error text-error bg-error-light"
+                    )}>
+                      {answer || '---'}
+                    </div>
+                  )}
                   
                   { isCorrect === null && (
                     <button 
