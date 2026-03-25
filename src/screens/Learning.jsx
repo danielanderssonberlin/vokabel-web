@@ -324,7 +324,17 @@ export default function Learning() {
 
   useEffect(() => {
     if (mainScrollRef.current) {
-      mainScrollRef.current.scrollTo(0, 0);
+      // Kleine Verzögerung um sicherzustellen, dass der Scroll 
+      // nach dem Focus des Inputs ausgeführt wird
+      setTimeout(() => {
+        if (mainScrollRef.current) {
+          mainScrollRef.current.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'auto'
+          });
+        }
+      }, 100);
     }
   }, [currentIndex, sessionCompleted]);
 
@@ -807,7 +817,7 @@ export default function Learning() {
   const current = vokabeln[currentIndex] || { german: '', spanish: '', status: 0 };
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full max-w-2xl mx-auto overflow-hidden">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl mx-auto overflow-hidden pt-[env(safe-area-inset-top)]">
       <form onSubmit={handleCheck} className="flex flex-col flex-1 overflow-hidden">
         <div ref={mainScrollRef} className="flex-1 p-4 pb-32 overflow-y-auto no-scrollbar md:p-8">
           <div className="flex items-center justify-between mb-8">
