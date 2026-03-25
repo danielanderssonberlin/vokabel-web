@@ -23,7 +23,14 @@ export const LanguageProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  const fetchLanguages = useCallback(async () => {
+  const fetchLanguages = useCallback(async (force = false) => {
+    // Wenn wir bereits Sprachen haben und nicht erzwingen, brechen wir ab
+    // Dies verhindert, dass lokale Änderungen beim Tab-Wechsel überschrieben werden
+    if (!force && availableLanguages.length > 0) {
+      setLoading(false);
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setLoading(false);
@@ -76,15 +83,20 @@ export const LanguageProvider = ({ children }) => {
       }
     }
     setLoading(false);
-  }, [selectedLanguage]);
+  }, [selectedLanguage, availableLanguages.length]);
 
   useEffect(() => {
     fetchLanguages();
     
     // Auth-Status Änderungen überwachen
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-        fetchLanguages();
+        // Wenn wir eingeloggt sind, rufen wir fetchLanguages auf, aber nur wenn wir noch keine Sprachen haben
+        // (Vermeidet Überschreiben nach dem Einloggen wenn localStorage noch da ist)
+        if (session?.user) {
+          // Kleine Verzögerung um DB-Konsistenz abzuwarten falls gerade registriert
+          setTimeout(() => fetchLanguages(false), 100);
+        }
       } else if (event === 'SIGNED_OUT') {
         setSelectedLanguage(null);
         setAvailableLanguages([]);
@@ -114,16 +126,26 @@ export const LanguageProvider = ({ children }) => {
     setSelectedLanguage(code);
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      await supabase
+      // Erst prüfen ob Profil existiert
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const { error } = await supabase
         .from('profiles')
         .upsert({ 
           id: user.id,
           current_language: code 
         });
+      
+      if (error) console.error('Error updating current language:', error);
     }
   };
 
   const addLanguage = async (lang) => {
+    // Lokales Update sofort
     const newLangs = [...availableLanguages, lang];
     setAvailableLanguages(newLangs);
     
@@ -135,13 +157,26 @@ export const LanguageProvider = ({ children }) => {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      await supabase
+      // Wir nutzen upsert, stellen aber sicher dass die ID gesetzt ist
+      const { error } = await supabase
         .from('profiles')
         .upsert({ 
           id: user.id,
           languages: newLangs,
           current_language: newSelected
-        });
+        }, { onConflict: 'id' });
+        
+      if (error) {
+        console.error('Error adding language to Supabase:', error);
+        // Fallback: Falls upsert fehlschlägt, versuchen wir es mit einem normalen update falls Zeile existiert
+        await supabase
+          .from('profiles')
+          .update({ 
+            languages: newLangs,
+            current_language: newSelected
+          })
+          .eq('id', user.id);
+      }
     }
   };
 
@@ -157,13 +192,14 @@ export const LanguageProvider = ({ children }) => {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      await supabase
+      const { error } = await supabase
         .from('profiles')
         .upsert({ 
           id: user.id,
           languages: newLangs,
           current_language: newSelected
         });
+      if (error) console.error('Error removing language:', error);
     }
   };
 
@@ -175,7 +211,7 @@ export const LanguageProvider = ({ children }) => {
       changeLanguage, 
       addLanguage, 
       removeLanguage,
-      refreshLanguages: fetchLanguages
+      refreshLanguages: () => fetchLanguages(true)
     }}>
       {children}
     </LanguageContext.Provider>

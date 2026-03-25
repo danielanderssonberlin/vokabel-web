@@ -51,6 +51,7 @@ export default function Learning() {
   const [pendingUpdate, setPendingUpdate] = useState(false);
   const [isArchiveMode, setIsArchiveMode] = useState(false);
   const [disableTooSoon, setDisableTooSoon] = useState(false);
+  const [nextLanguageToLearn, setNextLanguageToLearn] = useState(null);
   const inputRef = useRef(null);
   const mainScrollRef = useRef(null);
   const submitButtonRef = useRef(null);
@@ -98,6 +99,37 @@ export default function Learning() {
       }
     });
   }, []);
+
+  // Check for next available language to learn today
+  useEffect(() => {
+    async function checkNextLanguage() {
+      if (sessionCompleted && user && availableLanguages.length > 1) {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        // Find other languages
+        const otherLangs = availableLanguages.filter(l => l.code !== selectedLanguage);
+        
+        for (const lang of otherLangs) {
+          // Check if this language has been studied today
+          const { data, error } = await supabase
+            .from('vocabulary')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('language', lang.code)
+            .gte('lastReviewed', todayStart.toISOString())
+            .limit(1);
+
+          if (!error && (!data || data.length === 0)) {
+            // Found a language that wasn't studied today
+            setNextLanguageToLearn(lang);
+            break;
+          }
+        }
+      }
+    }
+    checkNextLanguage();
+  }, [sessionCompleted, user, availableLanguages, selectedLanguage]);
 
   const getSessionKey = useCallback(() => {
     if (!selectedLanguage || !user) return null;
@@ -635,6 +667,22 @@ export default function Learning() {
             >
               {vokabeln.length === 0 ? LEARNING.REFRESH : LEARNING.NEW_SESSION}
             </button>
+
+            {nextLanguageToLearn && (
+              <button
+                onClick={async () => {
+                  await changeLanguage(nextLanguageToLearn.code);
+                  loadVokabeln(false, true, 'random', nextLanguageToLearn.code);
+                  setSessionCompleted(false);
+                  setNextLanguageToLearn(null);
+                }}
+                className="flex items-center justify-center gap-3 px-8 py-4 font-bold transition-all border shadow-sm text-primary border-primary/20 bg-primary/5 rounded-2xl hover:bg-primary/10 active:scale-95"
+              >
+                <span className="text-2xl">{nextLanguageToLearn.flag}</span>
+                <span>{LEARNING.NEXT_LANGUAGE(nextLanguageToLearn.name)}</span>
+                <ArrowRight size={20} />
+              </button>
+            )}
 
             {vokabeln.length === 0 && !loading && (
               <button
