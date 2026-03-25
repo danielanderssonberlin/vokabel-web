@@ -121,7 +121,7 @@ export const UI_STRINGS = {
       UPDATE_FAILED: "Update fehlgeschlagen:",
       ACCENT_WARNING_TITLE: "Fast richtig!",
       ACCENT_WARNING_TEXT: "Nur ein Akzent ist falsch. Du hast noch einen Versuch!",
-      NEXT_LANGUAGE: (name) => `${name} lernen`,
+      NEXT_LANGUAGE: (name) => `Jetzt ${name} lernen`,
     },
     OVERVIEW: {
       TITLE: "Übersicht",
@@ -323,7 +323,7 @@ export const UI_STRINGS = {
       UPDATE_FAILED: "Update failed:",
       ACCENT_WARNING_TITLE: "Almost correct!",
       ACCENT_WARNING_TEXT: "Just an accent is wrong. You have one more try!",
-      NEXT_LANGUAGE: (name) => `Learn ${name}`,
+      NEXT_LANGUAGE: (name) => `Learn ${name} now`,
     },
     OVERVIEW: {
       TITLE: "Overview",

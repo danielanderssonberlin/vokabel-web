@@ -111,19 +111,30 @@ export default function Learning() {
         const otherLangs = availableLanguages.filter(l => l.code !== selectedLanguage);
         
         for (const lang of otherLangs) {
-          // Check if this language has been studied today
-          const { data, error } = await supabase
+          // Check if this language has words left to learn (status < 5)
+          const { data: wordsLeft, error: countError } = await supabase
             .from('vocabulary')
             .select('id')
             .eq('user_id', user.id)
             .eq('language', lang.code)
-            .gte('lastReviewed', todayStart.toISOString())
+            .lt('status', 5)
             .limit(1);
 
-          if (!error && (!data || data.length === 0)) {
-            // Found a language that wasn't studied today
-            setNextLanguageToLearn(lang);
-            break;
+          if (!countError && wordsLeft && wordsLeft.length > 0) {
+            // Check if this language has already been studied today
+            const { data: studiedToday, error: studyError } = await supabase
+              .from('vocabulary')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('language', lang.code)
+              .gte('lastReviewed', todayStart.toISOString())
+              .limit(1);
+
+            if (!studyError && (!studiedToday || studiedToday.length === 0)) {
+              // Found a language that has words to learn and wasn't studied today
+              setNextLanguageToLearn(lang);
+              break;
+            }
           }
         }
       }
