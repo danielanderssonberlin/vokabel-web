@@ -9,6 +9,7 @@ import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import UiLanguageSwitcher from '../components/UiLanguageSwitcher';
 import { useUiLanguage } from '../context/UiLanguageContext';
 import { clsx } from 'clsx';
+import { STORAGE_KEYS } from '../lib/storage';
 
 export default function Profile() {
   const { strings } = useUiLanguage();
@@ -17,6 +18,10 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [disableTooSoon, setDisableTooSoon] = useState(false);
+  const [autoProceed, setAutoProceed] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.AUTO_PROCEED);
+    return saved !== null ? saved === 'true' : true;
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -84,7 +89,7 @@ export default function Profile() {
     // Superadmin abfragen
     const { data, error } = await supabase
       .from('profiles')
-      .select('superadmin, disable_too_soon')
+      .select('superadmin, disable_too_soon, auto_proceed')
       .eq('id', user.id)
       .maybeSingle(); 
     
@@ -93,11 +98,15 @@ export default function Profile() {
     } else if (data) {
       setIsSuperadmin(Boolean(data.superadmin));
       setDisableTooSoon(Boolean(data.disable_too_soon));
+      const val = data.auto_proceed !== false;
+      setAutoProceed(val); 
+      localStorage.setItem(STORAGE_KEYS.AUTO_PROCEED, val.toString());
     } else {
       // Das ist kein harter Fehler, da Profile erst bei der ersten Einstellungsergänzung erstellt werden
       console.info('No profile row found yet. It will be created when you update your settings.');
       setIsSuperadmin(false);
       setDisableTooSoon(false);
+      // LocalStorage bleibt beim initialen State
     }
   };
 
@@ -143,17 +152,21 @@ export default function Profile() {
       const { error } = await supabase.auth.updateUser(updates);
       if (error) throw error;
 
-      // Profile settings (superadmin options)
-      if (isSuperadmin) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .upsert({ 
-            id: user.id,
-            disable_too_soon: disableTooSoon 
-          })
-          .select(); 
+      // Profile settings
+      localStorage.setItem(STORAGE_KEYS.AUTO_PROCEED, autoProceed.toString());
+      
+      const { data, error: profileError } = await supabase
+        .from('profiles')
+        .upsert({ 
+          id: user.id,
+          auto_proceed: autoProceed,
+          ...(isSuperadmin && { disable_too_soon: disableTooSoon })
+        })
+        .select(); 
 
-        console.log('Update result:', data, error);
+      if (profileError) {
+        console.error('Error updating profile settings:', profileError);
+        // Falls das Feld fehlt, ignorieren wir den Fehler für den User, da LocalStorage bereits gespeichert hat
       }
 
       setMessage({ type: 'success', text: PROFILE.SUCCESS_UPDATE });
@@ -433,6 +446,23 @@ export default function Profile() {
               </div>
               <ChevronRight size={18} className="text-text-muted" />
             </button>
+          </div>
+
+          <div className="pt-4 mt-6 border-t border-border">
+            <h3 className="mb-4 text-xs font-bold tracking-widest uppercase text-text-muted">{PROFILE.PERSONAL_SETTINGS}</h3>
+            <div className="flex items-center justify-between p-4 border bg-primary/5 border-primary/10 rounded-2xl">
+              <div className="flex flex-col">
+                <span className="font-bold text-primary">{PROFILE.AUTO_PROCEED_LABEL}</span>
+                <span className="text-xs text-text-secondary">{PROFILE.AUTO_PROCEED_DESC}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAutoProceed(!autoProceed)}
+                className={`w-12 h-6 rounded-full transition-colors relative ${autoProceed ? 'bg-primary' : 'bg-slate-300'}`}
+              >
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoProceed ? 'left-7' : 'left-1'}`} />
+              </button>
+            </div>
           </div>
 
           {isSuperadmin && (

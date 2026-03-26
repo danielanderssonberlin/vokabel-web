@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   USER_STATS: 'vokabro_user_stats',
   LEARNING_SESSION: (langCode) => `vokabro_learning_session_${langCode}`,
   UI_LANGUAGE: 'vokabro_ui_language',
+  AUTO_PROCEED: 'vokabro_auto_proceed',
 };
 
 export const clearUserStorage = () => {

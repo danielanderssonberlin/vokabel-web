@@ -51,6 +51,10 @@ export default function Learning() {
   const [pendingUpdate, setPendingUpdate] = useState(false);
   const [isArchiveMode, setIsArchiveMode] = useState(false);
   const [disableTooSoon, setDisableTooSoon] = useState(false);
+  const [autoProceed, setAutoProceed] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.AUTO_PROCEED);
+    return saved !== null ? saved === 'true' : true;
+  });
   const [nextLanguageToLearn, setNextLanguageToLearn] = useState(null);
   const inputRef = useRef(null);
   const mainScrollRef = useRef(null);
@@ -229,15 +233,18 @@ export default function Learning() {
     // Stats aus den Vokabeln berechnen
     setStats(calculateStatsFromVocabulary(all));
 
-    // Superadmin Einstellungen laden
+    // Einstellungen laden
     if (user) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('disable_too_soon')
+        .select('disable_too_soon, auto_proceed')
         .eq('id', user.id)
         .maybeSingle();
       if (profile) {
-        setDisableTooSoon(profile.disable_too_soon);
+        setDisableTooSoon(profile.disable_too_soon || false);
+        const val = profile.auto_proceed !== false;
+        setAutoProceed(val);
+        localStorage.setItem(STORAGE_KEYS.AUTO_PROCEED, val.toString());
       }
     }
     
@@ -589,7 +596,7 @@ export default function Learning() {
       setPendingUpdate(false);
     }
     
-    if (correct) {
+    if (correct && autoProceed) {
       setTimeout(() => {
         handleNext();
       }, isLearned ? 1500 : 1200); 
