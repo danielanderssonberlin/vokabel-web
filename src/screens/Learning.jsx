@@ -438,9 +438,14 @@ export default function Learning() {
     return map[key] || key;
   };
 
+  const normalizeForComparison = (str) => {
+    if (!str) return '';
+    return str.trim().toLowerCase().replace(/[?¿!¡]/g, '');
+  };
+
   const normalizeForAccentCheck = (str) => {
     if (!str) return '';
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/[?¿!¡]/g, '');
   };
 
   const handleNext = useCallback(() => {
@@ -490,9 +495,9 @@ export default function Learning() {
     let onlyAccentWrong = false;
 
     if (isVerb) {
-      const isInfCorrect = (infinitiveAnswer || '').trim().toLowerCase() === (parsedVerb.infinitive || '').trim().toLowerCase();
+      const isInfCorrect = normalizeForComparison(infinitiveAnswer) === normalizeForComparison(parsedVerb.infinitive);
       const areFormsCorrect = Object.keys(parsedVerb.forms).every(key => 
-        (verbAnswers[key] || '').trim().toLowerCase() === (parsedVerb.forms[key] || '').trim().toLowerCase()
+        normalizeForComparison(verbAnswers[key]) === normalizeForComparison(parsedVerb.forms[key])
       );
       correct = isInfCorrect && areFormsCorrect;
 
@@ -506,7 +511,7 @@ export default function Learning() {
         }
       }
     } else {
-      correct = answer.trim().toLowerCase() === current.spanish.trim().toLowerCase();
+      correct = normalizeForComparison(answer) === normalizeForComparison(current.spanish);
       if (!correct && normalizeForAccentCheck(answer) === normalizeForAccentCheck(current.spanish)) {
         onlyAccentWrong = true;
       }
