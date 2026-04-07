@@ -45,6 +45,7 @@ export default function Overview() {
     vosotros: '',
     ellos: ''
   });
+  const [sentence, setSentence] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -91,6 +92,7 @@ export default function Overview() {
       vosotros: '',
       ellos: ''
     });
+    setSentence('');
     setError('');
     setIsModalOpen(true);
   };
@@ -127,6 +129,7 @@ export default function Overview() {
       setForeign(item.spanish);
     }
     
+    setSentence(item.sentence || '');
     setError('');
     setIsModalOpen(true);
   };
@@ -155,12 +158,13 @@ export default function Overview() {
         : foreign.trim();
 
       if (editingItem) {
-        await updateVocabularyItem(editingItem.id, german.trim(), finalForeign);
+        await updateVocabularyItem(editingItem.id, german.trim(), finalForeign, sentence.trim());
       } else {
-        await addVocabularyItem(german.trim(), finalForeign, selectedLanguage);
+        await addVocabularyItem(german.trim(), finalForeign, selectedLanguage, sentence.trim());
       }
       setGerman('');
       setForeign('');
+      setSentence('');
       setIsVerb(false);
       setIsReflexive(false);
       setShowReflexiveHelp(false);
@@ -493,6 +497,22 @@ export default function Overview() {
                     </div>
                   </div>
                 )}
+
+                <div className="pt-2 border-t border-border-light">
+                  <label className="block mb-2 ml-1 text-sm font-medium text-text-main">
+                    {OVERVIEW.SENTENCE_LABEL}
+                  </label>
+                  <textarea
+                    className="w-full p-4 text-base border shadow-sm bg-surface border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder={OVERVIEW.SENTENCE_PLACEHOLDER}
+                    value={sentence}
+                    rows={2}
+                    onChange={(e) => setSentence(e.target.value)}
+                  />
+                  <p className="mt-1.5 ml-1 text-xs text-text-muted">
+                    {OVERVIEW.SENTENCE_HINT}
+                  </p>
+                </div>
               </div>
 
               <div className="pt-4 shrink-0">
@@ -588,6 +608,12 @@ function VocabularyItem({ item, onEdit, onDelete, index, OVERVIEW }) {
         )}>
           {displayForeign} {isInfinitive && `(${OVERVIEW.INFINITIVE_LABEL})`}
         </p>
+        
+        {item.sentence && (
+          <p className="mt-1 text-sm text-text-muted line-clamp-1">
+            {item.sentence}
+          </p>
+        )}
         
         <div className="flex items-center gap-1 mt-2">
           {[1, 2, 3, 4].map((i) => (

@@ -914,6 +914,12 @@ export default function Learning() {
               <span className="mb-2 text-xs font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.COMMON.DEUTSCH}</span>
               <h2 className="text-4xl font-bold text-text-main break-word">{current.german}</h2>
               
+              {current.sentence && isCorrect !== null && (
+                <p className="max-w-xs mt-4 text-sm font-medium italic text-center text-text-secondary/60 animate-fade-in">
+                  "{current.sentence}"
+                </p>
+              )}
+              
               {isCorrect === false && (
                 <div className="w-full pt-6 mt-6 border-t border-border-light animate-bounce-in">
                   {(() => {

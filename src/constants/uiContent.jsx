@@ -155,6 +155,9 @@ export const UI_STRINGS = {
       NOSOTROS: "nosotros",
       VOSOTROS: "vosotros",
       ELLOS: "ellos/ellas",
+      SENTENCE_LABEL: "Beispielsatz / Merkhilfe",
+      SENTENCE_PLACEHOLDER: "Satz hinzufügen...",
+      SENTENCE_HINT: "Wird beim Lernen als Merkhilfe angezeigt.",
     },
     PROFILE: {
       TITLE: "Profil & Einstellungen",
@@ -360,6 +363,9 @@ export const UI_STRINGS = {
       NOSOTROS: "we",
       VOSOTROS: "you (all)",
       ELLOS: "they",
+      SENTENCE_LABEL: "Example sentence / Memory aid",
+      SENTENCE_PLACEHOLDER: "Add a sentence...",
+      SENTENCE_HINT: "Shown as a memory aid during learning.",
     },
     PROFILE: {
       TITLE: "Profile & Settings",
