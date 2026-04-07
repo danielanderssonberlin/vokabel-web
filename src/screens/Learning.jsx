@@ -827,6 +827,11 @@ export default function Learning() {
   }
 
   const current = vokabeln[currentIndex] || { german: '', spanish: '', status: 0 };
+  let isVerb = false;
+  try {
+    const parsed = JSON.parse(current.spanish);
+    isVerb = !!(parsed && parsed.isVerb);
+  } catch (e) {}
 
   return (
     <div className="flex flex-col flex-1 w-full h-full max-w-2xl mx-auto overflow-hidden pt-[env(safe-area-inset-top)]">
@@ -1078,6 +1083,34 @@ export default function Learning() {
                           </div>
                         ))}
                       </div>
+
+                      {/* Submit Button direkt unter den Feldern für Verben */}
+                      <div className="mt-6">
+                        {isCorrect === true && (
+                          <div className="h-6 mb-2 text-center">
+                            <p className="text-sm font-bold text-success animate-bounce-in">
+                              {wasTooSoon ? UI_STRINGS.LEARNING.TOO_SOON_MSG : UI_STRINGS.LEARNING.STATUS_UP_MSG}
+                            </p>
+                          </div>
+                        )}
+                        <button
+                          ref={submitButtonRef}
+                          type="submit"
+                          disabled={isNextDisabled && isCorrect === null}
+                          className={cn(
+                            "flex items-center justify-center gap-2 w-full p-4 font-black text-white transition-all shadow-lg active:scale-[0.98] rounded-2xl bg-primary hover:bg-primary-dark",
+                            isNextDisabled && isCorrect === null && "opacity-50 grayscale"
+                          )}
+                        >
+                          <span className="text-lg">
+                            {isCorrect !== null 
+                              ? UI_STRINGS.LEARNING.NEXT_BUTTON 
+                              : (isNextDisabled ? `...` : (!answer && !infinitiveAnswer ? UI_STRINGS.LEARNING.DONT_KNOW_BUTTON : UI_STRINGS.LEARNING.CHECK_BUTTON))
+                            }
+                          </span>
+                          <ArrowRight size={22} className={cn(isCorrect === null && !isNextDisabled && "animate-pulse")} />
+                        </button>
+                      </div>
                     </div>
                   );
                 }
@@ -1137,33 +1170,35 @@ export default function Learning() {
           <div className="h-12 shrink-0" />
         </div>
 
-        <div className="px-4 pt-6 pb-4 border-t border-border-light">
-          {isCorrect === true && (
-            <div className="h-6 mb-2 text-center">
-              <p className="text-sm font-bold text-success animate-bounce-in">
-                {wasTooSoon ? UI_STRINGS.LEARNING.TOO_SOON_MSG : UI_STRINGS.LEARNING.STATUS_UP_MSG}
-              </p>
-            </div>
-          )}
-          
-          <button
-            ref={submitButtonRef}
-            type="submit"
-            disabled={isNextDisabled && isCorrect === null}
-            className={cn(
-              "flex items-center justify-center gap-2 w-full p-4 font-black text-white transition-all shadow-lg active:scale-[0.98] rounded-2xl bg-primary hover:bg-primary-dark",
-              isNextDisabled && isCorrect === null && "opacity-50 grayscale"
+        {!isVerb && (
+          <div className="px-4 pt-6 pb-4 border-t border-border-light">
+            {isCorrect === true && (
+              <div className="h-6 mb-2 text-center">
+                <p className="text-sm font-bold text-success animate-bounce-in">
+                  {wasTooSoon ? UI_STRINGS.LEARNING.TOO_SOON_MSG : UI_STRINGS.LEARNING.STATUS_UP_MSG}
+                </p>
+              </div>
             )}
-          >
-            <span className="text-lg">
-              {isCorrect !== null 
-                ? UI_STRINGS.LEARNING.NEXT_BUTTON 
-                : (isNextDisabled ? `...` : (!answer && !infinitiveAnswer ? UI_STRINGS.LEARNING.DONT_KNOW_BUTTON : UI_STRINGS.LEARNING.CHECK_BUTTON))
-              }
-            </span>
-            <ArrowRight size={22} className={cn(isCorrect === null && !isNextDisabled && "animate-pulse")} />
-          </button>
-        </div>
+            
+            <button
+              ref={submitButtonRef}
+              type="submit"
+              disabled={isNextDisabled && isCorrect === null}
+              className={cn(
+                "flex items-center justify-center gap-2 w-full p-4 font-black text-white transition-all shadow-lg active:scale-[0.98] rounded-2xl bg-primary hover:bg-primary-dark",
+                isNextDisabled && isCorrect === null && "opacity-50 grayscale"
+              )}
+            >
+              <span className="text-lg">
+                {isCorrect !== null 
+                  ? UI_STRINGS.LEARNING.NEXT_BUTTON 
+                  : (isNextDisabled ? `...` : (!answer && !infinitiveAnswer ? UI_STRINGS.LEARNING.DONT_KNOW_BUTTON : UI_STRINGS.LEARNING.CHECK_BUTTON))
+                }
+              </span>
+              <ArrowRight size={22} className={cn(isCorrect === null && !isNextDisabled && "animate-pulse")} />
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );
