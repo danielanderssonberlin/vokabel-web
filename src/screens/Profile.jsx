@@ -457,7 +457,21 @@ export default function Profile() {
               </div>
               <button
                 type="button"
-                onClick={() => setAutoProceed(!autoProceed)}
+                onClick={() => {
+                  const newVal = !autoProceed;
+                  setAutoProceed(newVal);
+                  localStorage.setItem(STORAGE_KEYS.AUTO_PROCEED, newVal.toString());
+                  
+                  // Sofort in DB speichern, wenn User eingeloggt
+                  if (user) {
+                    supabase.from('profiles').upsert({ 
+                      id: user.id, 
+                      auto_proceed: newVal 
+                    }).then(({ error }) => {
+                      if (error) console.error('Error updating auto_proceed:', error);
+                    });
+                  }
+                }}
                 className={`w-12 h-6 rounded-full transition-colors relative ${autoProceed ? 'bg-primary' : 'bg-slate-300'}`}
               >
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoProceed ? 'left-7' : 'left-1'}`} />
