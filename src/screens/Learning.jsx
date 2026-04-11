@@ -237,14 +237,11 @@ export default function Learning() {
     if (user) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('disable_too_soon, auto_proceed')
+        .select('disable_too_soon')
         .eq('id', user.id)
         .maybeSingle();
       if (profile) {
         setDisableTooSoon(profile.disable_too_soon || false);
-        const val = profile.auto_proceed !== false;
-        setAutoProceed(val);
-        localStorage.setItem(STORAGE_KEYS.AUTO_PROCEED, val.toString());
       }
     }
     

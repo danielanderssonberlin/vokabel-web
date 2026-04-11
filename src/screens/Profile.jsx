@@ -89,7 +89,7 @@ export default function Profile() {
     // Superadmin abfragen
     const { data, error } = await supabase
       .from('profiles')
-      .select('superadmin, disable_too_soon, auto_proceed')
+      .select('superadmin, disable_too_soon')
       .eq('id', user.id)
       .maybeSingle(); 
     
@@ -98,9 +98,6 @@ export default function Profile() {
     } else if (data) {
       setIsSuperadmin(Boolean(data.superadmin));
       setDisableTooSoon(Boolean(data.disable_too_soon));
-      const val = data.auto_proceed !== false;
-      setAutoProceed(val); 
-      localStorage.setItem(STORAGE_KEYS.AUTO_PROCEED, val.toString());
     } else {
       // Das ist kein harter Fehler, da Profile erst bei der ersten Einstellungsergänzung erstellt werden
       console.info('No profile row found yet. It will be created when you update your settings.');
@@ -159,7 +156,6 @@ export default function Profile() {
         .from('profiles')
         .upsert({ 
           id: user.id,
-          auto_proceed: autoProceed,
           ...(isSuperadmin && { disable_too_soon: disableTooSoon })
         })
         .select(); 
@@ -461,16 +457,6 @@ export default function Profile() {
                   const newVal = !autoProceed;
                   setAutoProceed(newVal);
                   localStorage.setItem(STORAGE_KEYS.AUTO_PROCEED, newVal.toString());
-                  
-                  // Sofort in DB speichern, wenn User eingeloggt
-                  if (user) {
-                    supabase.from('profiles').upsert({ 
-                      id: user.id, 
-                      auto_proceed: newVal 
-                    }).then(({ error }) => {
-                      if (error) console.error('Error updating auto_proceed:', error);
-                    });
-                  }
                 }}
                 className={`w-12 h-6 rounded-full transition-colors relative ${autoProceed ? 'bg-primary' : 'bg-slate-300'}`}
               >

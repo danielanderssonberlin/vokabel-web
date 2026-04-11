@@ -192,6 +192,17 @@ export const UI_STRINGS = {
       DELETE_LANG_DESC: "Möchtest du diese Sprache wirklich löschen? Alle zugehörigen Vokabeln gehen verloren.",
       WEEKDAYS: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
     },
+    USER_STATS: {
+      TITLE: "Nutzer-Statistiken",
+      NAME: "Name",
+      EMAIL: "E-Mail",
+      TOTAL: "Gesamt",
+      LEARNED: "Gelernt",
+      STREAK: "Serie",
+      LAST_LEARNED: "Zuletzt gelernt",
+      LOADING: "Lade Nutzerdaten...",
+      EMPTY_STATE: "Keine anderen Nutzer gefunden.",
+    },
     COMPONENTS: {
       DELETE_MODAL: {
         TITLE: "Vokabel löschen?",
@@ -400,6 +411,17 @@ export const UI_STRINGS = {
       DELETE_LANG_TITLE: "Delete language?",
       DELETE_LANG_DESC: "Do you really want to delete this language? All associated vocabulary will be lost.",
       WEEKDAYS: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    },
+    USER_STATS: {
+      TITLE: "User Statistics",
+      NAME: "Name",
+      EMAIL: "Email",
+      TOTAL: "Total",
+      LEARNED: "Learned",
+      STREAK: "Streak",
+      LAST_LEARNED: "Last learned",
+      LOADING: "Loading user data...",
+      EMPTY_STATE: "No other users found.",
     },
     COMPONENTS: {
       DELETE_MODAL: {
