@@ -606,7 +606,7 @@ function VocabularyItem({ item, onEdit, onDelete, index, OVERVIEW }) {
           "italic text-text-secondary",
           isInfinitive && "text-primary font-medium"
         )}>
-          {displayForeign} {isInfinitive && `(${OVERVIEW.INFINITIVE_LABEL})`}
+          {displayForeign} {isInfinitive && ` ${OVERVIEW.CONJUGATED_LABEL}`}
         </p>
         
         {item.sentence && (

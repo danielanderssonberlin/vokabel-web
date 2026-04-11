@@ -305,7 +305,6 @@ export default function Learning() {
     if (SpeechRecognition) {
       setIsSupported(true);
       recognition.current = new SpeechRecognition();
-      recognition.current.lang = selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'en' ? 'en-US' : 'de-DE'; // Basic mapping
       recognition.current.interimResults = false;
       recognition.current.continuous = false;
 
@@ -328,6 +327,39 @@ export default function Learning() {
       };
     }
   }, [selectedLanguage, LEARNING.MIC_ERROR]);
+
+  // Update recognition language based on current word direction
+  useEffect(() => {
+    if (recognition.current && vokabeln.length > 0) {
+      const current = vokabeln[currentIndex];
+      if (!current) return;
+      
+      let isVerb = false;
+      try {
+        const parsed = JSON.parse(current.spanish);
+        isVerb = !!(parsed && parsed.isVerb);
+      } catch (e) {}
+      
+      const isPassive = !isVerb && current.status < 2;
+      
+      if (isPassive) {
+        recognition.current.lang = 'de-DE';
+      } else {
+        const langMap = {
+          es: 'es-ES',
+          en: 'en-US',
+          fr: 'fr-FR',
+          it: 'it-IT',
+          pt: 'pt-PT',
+          ru: 'ru-RU',
+          tr: 'tr-TR',
+          pl: 'pl-PL',
+          nl: 'nl-NL'
+        };
+        recognition.current.lang = langMap[selectedLanguage] || 'en-US';
+      }
+    }
+  }, [currentIndex, vokabeln, selectedLanguage]);
 
   useEffect(() => {
     if (mainScrollRef.current) {
@@ -440,12 +472,12 @@ export default function Learning() {
 
   const normalizeForComparison = (str) => {
     if (!str) return '';
-    return str.trim().toLowerCase().replace(/[?¿!¡]/g, '');
+    return str.trim().toLowerCase().replace(/[?¿!¡.,:;]/g, '');
   };
 
   const normalizeForAccentCheck = (str) => {
     if (!str) return '';
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/[?¿!¡]/g, '');
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/[?¿!¡.,:;]/g, '');
   };
 
   const handleNext = useCallback(() => {
@@ -491,6 +523,8 @@ export default function Learning() {
       isVerb = !!(parsedVerb && parsedVerb.isVerb);
     } catch (e) {}
 
+    const isPassive = !isVerb && current.status < 2;
+
     let correct = false;
     let onlyAccentWrong = false;
 
@@ -511,8 +545,9 @@ export default function Learning() {
         }
       }
     } else {
-      correct = normalizeForComparison(answer) === normalizeForComparison(current.spanish);
-      if (!correct && normalizeForAccentCheck(answer) === normalizeForAccentCheck(current.spanish)) {
+      const target = isPassive ? current.german : current.spanish;
+      correct = normalizeForComparison(answer) === normalizeForComparison(target);
+      if (!correct && normalizeForAccentCheck(answer) === normalizeForAccentCheck(target)) {
         onlyAccentWrong = true;
       }
     }
@@ -833,6 +868,8 @@ export default function Learning() {
     isVerb = !!(parsed && parsed.isVerb);
   } catch (e) {}
 
+  const isPassive = !isVerb && current.status < 2;
+
   return (
     <div className="flex flex-col flex-1 w-full h-full max-w-2xl mx-auto overflow-hidden pt-[env(safe-area-inset-top)]">
       <form onSubmit={handleCheck} className="flex flex-col flex-1 overflow-hidden">
@@ -916,8 +953,12 @@ export default function Learning() {
               <div className="absolute px-3 py-1 border rounded-full top-4 right-4 border-border-light bg-background/50">
                 <p className="text-[10px] font-bold text-text-muted">{currentIndex + 1} / {vokabeln.length}</p>
               </div>
-              <span className="mb-2 text-xs font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.COMMON.DEUTSCH}</span>
-              <h2 className="text-4xl font-bold text-text-main break-word">{current.german}</h2>
+              <span className="mb-2 text-xs font-bold tracking-widest uppercase text-text-muted">
+                {isPassive ? selectedLanguageName : UI_STRINGS.COMMON.DEUTSCH}
+              </span>
+              <h2 className="text-4xl font-bold text-text-main break-word">
+                {isPassive ? current.spanish : current.german}
+              </h2>
               
               {current.sentence && isCorrect !== null && (
                 <p className="max-w-xs mt-4 text-sm font-medium italic text-center text-text-secondary/60 animate-fade-in">
@@ -935,7 +976,7 @@ export default function Learning() {
                           <div className="space-y-4">
                             <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
                             <div className="p-3 text-left border rounded-lg bg-error/5 border-error/10">
-                              <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
+                              <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.CONJUGATED_LABEL}</span>
                               {(infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() && (
                                 <div className="break-word">
                                   <span className="block mb-1 text-sm font-bold line-through text-error/60">{infinitiveAnswer || '---'}</span>
@@ -976,7 +1017,7 @@ export default function Learning() {
                         </div>
                         <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
                         <div className="break-word">
-                          <h3 className="text-3xl font-bold text-error">{current.spanish}</h3>
+                          <h3 className="text-3xl font-bold text-error">{isPassive ? current.german : current.spanish}</h3>
                         </div>
                       </>
                     );
@@ -1005,7 +1046,7 @@ export default function Learning() {
 
           <div className="flex flex-col">
             <label className="mb-2 ml-1 text-sm font-medium text-text-main">
-              {selectedLanguageName}
+              {isPassive ? UI_STRINGS.COMMON.DEUTSCH : selectedLanguageName}
             </label>
             
             {(() => {
@@ -1015,7 +1056,7 @@ export default function Learning() {
                   return (
                     <div className="mb-4 space-y-4">
                       <div>
-                        <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
+                        <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.OVERVIEW.CONJUGATED_LABEL}</span>
                         {isCorrect === null ? (
                           <input
                             ref={inputRef}
