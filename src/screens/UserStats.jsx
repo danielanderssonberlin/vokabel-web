@@ -96,7 +96,7 @@ export default function UserStats() {
   });
 
   return (
-    <div className="flex flex-col flex-1 w-full h-full max-w-4xl p-4 pb-32 mx-auto overflow-hidden md:p-8">
+    <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-0 mx-auto mb-10 md:p-8 md:pb-0">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <Users className="w-8 h-8 text-primary" />
