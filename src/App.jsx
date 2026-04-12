@@ -124,7 +124,7 @@ function AppContent({ session, isSuperadmin }) {
 
   return (
     <Router basename="/">
-      <div className="flex flex-col h-screen h-[100dvh] bg-background overflow-hidden">
+      <div className="flex flex-col h-screen bg-background overflow-hidden">
         <main className="z-0 flex-1 overflow-hidden">
           <Routes>
             <Route path="/" element={<Learning />} />

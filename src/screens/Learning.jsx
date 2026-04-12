@@ -360,42 +360,25 @@ export default function Learning() {
 
   useEffect(() => {
     if (mainScrollRef.current) {
-      // Kleine Verzögerung um sicherzustellen, dass der Scroll 
-      // nach dem Focus des Inputs ausgeführt wird
-      setTimeout(() => {
-        if (mainScrollRef.current) {
-          mainScrollRef.current.scrollTo({
-            top: 0,
-            left: 0,
-            behavior: 'auto'
-          });
-        }
-      }, 100);
+      mainScrollRef.current.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'auto'
+      });
     }
   }, [currentIndex, sessionCompleted]);
 
   useEffect(() => {
     if (isCorrect !== null && submitButtonRef.current) {
-      submitButtonRef.current.focus();
+      submitButtonRef.current.focus({ preventScroll: true });
     }
   }, [isCorrect]);
 
   useEffect(() => {
     if (isCorrect === null && !loading && !sessionCompleted && inputRef.current) {
-      inputRef.current.focus();
+      inputRef.current.focus({ preventScroll: true });
     }
   }, [currentIndex, isCorrect, loading, sessionCompleted]);
-
-  useEffect(() => {
-    if (isCorrect === false && mainScrollRef.current) {
-      setTimeout(() => {
-        mainScrollRef.current.scrollTo({
-          top: mainScrollRef.current.scrollHeight,
-          behavior: 'smooth'
-        });
-      }, 150);
-    }
-  }, [isCorrect]);
 
   useEffect(() => {
     if (vokabeln.length > 0 && !sessionCompleted && !loading) {
@@ -947,8 +930,24 @@ export default function Learning() {
             >
             {!loading && (
              <>
-              <div className="absolute px-3 py-1 border rounded-full top-4 right-4 border-border-light bg-background/50">
-                <p className="text-[10px] font-bold text-text-muted">{currentIndex + 1} / {vokabeln.length}</p>
+              <div className="absolute flex items-center gap-4 top-4 left-6 right-4">
+                {current.status < 5 && (
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "w-2 h-2 rounded-full border transition-all duration-500",
+                          current.status >= i ? "bg-primary border-primary" : "bg-transparent border-primary-light",
+                          current.status === i && isCorrect === true && !wasTooSoon && !pendingUpdate && "animate-status-pop"
+                        )}
+                      />
+                    ))}
+                  </div>
+                )}
+                <div className="px-3 py-1 ml-auto border rounded-full border-border-light bg-background/50">
+                  <p className="text-[10px] font-bold text-text-muted">{currentIndex + 1} / {vokabeln.length}</p>
+                </div>
               </div>
               <span className="mb-2 text-xs font-bold tracking-widest uppercase text-text-muted">
                 {isPassive ? selectedLanguageName : UI_STRINGS.COMMON.DEUTSCH}
@@ -958,7 +957,7 @@ export default function Learning() {
               </h2>
               
               {current.sentence && isCorrect !== null && (
-                <p className="max-w-xs mt-4 text-sm font-medium italic text-center text-text-secondary/60 animate-fade-in">
+                <p className="max-w-xs mt-4 text-sm italic font-medium text-center text-text-secondary/60 animate-fade-in">
                   "{current.sentence}"
                 </p>
               )}
@@ -1022,20 +1021,6 @@ export default function Learning() {
                 </div>
               )}
 
-              {current.status < 5 && (
-                <div className="flex gap-2 mt-6">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "w-4 h-4 rounded-full border transition-word duration-500",
-                        current.status >= i ? "bg-primary border-primary" : "bg-transparent border-primary-light",
-                        current.status === i && isCorrect === true && !wasTooSoon && !pendingUpdate && "animate-status-pop"
-                      )}
-                    />
-                  ))}
-                </div>
-              )}
               </>
               )}
             </div>
@@ -1159,7 +1144,6 @@ export default function Learning() {
                   {isCorrect === null ? (
                     <input
                       ref={inputRef}
-                      autoFocus
                       className={cn(
                         "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-border text-text-main focus:ring-primary/20"
                       )}
