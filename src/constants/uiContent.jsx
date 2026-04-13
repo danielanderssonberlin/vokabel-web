@@ -86,6 +86,10 @@ export const UI_STRINGS = {
           {
             title: "5. Beispielsätze & Merkhilfen",
             text: "Du kannst zu jeder Vokabel einen Beispielsatz oder eine Merkhilfe speichern. Diese wird dir beim Lernen angezeigt, sobald du die Lösung aufdeckst oder eine falsche Antwort gibst."
+          },
+          {
+            title: "6. Als App installieren",
+            text: "Für das beste Erlebnis füge Vokabro zu deinem Home-Bildschirm hinzu. iOS: Teilen-Button -> 'Zum Home-Bildschirm'. Android: Menü (drei Punkte) -> 'App installieren' oder 'Zum Startbildschirm hinzufügen'."
           }
         ]
       }
@@ -336,6 +340,10 @@ export const UI_STRINGS = {
           {
             title: "5. Example Sentences & Hints",
             text: "You can save an example sentence or memory aid for each word. This will be shown to you during learning once you reveal the solution or give a wrong answer."
+          },
+          {
+            title: "6. Install as an App",
+            text: "For the best experience, add Vokabro to your home screen. iOS: Share button -> 'Add to Home Screen'. Android: Menu (three dots) -> 'Install app' or 'Add to Home Screen'."
           }
         ]
       }
