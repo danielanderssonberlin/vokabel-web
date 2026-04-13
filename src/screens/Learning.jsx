@@ -175,9 +175,14 @@ export default function Learning() {
             isArchiveMode: savedArchive, 
             wrongAnswers: savedWrong, 
             sessionFinishedCount: savedFinished,
-            learnedThisSession: savedLearned
+            learnedThisSession: savedLearned,
+            timestamp: savedTimestamp
           } = JSON.parse(saved);
-          if (savedVokabeln && savedVokabeln.length > 0 && savedIndex < savedVokabeln.length) {
+
+          // Session nur wiederherstellen, wenn sie jünger als 12 Stunden ist
+          const isRecentlyStarted = savedTimestamp && (Date.now() - savedTimestamp < 12 * 60 * 60 * 1000);
+
+          if (isRecentlyStarted && savedVokabeln && savedVokabeln.length > 0 && savedIndex < savedVokabeln.length) {
             // Validierung: Passt die gespeicherte Session zur gewählten Sprache?
             if (savedVokabeln[0].language === lang) {
               setVokabeln(savedVokabeln);
@@ -268,7 +273,8 @@ export default function Learning() {
           isArchiveMode,
           wrongAnswers,
           sessionFinishedCount,
-          learnedThisSession
+          learnedThisSession,
+          timestamp: JSON.parse(localStorage.getItem(sessionKey))?.timestamp || Date.now()
         }));
       }
     }
