@@ -110,7 +110,7 @@ export default function Learning() {
       // Use proxy for local development or full URL for production (if CORS is handled)
       const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? '/hypereal-api/audio/generate'
-        : 'https://api.hypereal.tech/api/v1/audio/generate';
+        : 'https://hypereal.tech/api/v1/audio/generate';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
