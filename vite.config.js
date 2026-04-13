@@ -14,16 +14,6 @@ export default defineConfig({
   plugins: [react()],
   // z.B. /meine-app/
   base: '/',
-  server: {
-    proxy: {
-      '/hypereal-api': {
-        target: 'https://www.hypereal.tech',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/hypereal-api/, '/api/v1'),
-      },
-    },
-  },
   test: {
     projects: [{
       extends: true,

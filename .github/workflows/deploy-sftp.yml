@@ -26,8 +26,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_HYPEREAL_KEY: ${{ secrets.VITE_HYPEREAL_KEY }}
-          
+
       - name: Upload files to SFTP
         uses: appleboy/scp-action@v1.0.0
         with:

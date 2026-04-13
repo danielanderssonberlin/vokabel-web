@@ -86,10 +86,6 @@ export const UI_STRINGS = {
           {
             title: "5. Beispielsätze & Merkhilfen",
             text: "Du kannst zu jeder Vokabel einen Beispielsatz oder eine Merkhilfe speichern. Diese wird dir beim Lernen angezeigt, sobald du die Lösung aufdeckst oder eine falsche Antwort gibst."
-          },
-          {
-            title: "6. Spracherkennung",
-            text: "Du kannst deine Antworten auch diktieren. Klicke dazu auf das Mikrofon-Symbol. Vokabro erkennt automatisch die richtige Sprache (Deutsch oder Fremdsprache), je nach Abruf-Richtung."
           }
         ]
       }
@@ -340,10 +336,6 @@ export const UI_STRINGS = {
           {
             title: "5. Example Sentences & Hints",
             text: "You can save an example sentence or memory aid for each word. This will be shown to you during learning once you reveal the solution or give a wrong answer."
-          },
-          {
-            title: "6. Voice Recognition",
-            text: "You can also dictate your answers. Just click on the microphone icon. Vokabro automatically recognizes the correct language (German or foreign), depending on the recall direction."
           }
         ]
       }

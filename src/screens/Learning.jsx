@@ -5,7 +5,7 @@ import { getVocabulary, updateVocabularyStatus } from '../store/vocabularyStore'
 import { updateStudyStats, getUserStats, calculateStatsFromVocabulary } from '../store/userStore';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, GraduationCap, X, Loader2 } from 'lucide-react';
+import { CheckCircle2, BookOpen, ArrowRight, Mic, MicOff, AlertCircle, Volume2, Flame, GraduationCap, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -92,59 +92,7 @@ export default function Learning() {
   const [isSupported, setIsSupported] = useState(false);
   const [isMicEnabled, setIsMicEnabled] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const recognition = useRef(null);
-  const audioRef = useRef(null);
-
-  const handleSpeak = async (text) => {
-    if (!text || isSpeaking) return;
-    setIsSpeaking(true);
-    setError('');
-
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-      const functionUrl = `${supabaseUrl}/functions/v1/generate-speech`;
-
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-        },
-        body: JSON.stringify({
-          text: text,
-          model: 'minimax-speech-02'
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Proxy Response Status:', response.status, errorText);
-        throw new Error(`Proxy returned ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('Proxy Response Data:', data);
-      
-      if (data.outputUrl || data.url || (data.data && data.data[0] && data.data[0].url)) {
-        const url = data.outputUrl || data.url || data.data[0].url;
-        if (audioRef.current) {
-          audioRef.current.pause();
-        }
-        audioRef.current = new Audio(url);
-        audioRef.current.onended = () => setIsSpeaking(false);
-        audioRef.current.play();
-      } else {
-        throw new Error('No audio URL received');
-      }
-    } catch (err) {
-      console.error('Speech error:', err);
-      setError('Fehler bei der Sprachausgabe');
-      setIsSpeaking(false);
-    }
-  };
 
   // Fetch current user on mount
   useEffect(() => {
@@ -1010,36 +958,9 @@ export default function Learning() {
               <span className="mb-2 text-xs font-bold tracking-widest uppercase text-text-muted">
                 {isPassive ? selectedLanguageName : UI_STRINGS.COMMON.DEUTSCH}
               </span>
-              <div className="flex items-center justify-center gap-3">
-                <h2 className="text-4xl font-bold text-text-main break-word">
-                  {isPassive ? (
-                    (() => {
-                      try {
-                        const parsed = JSON.parse(current.spanish);
-                        return parsed.infinitive || current.spanish;
-                      } catch (e) {
-                        return current.spanish;
-                      }
-                    })()
-                  ) : current.german}
-                </h2>
-                {isPassive && (
-                  <button
-                    onClick={() => {
-                      let textToSpeak = current.spanish;
-                      try {
-                        const parsed = JSON.parse(current.spanish);
-                        textToSpeak = parsed.infinitive || current.spanish;
-                      } catch (e) {}
-                      handleSpeak(textToSpeak);
-                    }}
-                    disabled={isSpeaking}
-                    className="p-2 transition-all rounded-full hover:bg-primary/10 text-primary active:scale-95 disabled:opacity-50"
-                  >
-                    {isSpeaking ? <Loader2 size={24} className="animate-spin" /> : <Volume2 size={24} />}
-                  </button>
-                )}
-              </div>
+              <h2 className="text-4xl font-bold text-text-main break-word">
+                {isPassive ? current.spanish : current.german}
+              </h2>
               
               {current.sentence && isCorrect !== null && (
                 <p className="max-w-xs mt-4 text-sm italic font-medium text-center text-text-secondary/60 animate-fade-in">
@@ -1056,32 +977,20 @@ export default function Learning() {
                         return (
                           <div className="space-y-4">
                             <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
-                            <div className="relative p-3 text-left border rounded-lg bg-error/5 border-error/10">
+                            <div className="p-3 text-left border rounded-lg bg-error/5 border-error/10">
                               <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.CONJUGATED_LABEL}</span>
                               {(infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() && (
                                 <div className="break-word">
                                   <span className="block mb-1 text-sm font-bold line-through text-error/60">{infinitiveAnswer || '---'}</span>
                                 </div>
                               )}
-                              <div className="flex items-center justify-between gap-2 break-word">
+                              <div className="break-word">
                                 <span className="text-lg font-bold text-error">{parsed.infinitive}</span>
-                                {!isPassive && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleSpeak(parsed.infinitive);
-                                    }}
-                                    disabled={isSpeaking}
-                                    className="p-1 transition-all rounded-full hover:bg-error/10 text-error active:scale-95 disabled:opacity-50"
-                                  >
-                                    {isSpeaking ? <Loader2 size={16} className="animate-spin" /> : <Volume2 size={16} />}
-                                  </button>
-                                )}
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                               {Object.entries(parsed.forms).map(([key, value]) => (
-                                <div key={key} className="relative p-2 text-left border rounded-lg bg-error/5 border-error/10">
+                                <div key={key} className="p-2 text-left border rounded-lg bg-error/5 border-error/10">
                                   <span className="text-[10px] uppercase font-bold text-error/60 block">
                                     {parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()]}
                                   </span>
@@ -1090,19 +999,8 @@ export default function Learning() {
                                       <span className="text-[11px] font-bold text-error/60 line-through block">{verbAnswers[key] || '---'}</span>
                                     </div>
                                   )}
-                                  <div className="flex items-center justify-between gap-1 break-word">
+                                  <div className="break-word">
                                     <span className="text-sm font-bold text-error">{value}</span>
-                                    {!isPassive && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleSpeak(value);
-                                        }}
-                                        className="p-1 transition-all rounded-full hover:bg-error/10 text-error active:scale-90"
-                                      >
-                                        <Volume2 size={12} />
-                                      </button>
-                                    )}
                                   </div>
                                 </div>
                               ))}
@@ -1120,17 +1018,8 @@ export default function Learning() {
                           </div>
                         </div>
                         <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
-                        <div className="flex items-center justify-center gap-3 break-word">
+                        <div className="break-word">
                           <h3 className="text-3xl font-bold text-error">{isPassive ? current.german : current.spanish}</h3>
-                          {!isPassive && (
-                            <button
-                              onClick={() => handleSpeak(current.spanish)}
-                              disabled={isSpeaking}
-                              className="p-2 transition-all rounded-full hover:bg-error/10 text-error active:scale-95 disabled:opacity-50"
-                            >
-                              {isSpeaking ? <Loader2 size={20} className="animate-spin" /> : <Volume2 size={20} />}
-                            </button>
-                          )}
                         </div>
                       </>
                     );
