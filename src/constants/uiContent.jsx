@@ -72,19 +72,15 @@ export const UI_STRINGS = {
             text: "Füge deine eigenen Vokabeln in der Übersicht hinzu. Du kannst auch angeben, ob es sich um ein konjugiertes Verb handelt."
           },
           {
-            title: "2. Das 5er-Block-System",
-            text: "Vokabro lernt mit dir in Blöcken von 5 Vokabeln. So bleibst du fokussiert und überforderst dich nicht."
-          },
-          {
-            title: "3. Status-System (0 bis 5)",
+            title: "2. Status-System (0 bis 5)",
             text: "Jede Vokabel hat einen Status von 0 bis 5. Wenn du eine Vokabel gewusst hast, steigt ihr Status. Bei Status 5 landet sie im Archiv."
           },
           {
-            title: "4. Die 12-Stunden-Regel",
+            title: "3. Die 12-Stunden-Regel",
             text: "Um echtes Langzeitgedächtnis aufzubauen, kann eine Vokabel nur alle 12 Stunden im Status aufsteigen. Wenn du sie öfter übst, bleibt der Status gleich."
           },
           {
-            title: "5. Abruf-Richtungen",
+            title: "4. Abruf-Richtungen",
             text: "Bei Status 0 und 1 lernst du 'Passiv' (Fremdsprache -> Deutsch). Ab Status 2 musst du die Vokabel aktiv abrufen (Deutsch -> Fremdsprache). Konjugierte Verben werden immer aktiv abgefragt."
           }
         ]
@@ -319,19 +315,15 @@ export const UI_STRINGS = {
             text: "Add your own words in the overview. You can also specify if it's a conjugated verb."
           },
           {
-            title: "2. The 5-Card Block System",
-            text: "Vokabro learns with you in blocks of 5 words. This keeps you focused and prevents overwhelm."
-          },
-          {
-            title: "3. Status System (0 to 5)",
+            title: "2. Status System (0 to 5)",
             text: "Each word has a status from 0 to 5. When you know a word, its status increases. At status 5, it goes into the archive."
           },
           {
-            title: "4. The 12-Hour Rule",
+            title: "3. The 12-Hour Rule",
             text: "To build true long-term memory, a word's status can only increase once every 12 hours. If you practice more often, the status remains the same."
           },
           {
-            title: "5. Recall Directions",
+            title: "4. Recall Directions",
             text: "At status 0 and 1, you learn 'Passive' (Foreign Language -> German). From status 2, you must actively recall the word (German -> Foreign Language). Conjugated verbs are always tested actively."
           }
         ]
