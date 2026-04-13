@@ -102,37 +102,31 @@ export default function Learning() {
     setError('');
 
     try {
-      const apiKey = import.meta.env.VITE_HYPEREAL_KEY || import.meta.env.VITE_HYPEREAL_API_KEY;
-      if (!apiKey) {
-        throw new Error('VITE_HYPEREAL_KEY is missing in environment variables. Please add it to your .env or GitHub Secrets.');
-      }
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      // Use proxy for local development or full URL for production (if CORS is handled)
-      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? '/hypereal-api/audio/generate'
-        : 'https://www.hypereal.tech/api/v1/audio/generate';
+      const functionUrl = `${supabaseUrl}/functions/v1/generate-speech`;
 
-      const response = await fetch(apiUrl, {
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
         },
         body: JSON.stringify({
-          model: 'minimax-speech-02',
           text: text,
-          format: 'mp3'
+          model: 'minimax-speech-02'
         }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Response Status:', response.status, errorText);
-        throw new Error(`API returned ${response.status}: ${errorText}`);
+        console.error('Proxy Response Status:', response.status, errorText);
+        throw new Error(`Proxy returned ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('API Response Data:', data);
+      console.log('Proxy Response Data:', data);
       
       if (data.outputUrl || data.url || (data.data && data.data[0] && data.data[0].url)) {
         const url = data.outputUrl || data.url || data.data[0].url;
