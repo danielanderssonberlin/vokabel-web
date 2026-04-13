@@ -17,7 +17,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/hypereal-api': {
-        target: 'https://hypereal.tech',
+        target: 'https://www.hypereal.tech',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/hypereal-api/, '/api/v1'),
