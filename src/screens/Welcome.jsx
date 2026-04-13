@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
-import { BookOpen, ArrowRight } from 'lucide-react';
+import { BookOpen, ArrowRight, HelpCircle } from 'lucide-react';
 import Login from './Login';
+import HowItWorks from './HowItWorks';
 import UiLanguageSwitcher from '../components/UiLanguageSwitcher';
 import { useUiLanguage } from '../context/UiLanguageContext';
 import logo from '../assets/logo.png';
 
 export default function Welcome() {
   const [showLogin, setShowLogin] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const { strings } = useUiLanguage();
   const { LANDING, COMMON } = strings;
 
   if (showLogin) {
     return <Login onBack={() => setShowLogin(false)} />;
+  }
+
+  if (showHowItWorks) {
+    return <HowItWorks onBack={() => setShowHowItWorks(false)} />;
   }
 
   return (
@@ -34,6 +40,14 @@ export default function Welcome() {
         >
           <span>{LANDING.START_BUTTON}</span>
           <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
+        </button>
+
+        <button
+          onClick={() => setShowHowItWorks(true)}
+          className="flex items-center justify-center w-full max-w-sm gap-2 p-4 mx-auto mt-4 font-bold transition-all border shadow-sm text-text-secondary border-border bg-surface rounded-3xl hover:bg-background active:scale-95"
+        >
+          <HelpCircle size={18} />
+          <span>{LANDING.HOW_IT_WORKS.LINK}</span>
         </button>
       </div>
 

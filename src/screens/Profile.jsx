@@ -3,10 +3,11 @@ import { supabase } from '../lib/supabase';
 import { getVocabulary } from '../store/vocabularyStore';
 import { calculateStatsFromVocabulary } from '../store/userStore';
 import { useLanguage } from '../context/LanguageContext';
-import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, ChevronRight, Calendar, XCircle, CheckCircle2, Plus, Trash2, Globe } from 'lucide-react';
+import { User, Mail, Lock, LogOut, BarChart3, Save, Loader2, CheckCircle, ChevronRight, Calendar, XCircle, CheckCircle2, Plus, Trash2, Globe, HelpCircle } from 'lucide-react';
 import PasswordModal from '../components/PasswordModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import UiLanguageSwitcher from '../components/UiLanguageSwitcher';
+import HowItWorks from './HowItWorks';
 import { useUiLanguage } from '../context/UiLanguageContext';
 import { clsx } from 'clsx';
 import { STORAGE_KEYS } from '../lib/storage';
@@ -26,6 +27,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [langToDelete, setLangToDelete] = useState(null);
   const [stats, setStats] = useState({ total: 0, learned: 0, inProgress: 0, studyHistory: [], streak: 0 });
 
@@ -200,6 +202,10 @@ export default function Profile() {
     );
   } 
 
+  if (showHowItWorks) {
+    return <HowItWorks onBack={() => setShowHowItWorks(false)} />;
+  }
+
   return (
     <div className="flex flex-col flex-1 w-full h-full max-w-2xl p-4 pb-20 mx-auto overflow-y-auto no-scrollbar md:p-8">
       <div className="flex items-center justify-between mb-8">
@@ -294,6 +300,20 @@ export default function Profile() {
           <h2 className="text-lg font-bold text-text-main">{PROFILE.UI_LANGUAGE_SECTION}</h2>
         </div>
         <UiLanguageSwitcher className="justify-start px-0" />
+      </div>
+
+      {/* How it Works Card */}
+      <div className="bg-surface border border-border rounded-[32px] p-6 mb-8 shadow-sm">
+        <button 
+          onClick={() => setShowHowItWorks(true)}
+          className="flex items-center justify-between w-full group"
+        >
+          <div className="flex items-center gap-2">
+            <HelpCircle className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-bold text-text-main">{strings.LANDING.HOW_IT_WORKS.LINK}</h2>
+          </div>
+          <ChevronRight className="w-5 h-5 text-text-muted group-hover:translate-x-1 transition-transform" />
+        </button>
       </div>
 
       {/* Statistik Card */}
