@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X, Trash2, AlertTriangle } from 'lucide-react';
 import { useUiLanguage } from '../context/UiLanguageContext';
 
@@ -6,10 +6,15 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title, 
   const { strings } = useUiLanguage();
   const { COMPONENTS, COMMON } = strings;
   const { DELETE_MODAL } = COMPONENTS;
+  const deleteBtnRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      // Fokus auf den Löschen-Button setzen wenn das Modal öffnet
+      setTimeout(() => {
+        deleteBtnRef.current?.focus();
+      }, 50);
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -50,8 +55,9 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title, 
               {COMMON.CANCEL}
             </button>
             <button 
+              ref={deleteBtnRef}
               onClick={onConfirm}
-              className="flex items-center justify-center gap-2 p-4 font-bold text-white transition-colors shadow-md rounded-2xl bg-error hover:bg-error/90 shadow-error/20"
+              className="flex items-center justify-center gap-2 p-4 font-bold text-white transition-colors shadow-md rounded-2xl bg-error hover:bg-error/90 shadow-error/20 focus:outline-none focus:ring-2 focus:ring-error/50"
             >
               <Trash2 size={18} />
               {DELETE_MODAL.CONFIRM}

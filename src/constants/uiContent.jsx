@@ -82,6 +82,14 @@ export const UI_STRINGS = {
           {
             title: "4. Abruf-Richtungen",
             text: "Bei Status 0 und 1 lernst du 'Passiv' (Fremdsprache -> Deutsch). Ab Status 2 musst du die Vokabel aktiv abrufen (Deutsch -> Fremdsprache). Konjugierte Verben werden immer aktiv abgefragt."
+          },
+          {
+            title: "5. Beispielsätze & Merkhilfen",
+            text: "Du kannst zu jeder Vokabel einen Beispielsatz oder eine Merkhilfe speichern. Diese wird dir beim Lernen angezeigt, sobald du die Lösung aufdeckst oder eine falsche Antwort gibst."
+          },
+          {
+            title: "6. Spracherkennung",
+            text: "Du kannst deine Antworten auch diktieren. Klicke dazu auf das Mikrofon-Symbol. Vokabro erkennt automatisch die richtige Sprache (Deutsch oder Fremdsprache), je nach Abruf-Richtung."
           }
         ]
       }
@@ -164,6 +172,9 @@ export const UI_STRINGS = {
       ERR_SAVE: "Konnte Vokabel nicht speichern",
       ERR_DELETE: "Konnte Vokabel nicht löschen",
       EMPTY_STATE_SUB: "Füge deine ersten Vokabeln hinzu, um zu starten.",
+      OR_SEPARATOR: "oder",
+      ADD_EXAMPLES: "Beispielvokabeln hinzufügen",
+      ADDING_EXAMPLES: "Vokabeln werden hinzugefügt...",
       NO_LANGUAGE_TITLE: "Keine Sprache ausgewählt",
       NO_LANGUAGE_SUB: "Bitte füge zuerst eine Sprache in deinem Profil hinzu.",
       GO_TO_PROFILE: "Zum Profil",
@@ -325,6 +336,14 @@ export const UI_STRINGS = {
           {
             title: "4. Recall Directions",
             text: "At status 0 and 1, you learn 'Passive' (Foreign Language -> German). From status 2, you must actively recall the word (German -> Foreign Language). Conjugated verbs are always tested actively."
+          },
+          {
+            title: "5. Example Sentences & Hints",
+            text: "You can save an example sentence or memory aid for each word. This will be shown to you during learning once you reveal the solution or give a wrong answer."
+          },
+          {
+            title: "6. Voice Recognition",
+            text: "You can also dictate your answers. Just click on the microphone icon. Vokabro automatically recognizes the correct language (German or foreign), depending on the recall direction."
           }
         ]
       }
@@ -407,6 +426,9 @@ export const UI_STRINGS = {
       ERR_SAVE: "Could not save vocabulary",
       ERR_DELETE: "Could not delete vocabulary",
       EMPTY_STATE_SUB: "Add your first words to get started.",
+      OR_SEPARATOR: "or",
+      ADD_EXAMPLES: "Add example vocabulary",
+      ADDING_EXAMPLES: "Adding vocabulary...",
       NO_LANGUAGE_TITLE: "No language selected",
       NO_LANGUAGE_SUB: "Please add a language in your profile first.",
       GO_TO_PROFILE: "Go to Profile",

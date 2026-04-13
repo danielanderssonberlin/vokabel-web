@@ -7,6 +7,12 @@ export const STORAGE_KEYS = {
   AUTO_PROCEED: 'vokabro_auto_proceed',
 };
 
+export const clearLearningSession = (langCode, userId) => {
+  if (!langCode || !userId) return;
+  const key = `${STORAGE_KEYS.LEARNING_SESSION(langCode)}_${userId}`;
+  localStorage.removeItem(key);
+};
+
 export const clearUserStorage = () => {
   const keysToKeep = [STORAGE_KEYS.UI_LANGUAGE];
   const allKeys = Object.values(STORAGE_KEYS).filter(val => typeof val === 'string');

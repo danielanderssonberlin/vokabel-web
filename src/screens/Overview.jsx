@@ -8,6 +8,8 @@ import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useUiLanguage } from '../context/UiLanguageContext';
+import { supabase } from '../lib/supabase';
+import { clearLearningSession } from '../lib/storage';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -162,6 +164,13 @@ export default function Overview() {
       } else {
         await addVocabularyItem(german.trim(), finalForeign, selectedLanguage, sentence.trim());
       }
+
+      // Session im LocalStorage invalidieren damit die neue Vokabel sofort gelernt werden kann
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        clearLearningSession(selectedLanguage, user.id);
+      }
+
       setGerman('');
       setForeign('');
       setSentence('');
@@ -200,12 +209,257 @@ export default function Overview() {
     if (itemToDelete) {
       try {
         await deleteVocabularyItem(itemToDelete);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          clearLearningSession(selectedLanguage, user.id);
+        }
         await loadVokabeln();
         setIsDeleteModalOpen(false);
         setItemToDelete(null);
       } catch {
         setError(OVERVIEW.ERR_DELETE);
       }
+    }
+  };
+
+  const handleAddExamples = async () => {
+    setLoading(true);
+    try {
+      let examples = [];
+      if (selectedLanguage === 'en') {
+        examples = [
+          { g: 'Apfel', f: 'apple' },
+          { g: 'Haus', f: 'house' },
+          { g: 'Hund', f: 'dog' },
+          { g: 'Katze', f: 'cat' },
+          { g: 'Baum', f: 'tree' },
+          { g: 'Wasser', f: 'water' },
+          { g: 'Brot', f: 'bread' },
+          { g: 'Sonne', f: 'sun' },
+          { g: 'Mond', f: 'moon' },
+          { g: 'Buch', f: 'book' },
+          { g: 'Auto', f: 'car' },
+          { g: 'Schule', f: 'school' },
+          { g: 'Stadt', f: 'city' },
+          { g: 'Freund', f: 'friend' },
+          { g: 'Zeit', f: 'time' },
+          { g: 'Name', f: 'name' },
+          { g: 'Tag', f: 'day' },
+          { g: 'Nacht', f: 'night' },
+          { g: 'Kind', f: 'child' },
+          { g: 'Leben', f: 'life' }
+        ];
+      } else if (selectedLanguage === 'es') {
+        examples = [
+          { g: 'Apfel', f: 'manzana' },
+          { g: 'Haus', f: 'casa' },
+          { g: 'Hund', f: 'perro' },
+          { g: 'Katze', f: 'gato' },
+          { g: 'Baum', f: 'árbol' },
+          { g: 'Wasser', f: 'agua' },
+          { g: 'Brot', f: 'pan' },
+          { g: 'Sonne', f: 'sol' },
+          { g: 'Mond', f: 'luna' },
+          { g: 'Buch', f: 'libro' },
+          { g: 'Auto', f: 'coche' },
+          { g: 'Schule', f: 'escuela' },
+          { g: 'Stadt', f: 'ciudad' },
+          { g: 'Freund', f: 'amigo' },
+          { g: 'Zeit', f: 'tiempo' },
+          { g: 'Name', f: 'nombre' },
+          { g: 'Tag', f: 'día' },
+          { g: 'Nacht', f: 'noche' },
+          { g: 'Kind', f: 'niño' },
+          { g: 'Leben', f: 'vida' }
+        ];
+      } else if (selectedLanguage === 'fr') {
+        examples = [
+          { g: 'Apfel', f: 'pomme' },
+          { g: 'Haus', f: 'maison' },
+          { g: 'Hund', f: 'chien' },
+          { g: 'Katze', f: 'chat' },
+          { g: 'Baum', f: 'arbre' },
+          { g: 'Wasser', f: 'eau' },
+          { g: 'Brot', f: 'pain' },
+          { g: 'Sonne', f: 'soleil' },
+          { g: 'Mond', f: 'lune' },
+          { g: 'Buch', f: 'livre' },
+          { g: 'Auto', f: 'voiture' },
+          { g: 'Schule', f: 'école' },
+          { g: 'Stadt', f: 'ville' },
+          { g: 'Freund', f: 'ami' },
+          { g: 'Zeit', f: 'temps' },
+          { g: 'Name', f: 'nom' },
+          { g: 'Tag', f: 'jour' },
+          { g: 'Nacht', f: 'nuit' },
+          { g: 'Kind', f: 'enfant' },
+          { g: 'Leben', f: 'vie' }
+        ];
+      } else if (selectedLanguage === 'it') {
+        examples = [
+          { g: 'Apfel', f: 'mela' },
+          { g: 'Haus', f: 'casa' },
+          { g: 'Hund', f: 'cane' },
+          { g: 'Katze', f: 'gatto' },
+          { g: 'Baum', f: 'albero' },
+          { g: 'Wasser', f: 'acqua' },
+          { g: 'Brot', f: 'pane' },
+          { g: 'Sonne', f: 'sole' },
+          { g: 'Mond', f: 'luna' },
+          { g: 'Buch', f: 'libro' },
+          { g: 'Auto', f: 'auto' },
+          { g: 'Schule', f: 'scuola' },
+          { g: 'Stadt', f: 'città' },
+          { g: 'Freund', f: 'amigo' },
+          { g: 'Zeit', f: 'tempo' },
+          { g: 'Name', f: 'nome' },
+          { g: 'Tag', f: 'giorno' },
+          { g: 'Nacht', f: 'notte' },
+          { g: 'Kind', f: 'bambino' },
+          { g: 'Leben', f: 'vita' }
+        ];
+      } else if (selectedLanguage === 'pt') {
+        examples = [
+          { g: 'Apfel', f: 'maçã' },
+          { g: 'Haus', f: 'casa' },
+          { g: 'Hund', f: 'cachorro' },
+          { g: 'Katze', f: 'gato' },
+          { g: 'Baum', f: 'árvore' },
+          { g: 'Wasser', f: 'água' },
+          { g: 'Brot', f: 'pão' },
+          { g: 'Sonne', f: 'sol' },
+          { g: 'Mond', f: 'lua' },
+          { g: 'Buch', f: 'livre' },
+          { g: 'Auto', f: 'carro' },
+          { g: 'Schule', f: 'escola' },
+          { g: 'Stadt', f: 'cidade' },
+          { g: 'Freund', f: 'amigo' },
+          { g: 'Zeit', f: 'tempo' },
+          { g: 'Name', f: 'nome' },
+          { g: 'Tag', f: 'dia' },
+          { g: 'Nacht', f: 'noite' },
+          { g: 'Kind', f: 'criança' },
+          { g: 'Leben', f: 'vida' }
+        ];
+      } else if (selectedLanguage === 'ru') {
+        examples = [
+          { g: 'Apfel', f: 'яблоко' },
+          { g: 'Haus', f: 'дом' },
+          { g: 'Hund', f: 'собака' },
+          { g: 'Katze', f: 'кошка' },
+          { g: 'Baum', f: 'дерево' },
+          { g: 'Wasser', f: 'вода' },
+          { g: 'Brot', f: 'хлеб' },
+          { g: 'Sonne', f: 'солнце' },
+          { g: 'Mond', f: 'луна' },
+          { g: 'Buch', f: 'книга' },
+          { g: 'Auto', f: 'машина' },
+          { g: 'Schule', f: 'школа' },
+          { g: 'Stadt', f: 'город' },
+          { g: 'Freund', f: 'друг' },
+          { g: 'Zeit', f: 'время' },
+          { g: 'Name', f: 'имя' },
+          { g: 'Tag', f: 'день' },
+          { g: 'Nacht', f: 'ночь' },
+          { g: 'Kind', f: 'ребенок' },
+          { g: 'Leben', f: 'жизнь' }
+        ];
+      } else if (selectedLanguage === 'tr') {
+        examples = [
+          { g: 'Apfel', f: 'elma' },
+          { g: 'Haus', f: 'ev' },
+          { g: 'Hund', f: 'köpek' },
+          { g: 'Katze', f: 'kedi' },
+          { g: 'Baum', f: 'ağaç' },
+          { g: 'Wasser', f: 'su' },
+          { g: 'Brot', f: 'ekmek' },
+          { g: 'Sonne', f: 'güneş' },
+          { g: 'Mond', f: 'ay' },
+          { g: 'Buch', f: 'kitap' },
+          { g: 'Auto', f: 'araba' },
+          { g: 'Schule', f: 'okul' },
+          { g: 'Stadt', f: 'şehir' },
+          { g: 'Freund', f: 'arkadaş' },
+          { g: 'Zeit', f: 'zaman' },
+          { g: 'Name', f: 'isim' },
+          { g: 'Tag', f: 'gün' },
+          { g: 'Nacht', f: 'gece' },
+          { g: 'Kind', f: 'çocuk' },
+          { g: 'Leben', f: 'hayat' }
+        ];
+      } else if (selectedLanguage === 'pl') {
+        examples = [
+          { g: 'Apfel', f: 'jabłko' },
+          { g: 'Haus', f: 'dom' },
+          { g: 'Hund', f: 'pies' },
+          { g: 'Katze', f: 'kot' },
+          { g: 'Baum', f: 'drzewo' },
+          { g: 'Wasser', f: 'woda' },
+          { g: 'Brot', f: 'chleb' },
+          { g: 'Sonne', f: 'słońce' },
+          { g: 'Mond', f: 'księżyc' },
+          { g: 'Buch', f: 'książka' },
+          { g: 'Auto', f: 'samochód' },
+          { g: 'Schule', f: 'szkoła' },
+          { g: 'Stadt', f: 'miasto' },
+          { g: 'Freund', f: 'przyjaciel' },
+          { g: 'Zeit', f: 'czas' },
+          { g: 'Name', f: 'imię' },
+          { g: 'Tag', f: 'dzień' },
+          { g: 'Nacht', f: 'noc' },
+          { g: 'Kind', f: 'dziecko' },
+          { g: 'Leben', f: 'życie' }
+        ];
+      } else if (selectedLanguage === 'nl') {
+        examples = [
+          { g: 'Apfel', f: 'appel' },
+          { g: 'Haus', f: 'huis' },
+          { g: 'Hund', f: 'hond' },
+          { g: 'Katze', f: 'kat' },
+          { g: 'Baum', f: 'boom' },
+          { g: 'Wasser', f: 'water' },
+          { g: 'Brot', f: 'brood' },
+          { g: 'Sonne', f: 'zon' },
+          { g: 'Mond', f: 'maan' },
+          { g: 'Buch', f: 'boek' },
+          { g: 'Auto', f: 'auto' },
+          { g: 'Schule', f: 'school' },
+          { g: 'Stadt', f: 'stad' },
+          { g: 'Freund', f: 'vriend' },
+          { g: 'Zeit', f: 'tijd' },
+          { g: 'Name', f: 'naam' },
+          { g: 'Tag', f: 'dag' },
+          { g: 'Nacht', f: 'nacht' },
+          { g: 'Kind', f: 'kind' },
+          { g: 'Leben', f: 'leven' }
+        ];
+      } else {
+        // Generic examples for other languages
+        examples = [
+          { g: 'Apfel', f: selectedLangData?.example || 'apple' },
+          { g: 'Hallo', f: '...' },
+          { g: 'Danke', f: '...' },
+          { g: 'Bitte', f: '...' },
+          { g: 'Ja', f: '...' },
+          { g: 'Nein', f: '...' }
+        ];
+      }
+
+      for (const ex of examples) {
+        await addVocabularyItem(ex.g, ex.f, selectedLanguage, '');
+      }
+
+      // Session im LocalStorage invalidieren damit die neuen Vokabeln sofort gelernt werden können
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        clearLearningSession(selectedLanguage, user.id);
+      }
+
+      await loadVokabeln();
+    } catch (e) {
+      console.error("Error adding examples:", e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -334,16 +588,35 @@ export default function Overview() {
             ))}
 
             {filteredData.length === 0 && (
-              <div className="relative flex flex-col items-center justify-center h-64 px-6 text-center animate-fade-in-up">
-                <div className="p-6 mb-4 rounded-full bg-primary/5">
+              <div className="relative flex flex-col items-center justify-center px-6 text-center animate-fade-in-up">
+                <div className="p-6 mt-4 mb-4 rounded-full bg-primary/5">
                   <BookOpen size={48} className="opacity-20 text-primary" />
                 </div>
                 <h2 className="mb-1 text-lg font-bold text-text-main">{OVERVIEW.EMPTY_STATE}</h2>
-                <p className="text-sm text-text-secondary">{OVERVIEW.EMPTY_STATE_SUB}</p>
+                <p className="mb-8 text-sm text-text-secondary">{OVERVIEW.EMPTY_STATE_SUB}</p>
                 
-                <div className="absolute right-0 flex flex-col items-center gap-2 bottom-4 animate-bounce">
-                  <span className="text-xs font-bold tracking-widest uppercase text-primary">{COMMON.ADD}</span>
-                  <ArrowDownRight size={32} className="text-primary" />
+                <div className="flex flex-col w-full gap-3">
+                  <button
+                    onClick={handleOpenAdd}
+                    className="flex items-center justify-center gap-2 px-6 py-4 font-bold text-white transition-all shadow-lg bg-primary rounded-2xl hover:bg-primary/90 active:scale-95"
+                  >
+                    <Plus size={20} />
+                    <span>{OVERVIEW.MODAL_ADD_TITLE}</span>
+                  </button>
+
+                  <div className="flex items-center gap-4 my-2">
+                    <div className="flex-1 h-px bg-border-light" />
+                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{OVERVIEW.OR_SEPARATOR}</span>
+                    <div className="flex-1 h-px bg-border-light" />
+                  </div>
+
+                  <button
+                    onClick={handleAddExamples}
+                    disabled={loading}
+                    className="px-6 py-4 text-sm font-bold transition-all border text-text-secondary border-border bg-surface rounded-2xl hover:bg-background active:scale-95 disabled:opacity-50"
+                  >
+                    {loading ? OVERVIEW.ADDING_EXAMPLES : OVERVIEW.ADD_EXAMPLES}
+                  </button>
                 </div>
               </div>
             )}
