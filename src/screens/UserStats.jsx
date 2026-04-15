@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useUiLanguage } from '../context/UiLanguageContext';
-import { Users, Mail, BarChart3, Flame, Clock, Search, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Users, Mail, BarChart3, Flame, Clock, Search, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -14,6 +14,7 @@ export default function UserStats() {
   const { USER_STATS } = strings;
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -24,21 +25,16 @@ export default function UserStats() {
   const fetchUsersData = async (manual = false) => {
     if (manual) setIsRefreshing(true);
     setLoading(true);
+    setError(null);
     try {
       console.log('Fetching users data...');
-      // Fetch data from our new view instead of the profiles table
+      // Fetch data from our new RPC function
       const { data: profiles, error: profilesError } = await supabase
-        .from('user_stats_view')
-        .select('*');
+        .rpc('get_user_stats');
 
       if (profilesError) {
         console.error('Profiles fetch error:', profilesError);
-        // Fallback to profiles table if view doesn't exist yet
-        const { data: retryProfiles, error: retryError } = await supabase
-          .from('profiles')
-          .select('*');
-        if (retryError) throw retryError;
-        setUsers(retryProfiles || []);
+        throw profilesError;
       } else {
         console.log('Profiles found:', profiles?.length || 0);
       }
@@ -79,8 +75,9 @@ export default function UserStats() {
 
       // Sort by total vocabulary (descending)
       setUsers(usersWithStats.sort((a, b) => b.total - a.total));
-    } catch (error) {
-      console.error('Error fetching user stats:', error);
+    } catch (err) {
+      console.error('Error fetching user stats:', err);
+      setError(err.message || 'Ein Fehler ist beim Laden der Nutzer aufgetreten.');
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -134,6 +131,12 @@ export default function UserStats() {
             <div className="w-full h-16 mb-2 rounded-2xl bg-surface/50" />
             <div className="w-full h-16 mb-2 rounded-2xl bg-surface/50" />
             <div className="w-full h-16 mb-2 rounded-2xl bg-surface/50" />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-64 p-6 text-center border-2 border-dashed border-error/20 rounded-3xl">
+            <XCircle size={48} className="mb-4 text-error opacity-50" />
+            <p className="font-bold text-error">{error}</p>
+            <p className="mt-2 text-sm text-text-muted">Prüfe deine Berechtigungen oder die SQL Funktion.</p>
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">

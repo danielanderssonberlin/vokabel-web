@@ -416,7 +416,10 @@ export default function Learning() {
 
   // Automatischer Start des Mikrofons
   useEffect(() => {
-    if (isMicEnabled && isCorrect === null && !loading && !sessionCompleted && recognition.current && !isListening) {
+    const current = vokabeln[currentIndex];
+    const isLastPass = current && current.status === 4 && !isArchiveMode;
+
+    if (isMicEnabled && isCorrect === null && !loading && !sessionCompleted && recognition.current && !isListening && !isLastPass) {
       try {
         recognition.current.start();
       } catch {
@@ -424,11 +427,11 @@ export default function Learning() {
       }
     }
     
-    // Stoppen wenn eine Antwort geprüft wird ODER Mikrofon deaktiviert wurde
-    if ((isCorrect !== null || !isMicEnabled) && isListening && recognition.current) {
+    // Stoppen wenn eine Antwort geprüft wird ODER Mikrofon deaktiviert wurde ODER letzter Durchlauf
+    if ((isCorrect !== null || !isMicEnabled || isLastPass) && isListening && recognition.current) {
       recognition.current.stop();
     }
-  }, [currentIndex, isMicEnabled, isCorrect, loading, sessionCompleted, isListening]);
+  }, [currentIndex, isMicEnabled, isCorrect, loading, sessionCompleted, isListening, vokabeln, isArchiveMode]);
 
   const handleMicPress = () => {
     setError('');
@@ -855,6 +858,7 @@ export default function Learning() {
   } catch (e) {}
 
   const isPassive = !isVerb && current.status < 2;
+  const isLastPass = current.status === 4 && !isArchiveMode;
 
   return (
     <div className="flex flex-col flex-1 w-full h-full max-w-2xl mx-auto overflow-hidden pt-[env(safe-area-inset-top)]">
@@ -1153,7 +1157,7 @@ export default function Learning() {
                       className={cn(
                         "flex-1 bg-surface border p-4 rounded-2xl text-xl shadow-sm focus:outline-none focus:ring-2 transition-all border-border text-text-main focus:ring-primary/20"
                       )}
-                      placeholder={isListening ? UI_STRINGS.LEARNING.LISTENING_PLACEHOLDER : UI_STRINGS.LEARNING.INPUT_PLACEHOLDER}
+                      placeholder={isListening ? UI_STRINGS.LEARNING.LISTENING_PLACEHOLDER : (isLastPass ? UI_STRINGS.LEARNING.INPUT_PLACEHOLDER_LAST_PASS : UI_STRINGS.LEARNING.INPUT_PLACEHOLDER)}
                       value={answer}
                       onChange={(e) => setAnswer(e.target.value)}
                       autoComplete="off"
@@ -1170,7 +1174,7 @@ export default function Learning() {
                     </div>
                   )}
                   
-                  { isCorrect === null && (
+                  { isCorrect === null && !isLastPass && (
                     <button 
                       type="button"
                       onClick={handleMicPress}
