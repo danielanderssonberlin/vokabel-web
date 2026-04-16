@@ -34,7 +34,9 @@ export default function Learning() {
     el: '',
     nosotros: '',
     vosotros: '',
-    ellos: ''
+    ellos: '',
+    pastSimple: '',
+    pastParticiple: ''
   });
   const [isCorrect, setIsCorrect] = useState(null);
   const [accentWarning, setAccentWarning] = useState(false);
@@ -480,7 +482,9 @@ export default function Learning() {
         el: '',
         nosotros: '',
         vosotros: '',
-        ellos: ''
+        ellos: '',
+        pastSimple: '',
+        pastParticiple: ''
       });
       setIsCorrect(null);
       setAccentWarning(false);
@@ -518,15 +522,21 @@ export default function Learning() {
     let onlyAccentWrong = false;
 
     if (isVerb) {
+      const verbType = parsedVerb.verbType || 'conjugation';
       const isInfCorrect = normalizeForComparison(infinitiveAnswer) === normalizeForComparison(parsedVerb.infinitive);
-      const areFormsCorrect = Object.keys(parsedVerb.forms).every(key => 
+      
+      const relevantKeys = verbType === 'conjugation' 
+        ? ['yo', 'tu', 'el', 'nosotros', 'vosotros', 'ellos'] 
+        : ['pastSimple', 'pastParticiple'];
+
+      const areFormsCorrect = relevantKeys.every(key => 
         normalizeForComparison(verbAnswers[key]) === normalizeForComparison(parsedVerb.forms[key])
       );
       correct = isInfCorrect && areFormsCorrect;
 
       if (!correct) {
         const infMatch = normalizeForAccentCheck(infinitiveAnswer) === normalizeForAccentCheck(parsedVerb.infinitive);
-        const formsMatch = Object.keys(parsedVerb.forms).every(key => 
+        const formsMatch = relevantKeys.every(key => 
           normalizeForAccentCheck(verbAnswers[key]) === normalizeForAccentCheck(parsedVerb.forms[key])
         );
         if (infMatch && formsMatch) {
@@ -978,11 +988,16 @@ export default function Learning() {
                     try {
                       const parsed = JSON.parse(current.spanish);
                       if (parsed && parsed.isVerb) {
+                        const verbType = parsed.verbType || 'conjugation';
+                        const relevantKeys = verbType === 'conjugation' 
+                          ? ['yo', 'tu', 'el', 'nosotros', 'vosotros', 'ellos'] 
+                          : ['pastSimple', 'pastParticiple'];
+
                         return (
                           <div className="space-y-4">
                             <span className="mb-2 text-xs font-bold tracking-widest uppercase text-error">{UI_STRINGS.LEARNING.RIGHT_ANSWER}</span>
                             <div className="p-3 text-left border rounded-lg bg-error/5 border-error/10">
-                              <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.CONJUGATED_LABEL}</span>
+                              <span className="text-[10px] uppercase font-bold text-error/60 block">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
                               {(infinitiveAnswer || '').trim().toLowerCase() !== (parsed.infinitive || '').trim().toLowerCase() && (
                                 <div className="break-word">
                                   <span className="block mb-1 text-sm font-bold line-through text-error/60">{infinitiveAnswer || '---'}</span>
@@ -992,22 +1007,31 @@ export default function Learning() {
                                 <span className="text-lg font-bold text-error">{parsed.infinitive}</span>
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              {Object.entries(parsed.forms).map(([key, value]) => (
-                                <div key={key} className="p-2 text-left border rounded-lg bg-error/5 border-error/10">
-                                  <span className="text-[10px] uppercase font-bold text-error/60 block">
-                                    {parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()]}
-                                  </span>
-                                  {(verbAnswers[key] || '').trim().toLowerCase() !== (value || '').trim().toLowerCase() && (
+                            <div className={cn(
+                              "grid gap-2",
+                              verbType === 'conjugation' ? "grid-cols-2" : "grid-cols-1"
+                            )}>
+                              {relevantKeys.map((key) => {
+                                const value = parsed.forms[key];
+                                return (
+                                  <div key={key} className="p-2 text-left border rounded-lg bg-error/5 border-error/10">
+                                    <span className="text-[10px] uppercase font-bold text-error/60 block">
+                                      {verbType === 'conjugation' 
+                                        ? (parsed.isReflexive ? getReflexiveLabel(key) : UI_STRINGS.OVERVIEW[key.toUpperCase()])
+                                        : (key === 'pastSimple' ? UI_STRINGS.OVERVIEW.FORM_PAST_SIMPLE : UI_STRINGS.OVERVIEW.FORM_PAST_PARTICIPLE)
+                                      }
+                                    </span>
+                                    {(verbAnswers[key] || '').trim().toLowerCase() !== (value || '').trim().toLowerCase() && (
+                                      <div className="break-word">
+                                        <span className="text-[11px] font-bold text-error/60 line-through block">{verbAnswers[key] || '---'}</span>
+                                      </div>
+                                    )}
                                     <div className="break-word">
-                                      <span className="text-[11px] font-bold text-error/60 line-through block">{verbAnswers[key] || '---'}</span>
+                                      <span className="text-sm font-bold text-error">{value}</span>
                                     </div>
-                                  )}
-                                  <div className="break-word">
-                                    <span className="text-sm font-bold text-error">{value}</span>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
                         );
@@ -1045,10 +1069,23 @@ export default function Learning() {
               try {
                 const parsed = JSON.parse(current.spanish);
                 if (parsed && parsed.isVerb) {
+                  const verbType = parsed.verbType || 'conjugation';
+                  const relevantFields = verbType === 'conjugation' ? [
+                    { key: 'yo', label: parsed.isReflexive ? getReflexiveLabel('yo') : UI_STRINGS.OVERVIEW.YO },
+                    { key: 'tu', label: parsed.isReflexive ? getReflexiveLabel('tu') : UI_STRINGS.OVERVIEW.TU },
+                    { key: 'el', label: parsed.isReflexive ? getReflexiveLabel('el') : UI_STRINGS.OVERVIEW.EL },
+                    { key: 'nosotros', label: parsed.isReflexive ? getReflexiveLabel('nosotros') : UI_STRINGS.OVERVIEW.NOSOTROS },
+                    { key: 'vosotros', label: parsed.isReflexive ? getReflexiveLabel('vosotros') : UI_STRINGS.OVERVIEW.VOSOTROS },
+                    { key: 'ellos', label: parsed.isReflexive ? getReflexiveLabel('ellos') : UI_STRINGS.OVERVIEW.ELLOS },
+                  ] : [
+                    { key: 'pastSimple', label: UI_STRINGS.OVERVIEW.FORM_PAST_SIMPLE },
+                    { key: 'pastParticiple', label: UI_STRINGS.OVERVIEW.FORM_PAST_PARTICIPLE },
+                  ];
+
                   return (
                     <div className="mb-4 space-y-4">
                       <div>
-                        <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.OVERVIEW.CONJUGATED_LABEL}</span>
+                        <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{UI_STRINGS.OVERVIEW.INFINITIVE_LABEL}</span>
                         {isCorrect === null ? (
                           <input
                             ref={inputRef}
@@ -1077,15 +1114,11 @@ export default function Learning() {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        {[
-                          { key: 'yo', label: parsed.isReflexive ? getReflexiveLabel('yo') : UI_STRINGS.OVERVIEW.YO },
-                          { key: 'tu', label: parsed.isReflexive ? getReflexiveLabel('tu') : UI_STRINGS.OVERVIEW.TU },
-                          { key: 'el', label: parsed.isReflexive ? getReflexiveLabel('el') : UI_STRINGS.OVERVIEW.EL },
-                          { key: 'nosotros', label: parsed.isReflexive ? getReflexiveLabel('nosotros') : UI_STRINGS.OVERVIEW.NOSOTROS },
-                          { key: 'vosotros', label: parsed.isReflexive ? getReflexiveLabel('vosotros') : UI_STRINGS.OVERVIEW.VOSOTROS },
-                          { key: 'ellos', label: parsed.isReflexive ? getReflexiveLabel('ellos') : UI_STRINGS.OVERVIEW.ELLOS },
-                        ].map((f) => (
+                      <div className={cn(
+                        "grid gap-3",
+                        verbType === 'conjugation' ? "grid-cols-2" : "grid-cols-1"
+                      )}>
+                        {relevantFields.map((f) => (
                           <div key={f.key}>
                             <span className="block mb-1 ml-1 text-[10px] font-bold tracking-widest uppercase text-text-muted">{f.label}</span>
                             {isCorrect === null ? (
@@ -1093,7 +1126,7 @@ export default function Learning() {
                                 className={cn(
                                   "w-full bg-surface border p-3 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 transition-all border-border text-text-main focus:ring-primary/20"
                                 )}
-                                value={verbAnswers[f.key]}
+                                value={verbAnswers[f.key] || ''}
                                 onChange={(e) => setVerbAnswers(prev => ({ ...prev, [f.key]: e.target.value }))}
                                 autoComplete="off"
                                 autoCapitalize="none"

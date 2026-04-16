@@ -37,6 +37,7 @@ export default function Overview() {
   const [german, setGerman] = useState('');
   const [foreign, setForeign] = useState('');
   const [isVerb, setIsVerb] = useState(false);
+  const [verbType, setVerbType] = useState('conjugation'); // 'conjugation' or 'tenses'
   const [isReflexive, setIsReflexive] = useState(false);
   const [showReflexiveHelp, setShowReflexiveHelp] = useState(false);
   const [forms, setForms] = useState({
@@ -84,6 +85,7 @@ export default function Overview() {
     setGerman('');
     setForeign('');
     setIsVerb(false);
+    setVerbType('conjugation');
     setIsReflexive(false);
     setShowReflexiveHelp(false);
     setForms({
@@ -107,6 +109,7 @@ export default function Overview() {
       const parsed = JSON.parse(item.spanish);
       if (parsed && parsed.isVerb) {
         setIsVerb(true);
+        setVerbType(parsed.verbType || 'conjugation');
         setIsReflexive(parsed.isReflexive || false);
         setShowReflexiveHelp(false);
         setForeign(parsed.infinitive || '');
@@ -116,7 +119,9 @@ export default function Overview() {
           el: '',
           nosotros: '',
           vosotros: '',
-          ellos: ''
+          ellos: '',
+          pastSimple: '',
+          pastParticiple: ''
         });
       } else {
         setIsVerb(false);
@@ -146,7 +151,11 @@ export default function Overview() {
     }
 
     if (isVerb) {
-      const allFormsFilled = Object.values(forms).every(f => f.trim() !== '');
+      const relevantKeys = verbType === 'conjugation' 
+        ? ['yo', 'tu', 'el', 'nosotros', 'vosotros', 'ellos'] 
+        : ['pastSimple', 'pastParticiple'];
+      
+      const allFormsFilled = relevantKeys.every(key => forms[key]?.trim() !== '');
       if (!allFormsFilled) {
         setError(OVERVIEW.ERR_FILL_ALL);
         return;
@@ -156,7 +165,7 @@ export default function Overview() {
     setLoading(true);
     try {
       const finalForeign = isVerb 
-        ? JSON.stringify({ isVerb: true, isReflexive, infinitive: foreign.trim(), forms }) 
+        ? JSON.stringify({ isVerb: true, verbType, isReflexive, infinitive: foreign.trim(), forms }) 
         : foreign.trim();
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -680,39 +689,69 @@ export default function Overview() {
                 </div>
 
                 {isVerb && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-4 border bg-surface/50 border-border-light rounded-2xl">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-text-main">{OVERVIEW.REFLEXIVE_LABEL}</span>
-                        <button 
+                  <>
+                    <div className="flex flex-col gap-2 p-4 border bg-surface/50 border-border-light rounded-2xl">
+                      <span className="text-sm font-bold text-text-main">{OVERVIEW.VERB_TYPE_LABEL}</span>
+                      <div className="flex p-1 bg-slate-200 rounded-xl">
+                        <button
                           type="button"
-                          onClick={() => setShowReflexiveHelp(!showReflexiveHelp)}
-                          className="transition-colors text-text-muted hover:text-primary"
+                          onClick={() => setVerbType('conjugation')}
+                          className={cn(
+                            "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
+                            verbType === 'conjugation' ? "bg-white text-primary shadow-sm" : "text-text-muted"
+                          )}
                         >
-                          <HelpCircle size={18} />
+                          {OVERVIEW.VERB_TYPE_CONJUGATION}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVerbType('tenses')}
+                          className={cn(
+                            "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
+                            verbType === 'tenses' ? "bg-white text-primary shadow-sm" : "text-text-muted"
+                          )}
+                        >
+                          {OVERVIEW.VERB_TYPE_3FORMS}
                         </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setIsReflexive(!isReflexive)}
-                        className={cn(
-                          "w-12 h-6 rounded-full transition-colors relative",
-                          isReflexive ? "bg-primary" : "bg-slate-300"
-                        )}
-                      >
-                        <div className={cn(
-                          "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
-                          isReflexive ? "left-7" : "left-1"
-                        )} />
-                      </button>
                     </div>
-                    
-                    {showReflexiveHelp && (
-                      <div className="p-4 mx-1 text-sm border bg-primary/5 border-primary/10 rounded-2xl text-text-secondary animate-fade-in">
-                        {OVERVIEW.REFLEXIVE_DESC}
+
+                    {verbType === 'conjugation' && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-4 border bg-surface/50 border-border-light rounded-2xl">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-text-main">{OVERVIEW.REFLEXIVE_LABEL}</span>
+                            <button 
+                              type="button"
+                              onClick={() => setShowReflexiveHelp(!showReflexiveHelp)}
+                              className="transition-colors text-text-muted hover:text-primary"
+                            >
+                              <HelpCircle size={18} />
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setIsReflexive(!isReflexive)}
+                            className={cn(
+                              "w-12 h-6 rounded-full transition-colors relative",
+                              isReflexive ? "bg-primary" : "bg-slate-300"
+                            )}
+                          >
+                            <div className={cn(
+                              "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                              isReflexive ? "left-7" : "left-1"
+                            )} />
+                          </button>
+                        </div>
+                        
+                        {showReflexiveHelp && (
+                          <div className="p-4 mx-1 text-sm border bg-primary/5 border-primary/10 rounded-2xl text-text-secondary animate-fade-in">
+                            {OVERVIEW.REFLEXIVE_DESC}
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
+                  </>
                 )}
 
                 <div>
@@ -753,24 +792,49 @@ export default function Overview() {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
-                      {[
-                        { key: 'yo', label: isReflexive ? `${OVERVIEW.YO} me` : OVERVIEW.YO },
-                        { key: 'tu', label: isReflexive ? `${OVERVIEW.TU} te` : OVERVIEW.TU },
-                        { key: 'el', label: isReflexive ? `${OVERVIEW.EL} se` : OVERVIEW.EL },
-                        { key: 'nosotros', label: isReflexive ? `${OVERVIEW.NOSOTROS} nos` : OVERVIEW.NOSOTROS },
-                        { key: 'vosotros', label: isReflexive ? `${OVERVIEW.VOSOTROS} os` : OVERVIEW.VOSOTROS },
-                        { key: 'ellos', label: isReflexive ? `${OVERVIEW.ELLOS} se` : OVERVIEW.ELLOS },
-                      ].map((f) => (
-                        <div key={f.key}>
-                          <label className="block mb-1 ml-1 text-xs font-medium text-text-secondary">{f.label}</label>
-                          <input
-                            type="text"
-                            className="w-full p-3 text-base border shadow-sm bg-surface border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
-                            value={forms[f.key]}
-                            onChange={(e) => handleFormChange(f.key, e.target.value)}
-                          />
-                        </div>
-                      ))}
+                      {verbType === 'conjugation' ? (
+                        [
+                          { key: 'yo', label: isReflexive ? `${OVERVIEW.YO} me` : OVERVIEW.YO },
+                          { key: 'tu', label: isReflexive ? `${OVERVIEW.TU} te` : OVERVIEW.TU },
+                          { key: 'el', label: isReflexive ? `${OVERVIEW.EL} se` : OVERVIEW.EL },
+                          { key: 'nosotros', label: isReflexive ? `${OVERVIEW.NOSOTROS} nos` : OVERVIEW.NOSOTROS },
+                          { key: 'vosotros', label: isReflexive ? `${OVERVIEW.VOSOTROS} os` : OVERVIEW.VOSOTROS },
+                          { key: 'ellos', label: isReflexive ? `${OVERVIEW.ELLOS} se` : OVERVIEW.ELLOS },
+                        ].map((f) => (
+                          <div key={f.key}>
+                            <label className="block mb-1 ml-1 text-xs font-medium text-text-secondary">{f.label}</label>
+                            <input
+                              type="text"
+                              className="w-full p-3 text-base border shadow-sm bg-surface border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              value={forms[f.key] || ''}
+                              onChange={(e) => handleFormChange(f.key, e.target.value)}
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        <>
+                          <div className="col-span-2">
+                            <label className="block mb-1 ml-1 text-xs font-medium text-text-secondary">{OVERVIEW.FORM_PAST_SIMPLE}</label>
+                            <input
+                              type="text"
+                              className="w-full p-4 text-lg border shadow-sm bg-surface border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              placeholder="brought"
+                              value={forms.pastSimple || ''}
+                              onChange={(e) => handleFormChange('pastSimple', e.target.value)}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="block mb-1 ml-1 text-xs font-medium text-text-secondary">{OVERVIEW.FORM_PAST_PARTICIPLE}</label>
+                            <input
+                              type="text"
+                              className="w-full p-4 text-lg border shadow-sm bg-surface border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              placeholder="brought"
+                              value={forms.pastParticiple || ''}
+                              onChange={(e) => handleFormChange('pastParticiple', e.target.value)}
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
