@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useUiLanguage } from '../context/UiLanguageContext';
 import { supabase } from '../lib/supabase';
-import { clearLearningSession } from '../lib/storage';
+import { clearLearningSession, updateWordInSession, removeWordFromSession } from '../lib/storage';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -159,16 +159,20 @@ export default function Overview() {
         ? JSON.stringify({ isVerb: true, isReflexive, infinitive: foreign.trim(), forms }) 
         : foreign.trim();
 
+      const { data: { user } } = await supabase.auth.getUser();
       if (editingItem) {
         await updateVocabularyItem(editingItem.id, german.trim(), finalForeign, sentence.trim());
+        if (user) {
+          updateWordInSession(selectedLanguage, user.id, {
+            ...editingItem,
+            german: german.trim(),
+            spanish: finalForeign,
+            sentence: sentence.trim()
+          });
+        }
       } else {
         await addVocabularyItem(german.trim(), finalForeign, selectedLanguage, sentence.trim());
-      }
-
-      // Session im LocalStorage invalidieren damit die neue Vokabel sofort gelernt werden kann
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        clearLearningSession(selectedLanguage, user.id);
+        // No clearLearningSession here, so adding a word doesn't reset an active session
       }
 
       setGerman('');
@@ -211,7 +215,7 @@ export default function Overview() {
         await deleteVocabularyItem(itemToDelete);
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          clearLearningSession(selectedLanguage, user.id);
+          removeWordFromSession(selectedLanguage, user.id, itemToDelete);
         }
         await loadVokabeln();
         setIsDeleteModalOpen(false);
