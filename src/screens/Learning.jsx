@@ -109,7 +109,7 @@ export default function Learning() {
   // Check for next available language to learn today
   useEffect(() => {
     async function checkNextLanguage() {
-      if (sessionCompleted && user && availableLanguages.length > 1) {
+      if ((sessionCompleted || (vokabeln.length === 0 && !loading)) && user && availableLanguages.length > 1) {
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
 
@@ -127,26 +127,15 @@ export default function Learning() {
             .limit(1);
 
           if (!countError && wordsLeft && wordsLeft.length > 0) {
-            // Check if this language has already been studied today
-            const { data: studiedToday, error: studyError } = await supabase
-              .from('vocabulary')
-              .select('id')
-              .eq('user_id', user.id)
-              .eq('language', lang.code)
-              .gte('lastReviewed', todayStart.toISOString())
-              .limit(1);
-
-            if (!studyError && (!studiedToday || studiedToday.length === 0)) {
-              // Found a language that has words to learn and wasn't studied today
-              setNextLanguageToLearn(lang);
-              break;
-            }
+            // Found a language that has words to learn
+            setNextLanguageToLearn(lang);
+            break;
           }
         }
       }
     }
     checkNextLanguage();
-  }, [sessionCompleted, user, availableLanguages, selectedLanguage]);
+  }, [sessionCompleted, vokabeln.length, loading, user, availableLanguages, selectedLanguage]);
 
   const getSessionKey = useCallback(() => {
     if (!selectedLanguage || !user) return null;
