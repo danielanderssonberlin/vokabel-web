@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getVocabulary, deleteVocabularyItem, addVocabularyItem, updateVocabularyItem } from '../store/vocabularyStore';
 import { Search, Trash2, BookOpen, Plus, PlusCircle, X, Edit2, AlertCircle, SortAsc, Clock, ArrowDownRight, Languages, HelpCircle, RotateCcw } from 'lucide-react';
@@ -51,6 +51,7 @@ export default function Overview() {
   const [sentence, setSentence] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const firstInputRef = useRef(null);
 
   const loadVokabeln = useCallback(async () => {
     if (!selectedLanguage) {
@@ -78,6 +79,29 @@ export default function Overview() {
     return () => {
       document.body.style.overflow = 'unset';
     };
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    if (isModalOpen && firstInputRef.current) {
+      setTimeout(() => {
+        firstInputRef.current.focus();
+      }, 50);
+    }
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Wenn Modal offen ist oder in Input getippt wird, nichts tun
+      if (isModalOpen || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (e.key === '+') {
+        e.preventDefault();
+        handleOpenAdd();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isModalOpen]);
 
   const handleOpenAdd = () => {
@@ -759,6 +783,7 @@ export default function Overview() {
                     {isVerb ? OVERVIEW.INFINITIVE_LABEL : OVERVIEW.GERMAN_LABEL}
                   </label>
                   <textarea
+                    ref={firstInputRef}
                     className="w-full p-4 text-lg border shadow-sm bg-surface border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder={isVerb ? OVERVIEW.INFINITIVE_LABEL : OVERVIEW.GERMAN_PLACEHOLDER}
                     value={german}
