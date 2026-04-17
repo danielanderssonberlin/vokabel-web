@@ -19,10 +19,7 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [disableTooSoon, setDisableTooSoon] = useState(false);
-  const [autoProceed, setAutoProceed] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.AUTO_PROCEED);
-    return saved !== null ? saved === 'true' : true;
-  });
+  const [autoProceed, setAutoProceed] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -88,10 +85,10 @@ export default function Profile() {
     setFullName(user.user_metadata?.full_name || '');
     setEmail(user.email || '');
 
-    // Superadmin abfragen
+    // Profil-Einstellungen abfragen
     const { data, error } = await supabase
       .from('profiles')
-      .select('superadmin, disable_too_soon')
+      .select('superadmin, disable_too_soon, auto_proceed')
       .eq('id', user.id)
       .maybeSingle(); 
     
@@ -100,6 +97,9 @@ export default function Profile() {
     } else if (data) {
       setIsSuperadmin(Boolean(data.superadmin));
       setDisableTooSoon(Boolean(data.disable_too_soon));
+      if (data.auto_proceed !== null) {
+        setAutoProceed(Boolean(data.auto_proceed));
+      }
     } else {
       // Das ist kein harter Fehler, da Profile erst bei der ersten Einstellungsergänzung erstellt werden
       console.info('No profile row found yet. It will be created when you update your settings.');
@@ -152,12 +152,11 @@ export default function Profile() {
       if (error) throw error;
 
       // Profile settings
-      localStorage.setItem(STORAGE_KEYS.AUTO_PROCEED, autoProceed.toString());
-      
       const { data, error: profileError } = await supabase
         .from('profiles')
         .upsert({ 
           id: user.id,
+          auto_proceed: autoProceed,
           ...(isSuperadmin && { disable_too_soon: disableTooSoon })
         })
         .select(); 
@@ -473,11 +472,7 @@ export default function Profile() {
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  const newVal = !autoProceed;
-                  setAutoProceed(newVal);
-                  localStorage.setItem(STORAGE_KEYS.AUTO_PROCEED, newVal.toString());
-                }}
+                onClick={() => setAutoProceed(!autoProceed)}
                 className={`w-12 h-6 rounded-full transition-colors relative ${autoProceed ? 'bg-primary' : 'bg-slate-300'}`}
               >
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoProceed ? 'left-7' : 'left-1'}`} />
