@@ -53,10 +53,6 @@ export default function Learning() {
   const [pendingUpdate, setPendingUpdate] = useState(false);
   const [isArchiveMode, setIsArchiveMode] = useState(false);
   const [disableTooSoon, setDisableTooSoon] = useState(false);
-  const [autoProceed, setAutoProceed] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.AUTO_PROCEED);
-    return saved !== null ? saved === 'true' : true;
-  });
   const [nextLanguageToLearn, setNextLanguageToLearn] = useState(null);
   const inputRef = useRef(null);
   const mainScrollRef = useRef(null);
@@ -622,12 +618,6 @@ export default function Learning() {
       console.error(LEARNING.UPDATE_FAILED, err);
     } finally {
       setPendingUpdate(false);
-    }
-    
-    if (correct && autoProceed) {
-      setTimeout(() => {
-        handleNext();
-      }, isLearned ? 1500 : 1200); 
     }
   };
 
