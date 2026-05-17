@@ -46,7 +46,7 @@ export const addVocabularyItem = async (german, foreignWord, language, sentence 
   return data[0];
 };
 
-export const updateVocabularyStatus = async (id, correct) => {
+export const updateVocabularyStatus = async (id, correct, isArchiveMode = false) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
@@ -74,8 +74,10 @@ export const updateVocabularyStatus = async (id, correct) => {
   const last = new Date(item.lastReviewed || 0);
   const hoursSinceLast = (now - last) / (1000 * 60 * 60);
 
+  const isTooSoon = !isTooSoonDisabled && hoursSinceLast < 12 && item.lastReviewed !== null;
+
   if (correct) {
-    if (!isTooSoonDisabled && hoursSinceLast < 12 && item.lastReviewed !== null) {
+    if (isTooSoon) {
       tooSoon = true;
     } else {
       newStatus = Math.min(5, item.status + 1);
@@ -84,7 +86,10 @@ export const updateVocabularyStatus = async (id, correct) => {
       }
     }
   } else {
-    newStatus = Math.max(0, item.status - 1);
+    // Nicht abstufen wenn "Too Soon" oder im Archiv-Modus
+    if (!isTooSoon && !isArchiveMode) {
+      newStatus = Math.max(0, item.status - 1);
+    }
   }
 
   const { data, error: updateError } = await supabase

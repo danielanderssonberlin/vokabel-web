@@ -52,7 +52,6 @@ export default function Learning() {
   const [info, setInfo] = useState(null);
   const [pendingUpdate, setPendingUpdate] = useState(false);
   const [isArchiveMode, setIsArchiveMode] = useState(false);
-  const [disableTooSoon, setDisableTooSoon] = useState(false);
   const [nextLanguageToLearn, setNextLanguageToLearn] = useState(null);
   const inputRef = useRef(null);
   const mainScrollRef = useRef(null);
@@ -87,7 +86,6 @@ export default function Learning() {
   };
   
   // Speech Recognition State
-  const [isSupported, setIsSupported] = useState(false);
   const [isMicEnabled, setIsMicEnabled] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recognition = useRef(null);
@@ -224,18 +222,6 @@ export default function Learning() {
     
     // Stats aus den Vokabeln berechnen
     setStats(calculateStatsFromVocabulary(all));
-
-    // Einstellungen laden
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('disable_too_soon')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (profile) {
-        setDisableTooSoon(profile.disable_too_soon || false);
-      }
-    }
     
     setCurrentIndex(0);
     setIsCorrect(null);
@@ -293,7 +279,6 @@ export default function Learning() {
     // Initialize Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
-      setIsSupported(true);
       recognition.current = new SpeechRecognition();
       recognition.current.interimResults = false;
       recognition.current.continuous = false;
@@ -593,7 +578,7 @@ export default function Learning() {
     }
     
     try {
-      const { updated, tooSoon } = await updateVocabularyStatus(current.id, correct);
+      const { updated, tooSoon } = await updateVocabularyStatus(current.id, correct, isArchiveMode);
       
       // Sync mit Backend-Ergebnis (berücksichtigt disableTooSoon automatisch)
       setWasTooSoon(tooSoon); 
